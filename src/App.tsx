@@ -25,8 +25,7 @@ export const App: React.FC = () => {
     handlePointerMove,
     handlePointerUp,
     handlePointerCancel,
-    handlePointerLeave,
-    resetToNow
+    handlePointerLeave
   } = useScrubber(currentMinutes);
 
   // Precompute 24h timeline segments for each market against Chile reference day
@@ -84,8 +83,6 @@ export const App: React.FC = () => {
           dateFormatted={dateFormatted}
           openMarketsCount={openMarketsCount}
           totalMarketsCount={MARKETS.length}
-          isScrubbing={isScrubbing}
-          onResetScrubber={resetToNow}
         />
 
         <main className="main-content">

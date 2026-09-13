@@ -1,6 +1,6 @@
 import React from 'react';
 import { DateTime } from 'luxon';
-import { Globe, RotateCcw, Activity } from 'lucide-react';
+import { Globe, Activity } from 'lucide-react';
 import { getSantiagoOffsetDescription } from '../core/timezone';
 
 interface HeaderProps {
@@ -9,8 +9,6 @@ interface HeaderProps {
   dateFormatted: string;
   openMarketsCount: number;
   totalMarketsCount: number;
-  isScrubbing: boolean;
-  onResetScrubber: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -18,9 +16,7 @@ export const Header: React.FC<HeaderProps> = ({
   timeFormatted,
   dateFormatted,
   openMarketsCount,
-  totalMarketsCount,
-  isScrubbing,
-  onResetScrubber
+  totalMarketsCount
 }) => {
   const santiagoOffset = getSantiagoOffsetDescription(now);
 
@@ -55,19 +51,9 @@ export const Header: React.FC<HeaderProps> = ({
               <strong>{openMarketsCount}</strong> de {totalMarketsCount} mercados abiertos ahora
             </span>
           </div>
-
-          {isScrubbing && (
-            <button
-              onClick={onResetScrubber}
-              className="reset-btn"
-              title="Volver a la hora actual de Chile"
-            >
-              <RotateCcw size={13} />
-              <span>Volver a Ahora</span>
-            </button>
-          )}
         </div>
       </div>
     </header>
   );
 };
+

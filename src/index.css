@@ -197,28 +197,6 @@ body {
   border-radius: 8px;
 }
 
-.reset-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-  background: rgba(56, 189, 248, 0.15);
-  color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.35);
-  padding: 0.35rem 0.75rem;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  min-height: 32px;
-}
-
-.reset-btn:hover {
-  background: rgba(56, 189, 248, 0.25);
-  border-color: #38bdf8;
-  color: #fff;
-}
-
 /* Market Cards Grid */
 .market-cards-grid {
   display: grid;
