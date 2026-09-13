@@ -8,6 +8,7 @@ export interface UseScrubberResult {
   handlePointerDown: (e: React.PointerEvent<HTMLDivElement>) => void;
   handlePointerMove: (e: React.PointerEvent<HTMLDivElement>) => void;
   handlePointerUp: (e: React.PointerEvent<HTMLDivElement>) => void;
+  handlePointerCancel: (e: React.PointerEvent<HTMLDivElement>) => void;
   handlePointerLeave: () => void;
   resetToNow: () => void;
   setScrubberMinutes: (minutes: number | null) => void;
@@ -31,12 +32,17 @@ export function useScrubber(defaultMinutes: number): UseScrubberResult {
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
+      // Isolate pointer interaction
       const minutes = calculateMinutesFromEvent(e.clientX);
       if (minutes !== null) {
         setScrubberMinutes(minutes);
         setIsDragging(true);
         setIsHovering(true);
-        (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+        try {
+          e.currentTarget.setPointerCapture(e.pointerId);
+        } catch {
+          // Fallback if setPointerCapture is unsupported
+        }
       }
     },
     [calculateMinutesFromEvent]
@@ -57,9 +63,26 @@ export function useScrubber(defaultMinutes: number): UseScrubberResult {
     (e: React.PointerEvent<HTMLDivElement>) => {
       setIsDragging(false);
       try {
-        (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
+        if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+          e.currentTarget.releasePointerCapture(e.pointerId);
+        }
       } catch {
-        // Ignore if pointer capture wasn't active
+        // Safe fallback
+      }
+    },
+    []
+  );
+
+  const handlePointerCancel = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      setIsDragging(false);
+      setIsHovering(false);
+      try {
+        if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+          e.currentTarget.releasePointerCapture(e.pointerId);
+        }
+      } catch {
+        // Safe fallback
       }
     },
     []
@@ -86,6 +109,7 @@ export function useScrubber(defaultMinutes: number): UseScrubberResult {
     handlePointerDown,
     handlePointerMove,
     handlePointerUp,
+    handlePointerCancel,
     handlePointerLeave,
     resetToNow,
     setScrubberMinutes

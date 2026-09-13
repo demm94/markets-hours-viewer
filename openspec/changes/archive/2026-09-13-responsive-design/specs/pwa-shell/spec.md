@@ -1,14 +1,11 @@
-# pwa-shell Specification
+# Delta for pwa-shell
 
-## Purpose
-
-Defines application shell layout, dark-mode financial theming, and Progressive Web App (PWA) installation and offline caching requirements.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Responsive Dashboard Layout and Theming
 
 The application shell MUST provide a responsive viewport container tailored for desktop monitors and mobile devices with a dark financial theme, ensuring compact layout scaling on narrow screens (< 480px).
+(Previously: Provided basic responsive container without small screen card compaction or sticky left column constraints)
 
 #### Scenario: Header and Reference Info
 - GIVEN the application loads in any viewport
@@ -27,20 +24,3 @@ The application shell MUST provide a responsive viewport container tailored for 
 - WHEN the dashboard is displayed
 - THEN header title and clock MUST stack vertically with fluid typography
 - AND market cards MUST display compact metrics without text truncation
-
-### Requirement: PWA Capabilities and Offline Caching
-
-The application MUST provide valid Web App Manifest attributes and service worker caching for offline standalone execution.
-
-#### Scenario: Web App Manifest Configuration
-- GIVEN client browser requests manifest
-- WHEN `/manifest.webmanifest` is served
-- THEN `display` MUST be `standalone`
-- AND `theme_color` and `background_color` MUST match the dark theme background
-- AND icons for 192x192 and 512x512 MUST be specified
-
-#### Scenario: Offline Shell Availability
-- GIVEN user installs or visits the PWA while online
-- WHEN connection goes offline and page is refreshed
-- THEN the application shell and static assets MUST load from service worker cache without network error
-- AND timezone calculations MUST continue to function offline using bundled IANA data

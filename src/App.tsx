@@ -24,6 +24,7 @@ export const App: React.FC = () => {
     handlePointerDown,
     handlePointerMove,
     handlePointerUp,
+    handlePointerCancel,
     handlePointerLeave,
     resetToNow
   } = useScrubber(currentMinutes);
@@ -102,6 +103,7 @@ export const App: React.FC = () => {
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerCancel}
             onPointerLeave={handlePointerLeave}
           />
         </main>

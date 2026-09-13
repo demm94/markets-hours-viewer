@@ -15,6 +15,7 @@ interface TimelineGridProps {
   onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => void;
   onPointerMove: (e: React.PointerEvent<HTMLDivElement>) => void;
   onPointerUp: (e: React.PointerEvent<HTMLDivElement>) => void;
+  onPointerCancel?: (e: React.PointerEvent<HTMLDivElement>) => void;
   onPointerLeave: () => void;
 }
 
@@ -30,6 +31,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = ({
   onPointerDown,
   onPointerMove,
   onPointerUp,
+  onPointerCancel,
   onPointerLeave
 }) => {
   const hours = Array.from({ length: 13 }, (_, i) => i * 2); // 0, 2, 4, ... 24
@@ -111,6 +113,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = ({
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
+          onPointerCancel={onPointerCancel}
           onPointerLeave={onPointerLeave}
         >
           {/* Hour Labels at Top */}

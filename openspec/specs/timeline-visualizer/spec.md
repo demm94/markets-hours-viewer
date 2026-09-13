@@ -25,7 +25,7 @@ The visualizer MUST render stacked horizontal tracks sharing a normalized 00:00 
 
 ### Requirement: Synchronized Interactive Scrubber
 
-The visualizer MUST render a synchronized vertical scrubber line traversing all market tracks when the user moves a pointer or performs a touch drag across the timeline.
+The visualizer MUST render a synchronized vertical scrubber line traversing all market tracks when the user moves a pointer or performs a touch drag across the timeline, isolating horizontal drag gestures from vertical document scrolling.
 
 #### Scenario: Desktop Hover Scrubber Tracking
 - GIVEN desktop viewport
@@ -44,6 +44,12 @@ The visualizer MUST render a synchronized vertical scrubber line traversing all 
 - WHEN rendered
 - THEN the active trading block for that exchange MUST visually highlight
 - AND its status indicator MUST reflect `open`
+
+#### Scenario: Touch Drag Gesture Isolation
+- GIVEN mobile touchscreen viewport
+- WHEN the user initiates and maintains a touch drag gesture across the timeline surface
+- THEN horizontal scrubber movements MUST NOT trigger unexpected vertical page scrolling or document panning
+- AND releasing touch MUST safely end the drag interaction without sticky pointer capture leaks
 
 ### Requirement: Real-Time "Now" Indicator
 

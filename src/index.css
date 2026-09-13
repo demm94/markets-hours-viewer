@@ -1,8 +1,8 @@
 :root {
   --bg-main: #060911;
   --bg-surface: #0e1526;
-  --bg-card: rgba(14, 21, 38, 0.8);
-  --bg-card-hover: rgba(22, 33, 58, 0.9);
+  --bg-card: rgba(14, 21, 38, 0.85);
+  --bg-card-hover: rgba(22, 33, 58, 0.95);
   --border-subtle: rgba(51, 65, 85, 0.5);
   --border-active: rgba(56, 189, 248, 0.5);
 
@@ -46,7 +46,7 @@ body {
 .app-layout {
   min-height: 100vh;
   background: radial-gradient(ellipse at 50% 0%, #172554 0%, var(--bg-main) 65%);
-  padding: 1.5rem 1rem;
+  padding: clamp(0.75rem, 2vw, 1.5rem);
 }
 
 .app-container {
@@ -54,7 +54,7 @@ body {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 1.75rem;
+  gap: clamp(1rem, 2.5vw, 1.75rem);
 }
 
 /* Header */
@@ -63,19 +63,21 @@ body {
   justify-content: space-between;
   align-items: flex-start;
   flex-wrap: wrap;
-  gap: 1.5rem;
+  gap: 1.25rem;
   background: var(--bg-card);
   backdrop-filter: blur(14px);
   border: 1px solid var(--border-subtle);
   border-radius: 16px;
-  padding: 1.5rem 1.75rem;
+  padding: clamp(1rem, 2.5vw, 1.75rem);
   box-shadow: 0 12px 36px -10px rgba(0, 0, 0, 0.6);
 }
 
 .header-left {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.4rem;
+  flex: 1;
+  min-width: 260px;
 }
 
 .app-badge {
@@ -89,23 +91,24 @@ body {
   color: #34d399;
   background: rgba(16, 185, 129, 0.12);
   border: 1px solid rgba(16, 185, 129, 0.25);
-  padding: 0.25rem 0.6rem;
+  padding: 0.2rem 0.55rem;
   border-radius: 9999px;
   width: fit-content;
 }
 
 .header-title {
-  font-size: 1.75rem;
+  font-size: clamp(1.25rem, 3.2vw, 1.75rem);
   font-weight: 700;
   letter-spacing: -0.02em;
   color: #f8fafc;
+  line-height: 1.2;
 }
 
 .header-subtitle {
   color: var(--text-secondary);
-  font-size: 0.875rem;
+  font-size: clamp(0.8rem, 1.8vw, 0.875rem);
   max-width: 580px;
-  line-height: 1.5;
+  line-height: 1.45;
 }
 
 .header-right {
@@ -113,15 +116,16 @@ body {
   flex-direction: column;
   align-items: flex-end;
   gap: 0.75rem;
+  min-width: 240px;
 }
 
 .clock-card {
-  background: rgba(2, 6, 23, 0.65);
+  background: rgba(2, 6, 23, 0.7);
   border: 1px solid var(--border-subtle);
   border-radius: 12px;
-  padding: 0.85rem 1.25rem;
+  padding: 0.75rem 1.15rem;
   text-align: right;
-  min-width: 220px;
+  width: 100%;
 }
 
 .clock-header {
@@ -148,7 +152,7 @@ body {
 }
 
 .offset-tag {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: #38bdf8;
   font-family: var(--font-mono);
   background: rgba(56, 189, 248, 0.1);
@@ -158,10 +162,12 @@ body {
 
 .clock-time {
   font-family: var(--font-mono);
-  font-size: 1.75rem;
+  font-size: clamp(1.4rem, 3.5vw, 1.75rem);
   font-weight: 700;
   color: #f8fafc;
   letter-spacing: -0.03em;
+  line-height: 1.15;
+  margin: 0.15rem 0;
 }
 
 .clock-date {
@@ -173,18 +179,21 @@ body {
 .status-summary-bar {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.6rem;
+  width: 100%;
+  justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
 .open-pill {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: #e2e8f0;
   background: rgba(16, 185, 129, 0.12);
   border: 1px solid rgba(16, 185, 129, 0.25);
-  padding: 0.35rem 0.75rem;
+  padding: 0.35rem 0.7rem;
   border-radius: 8px;
 }
 
@@ -201,6 +210,7 @@ body {
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
+  min-height: 32px;
 }
 
 .reset-btn:hover {
@@ -212,8 +222,8 @@ body {
 /* Market Cards Grid */
 .market-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.85rem;
 }
 
 .market-card {
@@ -221,10 +231,10 @@ body {
   backdrop-filter: blur(8px);
   border: 1px solid var(--border-subtle);
   border-radius: 12px;
-  padding: 1rem;
+  padding: 0.85rem;
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 0.55rem;
   transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
@@ -259,21 +269,21 @@ body {
 .market-card-flag-group {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
 }
 
 .market-flag {
-  font-size: 1.35rem;
+  font-size: 1.25rem;
 }
 
 .market-country {
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: #f8fafc;
 }
 
 .market-code {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   color: var(--text-muted);
   font-family: var(--font-mono);
 }
@@ -282,9 +292,9 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 600;
-  padding: 0.2rem 0.5rem;
+  padding: 0.15rem 0.45rem;
   border-radius: 9999px;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -325,17 +335,17 @@ body {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  margin-top: 0.25rem;
+  margin-top: 0.15rem;
 }
 
 .market-time-label {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
 }
 
 .market-time-val {
   font-family: var(--font-mono);
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: #f8fafc;
 }
@@ -343,10 +353,10 @@ body {
 .market-card-footer {
   display: flex;
   justify-content: space-between;
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   color: var(--text-muted);
   border-top: 1px solid rgba(51, 65, 85, 0.4);
-  padding-top: 0.4rem;
+  padding-top: 0.35rem;
 }
 
 /* Timeline Section */
@@ -355,11 +365,11 @@ body {
   backdrop-filter: blur(14px);
   border: 1px solid var(--border-subtle);
   border-radius: 16px;
-  padding: 1.5rem 1.75rem;
+  padding: clamp(1rem, 2vw, 1.5rem);
   box-shadow: 0 12px 36px -10px rgba(0, 0, 0, 0.6);
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 .timeline-header-bar {
@@ -371,21 +381,21 @@ body {
 }
 
 .timeline-title {
-  font-size: 1.2rem;
+  font-size: clamp(1.05rem, 2vw, 1.2rem);
   font-weight: 700;
   color: #f8fafc;
 }
 
 .timeline-hint {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: #38bdf8;
   background: rgba(56, 189, 248, 0.08);
-  padding: 0.25rem 0.6rem;
+  padding: 0.2rem 0.55rem;
   border-radius: 6px;
   border: 1px solid rgba(56, 189, 248, 0.2);
 }
 
-/* Master Table Layout */
+/* Master Table Layout with Sticky Column */
 .timeline-table-wrapper {
   display: flex;
   overflow-x: auto;
@@ -393,15 +403,40 @@ body {
   border-radius: 12px;
   background: rgba(8, 12, 22, 0.9);
   user-select: none;
+  -webkit-user-select: none;
   box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.4);
+  position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(56, 189, 248, 0.3) rgba(15, 23, 42, 0.8);
 }
 
-/* Left Frozen Column */
+.timeline-table-wrapper::-webkit-scrollbar {
+  height: 6px;
+}
+
+.timeline-table-wrapper::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.8);
+  border-radius: 0 0 12px 12px;
+}
+
+.timeline-table-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.3);
+  border-radius: 3px;
+}
+
+.timeline-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 189, 248, 0.5);
+}
+
+/* Left Frozen Sticky Column */
 .timeline-left-column {
-  width: 230px;
-  min-width: 230px;
-  background: #0b1120;
+  width: 210px;
+  min-width: 210px;
+  position: sticky;
+  left: 0;
+  background: #090e1b;
   border-right: 1px solid var(--border-subtle);
+  box-shadow: 4px 0 16px rgba(0, 0, 0, 0.55);
   display: flex;
   flex-direction: column;
   z-index: 10;
@@ -411,14 +446,14 @@ body {
   height: 36px;
   display: flex;
   align-items: center;
-  padding: 0 1rem;
-  font-size: 0.75rem;
+  padding: 0 0.85rem;
+  font-size: 0.72rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text-muted);
   border-bottom: 1px solid var(--border-subtle);
-  background: #090d1a;
+  background: #080c18;
 }
 
 .market-info-cell {
@@ -426,24 +461,24 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 0.85rem;
+  padding: 0 0.75rem;
   border-bottom: 1px solid rgba(51, 65, 85, 0.25);
   transition: background 0.15s ease;
 }
 
 .market-info-cell.cell-anchor {
-  background: rgba(56, 189, 248, 0.08);
+  background: rgba(56, 189, 248, 0.09);
   border-bottom: 1px solid rgba(56, 189, 248, 0.3);
 }
 
 .cell-identity {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
 }
 
 .cell-flag {
-  font-size: 1.25rem;
+  font-size: 1.15rem;
 }
 
 .cell-names {
@@ -452,13 +487,14 @@ body {
 }
 
 .cell-name {
-  font-size: 0.825rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: #f8fafc;
+  white-space: nowrap;
 }
 
 .cell-code {
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   color: var(--text-muted);
   font-family: var(--font-mono);
 }
@@ -467,18 +503,18 @@ body {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 0.15rem;
+  gap: 0.12rem;
 }
 
 .cell-scrubber-time {
   font-family: var(--font-mono);
-  font-size: 0.85rem;
+  font-size: 0.825rem;
   font-weight: 700;
   color: #f8fafc;
 }
 
 .status-badge-compact {
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   font-weight: 600;
   padding: 0.05rem 0.35rem;
   border-radius: 4px;
@@ -512,19 +548,21 @@ body {
 /* Right Interactive Bars Area */
 .timeline-bars-container {
   flex: 1;
-  min-width: 700px;
+  min-width: 680px;
   position: relative;
   display: flex;
   flex-direction: column;
   cursor: crosshair;
   touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .timeline-col-header-bars {
   height: 36px;
   position: relative;
   border-bottom: 1px solid var(--border-subtle);
-  background: #090d1a;
+  background: #080c18;
 }
 
 .hour-tick-label {
@@ -532,7 +570,7 @@ body {
   top: 50%;
   transform: translate(-50%, -50%);
   font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: var(--text-muted);
   font-weight: 500;
 }
@@ -606,7 +644,7 @@ body {
 }
 
 .chile-ref-text {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 600;
   color: #38bdf8;
   letter-spacing: 0.05em;
@@ -621,7 +659,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.68rem;
+  font-size: 0.66rem;
   font-weight: 600;
   color: #fff;
   border-radius: 4px;
@@ -725,9 +763,9 @@ body {
   background: #0284c7;
   color: #fff;
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  padding: 0.2rem 0.55rem;
+  padding: 0.2rem 0.5rem;
   border-radius: 6px;
   box-shadow: 0 4px 14px rgba(2, 132, 199, 0.6);
   white-space: nowrap;
@@ -739,22 +777,22 @@ body {
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 1.5rem;
+  gap: clamp(0.75rem, 2vw, 1.5rem);
   border-top: 1px solid var(--border-subtle);
   padding-top: 1rem;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-secondary);
 }
 
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.35rem;
 }
 
 .legend-box {
-  width: 14px;
-  height: 10px;
+  width: 12px;
+  height: 9px;
   border-radius: 2px;
 }
 
@@ -772,7 +810,7 @@ body {
 }
 
 .legend-line {
-  width: 14px;
+  width: 12px;
   height: 2px;
 }
 
@@ -795,8 +833,8 @@ body {
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 1rem;
-  font-size: 0.75rem;
+  gap: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
 }
 
@@ -810,12 +848,11 @@ body {
   color: var(--text-secondary);
 }
 
-/* Responsive adjustments */
+/* Responsive Breakpoints */
 @media (max-width: 768px) {
   .app-header {
     flex-direction: column;
     align-items: stretch;
-    padding: 1.25rem;
   }
 
   .header-right {
@@ -830,12 +867,56 @@ body {
     justify-content: flex-start;
   }
 
-  .timeline-section {
-    padding: 1.25rem 1rem;
+  .status-summary-bar {
+    justify-content: flex-start;
   }
 
   .timeline-left-column {
     width: 175px;
     min-width: 175px;
+  }
+
+  .market-cards-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .app-layout {
+    padding: 0.5rem;
+  }
+
+  .header-title {
+    font-size: 1.25rem;
+  }
+
+  .timeline-left-column {
+    width: 155px;
+    min-width: 155px;
+  }
+
+  .cell-name {
+    font-size: 0.75rem;
+  }
+
+  .cell-scrubber-time {
+    font-size: 0.75rem;
+  }
+
+  .market-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+  }
+
+  .market-card {
+    padding: 0.65rem;
+  }
+
+  .market-country {
+    font-size: 0.8rem;
+  }
+
+  .market-time-val {
+    font-size: 1.05rem;
   }
 }
