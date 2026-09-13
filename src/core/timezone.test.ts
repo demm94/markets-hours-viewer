@@ -1,0 +1,103 @@
+import { describe, it, expect } from 'vitest';
+import { DateTime } from 'luxon';
+import {
+  CHILE_TZ,
+  projectMarketToTimeline,
+  evaluateMarketAt,
+  formatMinutes,
+  getSantiagoOffsetDescription
+} from './timezone';
+import { MARKETS } from './markets';
+
+describe('timezone engine', () => {
+  const nyse = MARKETS.find((m) => m.id === 'nyse')!;
+  const twse = MARKETS.find((m) => m.id === 'twse')!;
+  const sse = MARKETS.find((m) => m.id === 'sse')!;
+
+  it('projects NYSE regular session accurately during Chile DST (September 2026)', () => {
+    // September 15, 2026: Chile is in UTC-3, NY is in EDT (UTC-4)
+    const refDate = DateTime.fromISO('2026-09-15T12:00:00', { zone: CHILE_TZ });
+    const segments = projectMarketToTimeline(nyse, refDate);
+
+    expect(segments.length).toBe(1);
+    const seg = segments[0];
+
+    // NY 09:30 EDT -> Chile 10:30 (630 min)
+    // NY 16:00 EDT -> Chile 17:00 (1020 min)
+    expect(seg.startMinute).toBe(630);
+    expect(seg.endMinute).toBe(1020);
+    expect(seg.type).toBe('regular');
+  });
+
+  it('projects Asian market (TWSE) wrapping around the 24h midnight boundary', () => {
+    // September 15, 2026: Chile UTC-3, Taipei UTC+8 (11h difference)
+    const refDate = DateTime.fromISO('2026-09-15T12:00:00', { zone: CHILE_TZ });
+    const segments = projectMarketToTimeline(twse, refDate);
+
+    // Should produce 2 segments within the 24h Chile day:
+    // 1) 00:00 to 02:30 (from current day's Taipei session: 09:00 - 13:30 Taipei)
+    // 2) 22:00 to 24:00 (from next day's Taipei session: 09:00 - 13:30 Taipei)
+    expect(segments.length).toBe(2);
+
+    expect(segments[0].startMinute).toBe(0);
+    expect(segments[0].endMinute).toBe(150); // 02:30 = 2 * 60 + 30 = 150
+
+    expect(segments[1].startMinute).toBe(1320); // 22:00 = 22 * 60 = 1320
+    expect(segments[1].endMinute).toBe(1440); // 24:00 = 1440
+  });
+
+  it('correctly maps China SSE split sessions including lunch break', () => {
+    const refDate = DateTime.fromISO('2026-09-15T12:00:00', { zone: CHILE_TZ });
+    const segments = projectMarketToTimeline(sse, refDate);
+
+    // China has morning (09:30-11:30), lunch (11:30-13:00), and afternoon (13:00-15:00)
+    // In Chile (11h diff in Sep):
+    // Taipei/Shanghai 09:30-15:00 spans 22:30 to 04:00 Chile time
+    const lunchSegments = segments.filter((s) => s.type === 'lunch');
+    const regularSegments = segments.filter((s) => s.type === 'regular');
+
+    expect(lunchSegments.length).toBeGreaterThan(0);
+    expect(regularSegments.length).toBeGreaterThan(0);
+  });
+
+  it('evaluates instantaneous market status accurately', () => {
+    // 14:00 in New York -> NYSE should be open
+    const nyOpenInstant = DateTime.fromObject(
+      { year: 2026, month: 9, day: 15, hour: 14, minute: 0 },
+      { zone: 'America/New_York' }
+    );
+    const evalNy = evaluateMarketAt(nyse, nyOpenInstant);
+    expect(evalNy.status).toBe('open');
+    expect(evalNy.localTimeFormatted).toBe('14:00');
+
+    // 20:00 in New York -> NYSE closed
+    const nyClosedInstant = DateTime.fromObject(
+      { year: 2026, month: 9, day: 15, hour: 20, minute: 0 },
+      { zone: 'America/New_York' }
+    );
+    const evalNyClosed = evaluateMarketAt(nyse, nyClosedInstant);
+    expect(evalNyClosed.status).toBe('closed');
+
+    // 12:00 in Shanghai -> lunch break
+    const sseLunchInstant = DateTime.fromObject(
+      { year: 2026, month: 9, day: 15, hour: 12, minute: 0 },
+      { zone: 'Asia/Shanghai' }
+    );
+    const evalSseLunch = evaluateMarketAt(sse, sseLunchInstant);
+    expect(evalSseLunch.status).toBe('lunch');
+  });
+
+  it('formats minute offsets correctly', () => {
+    expect(formatMinutes(0)).toBe('00:00');
+    expect(formatMinutes(630)).toBe('10:30');
+    expect(formatMinutes(1020)).toBe('17:00');
+    expect(formatMinutes(1440)).toBe('00:00');
+  });
+
+  it('detects Santiago DST offset accurately in September', () => {
+    const sepDate = DateTime.fromISO('2026-09-15T12:00:00', { zone: CHILE_TZ });
+    const desc = getSantiagoOffsetDescription(sepDate);
+    expect(desc).toContain('UTC-3');
+    expect(desc).toContain('Horario de Verano');
+  });
+});
