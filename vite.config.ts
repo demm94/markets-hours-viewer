@@ -9,8 +9,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Horarios Bursátiles - Santiago Reference',
-        short_name: 'Bolsas vs Chile',
+        name: 'Markets View',
+        short_name: 'Markets View',
         description: 'Comparador en tiempo real de horarios de apertura y cierre bursátil contra hora de Chile',
         theme_color: '#0f172a',
         background_color: '#090d16',

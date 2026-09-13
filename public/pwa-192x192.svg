@@ -1,8 +1,72 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <rect width="512" height="512" rx="128" fill="#0f172a" />
-  <circle cx="256" cy="256" r="180" fill="none" stroke="#334155" stroke-width="24" />
-  <path d="M 256 120 L 256 256 L 350 256" fill="none" stroke="#10b981" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" />
-  <circle cx="256" cy="256" r="18" fill="#10b981" />
-  <circle cx="390" cy="180" r="14" fill="#38bdf8" />
-  <circle cx="130" cy="340" r="14" fill="#f59e0b" />
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0e1726" />
+      <stop offset="50%" stop-color="#080d1a" />
+      <stop offset="100%" stop-color="#02040a" />
+    </linearGradient>
+    <linearGradient id="emeraldGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#34d399" />
+    </linearGradient>
+    <linearGradient id="cyanGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="100%" stop-color="#38bdf8" />
+    </linearGradient>
+    <linearGradient id="amberGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#d97706" />
+      <stop offset="100%" stop-color="#fbbf24" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="10" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <filter id="subtleGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="5" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Squircle Base -->
+  <rect width="512" height="512" rx="120" fill="url(#bgGrad)" />
+  <rect width="508" height="508" x="2" y="2" rx="118" fill="none" stroke="rgba(56, 189, 248, 0.25)" stroke-width="3" />
+
+  <!-- Outer Dial Track -->
+  <circle cx="256" cy="256" r="190" fill="none" stroke="rgba(51, 65, 85, 0.45)" stroke-width="14" />
+  <!-- Active Market Arc -->
+  <circle cx="256" cy="256" r="190" fill="none" stroke="url(#cyanGrad)" stroke-width="14" stroke-dasharray="320 880" stroke-linecap="round" transform="rotate(-70 256 256)" filter="url(#subtleGlow)" />
+
+  <!-- Major Hour Ticks -->
+  <circle cx="256" cy="66" r="6" fill="#94a3b8" />
+  <circle cx="446" cy="256" r="6" fill="#94a3b8" />
+  <circle cx="256" cy="446" r="6" fill="#94a3b8" />
+  <circle cx="66" cy="256" r="6" fill="#94a3b8" />
+
+  <!-- Inner Subtle Timeline Rings -->
+  <circle cx="256" cy="256" r="140" fill="none" stroke="rgba(51, 65, 85, 0.3)" stroke-width="2.5" stroke-dasharray="6 8" />
+
+  <!-- Market Trading Session Bars -->
+  <!-- Bar 1 (Asia Session - Amber) -->
+  <line x1="170" y1="195" x2="170" y2="335" stroke="#f59e0b" stroke-width="3" stroke-linecap="round" opacity="0.8" />
+  <rect x="156" y="220" width="28" height="90" rx="6" fill="url(#amberGrad)" filter="url(#subtleGlow)" />
+
+  <!-- Bar 2 (Pre-market - Cyan) -->
+  <line x1="220" y1="140" x2="220" y2="345" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" opacity="0.8" />
+  <rect x="206" y="170" width="28" height="150" rx="6" fill="url(#cyanGrad)" filter="url(#subtleGlow)" />
+
+  <!-- Bar 3 (Main Session - Emerald) -->
+  <line x1="270" y1="100" x2="270" y2="355" stroke="#10b981" stroke-width="3.5" stroke-linecap="round" />
+  <rect x="256" y="130" width="28" height="200" rx="6" fill="url(#emeraldGrad)" filter="url(#glow)" />
+
+  <!-- Bar 4 (Extended Session - Emerald/Cyan) -->
+  <line x1="320" y1="170" x2="320" y2="335" stroke="#34d399" stroke-width="3" stroke-linecap="round" opacity="0.8" />
+  <rect x="306" y="195" width="28" height="120" rx="6" fill="url(#emeraldGrad)" opacity="0.9" filter="url(#subtleGlow)" />
+
+  <!-- Dynamic Timeline Scrubber Line -->
+  <line x1="270" y1="62" x2="270" y2="450" stroke="#38bdf8" stroke-width="4.5" filter="url(#glow)" />
+  
+  <!-- Scrubber Indicator Arrow & Beacon -->
+  <polygon points="270,64 258,82 282,82" fill="#38bdf8" />
+  <circle cx="270" cy="280" r="10" fill="#f8fafc" filter="url(#glow)" />
+  <circle cx="270" cy="280" r="5" fill="#0284c7" />
 </svg>
