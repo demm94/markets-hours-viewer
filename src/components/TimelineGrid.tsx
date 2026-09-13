@@ -118,15 +118,24 @@ export const TimelineGrid: React.FC<TimelineGridProps> = ({
         >
           {/* Hour Labels at Top */}
           <div className="timeline-col-header-bars">
-            {hours.map((h) => (
-              <div
-                key={h}
-                className="hour-tick-label"
-                style={{ left: `${(h / 24) * 100}%` }}
-              >
-                {h.toString().padStart(2, '0')}:00
-              </div>
-            ))}
+            {hours.map((h) => {
+              const transform =
+                h === 0
+                  ? 'translate(4px, -50%)'
+                  : h === 24
+                  ? 'translate(calc(-100% - 4px), -50%)'
+                  : 'translate(-50%, -50%)';
+
+              return (
+                <div
+                  key={h}
+                  className="hour-tick-label"
+                  style={{ left: `${(h / 24) * 100}%`, transform }}
+                >
+                  {h.toString().padStart(2, '0')}:00
+                </div>
+              );
+            })}
           </div>
 
           {/* Background Vertical Grid Lines */}
