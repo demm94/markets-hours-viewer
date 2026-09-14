@@ -1,6 +1,6 @@
 import React from 'react';
 import { DateTime } from 'luxon';
-import { Globe, Activity } from 'lucide-react';
+import { Activity } from 'lucide-react';
 import { getSantiagoOffsetDescription } from '../core/timezone';
 
 interface HeaderProps {
@@ -22,38 +22,27 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="app-header">
-      <div className="header-left">
-        <div className="app-badge">
-          <Globe size={16} className="text-emerald-400" />
-          <span>Mercados vs. Chile</span>
+      <div className="header-brand">
+        <img src="/favicon.svg" alt="Markets View Logo" className="header-logo" />
+        <span className="header-app-name">Markets View</span>
+        <div className="header-open-badge">
+          <Activity size={12} className="animate-pulse text-emerald-400" />
+          <span>
+            <strong>{openMarketsCount}</strong>/{totalMarketsCount} abiertos
+          </span>
         </div>
-        <h1 className="header-title">Comparador de Horarios Bursátiles</h1>
-        <p className="header-subtitle">
-          Proyección en tiempo real de bolsas asiáticas y estadounidenses contra el horario local de Chile.
-        </p>
       </div>
 
-      <div className="header-right">
-        <div className="clock-card">
-          <div className="clock-header">
-            <span className="live-dot" />
-            <span className="clock-location">Santiago de Chile</span>
-            <span className="offset-tag">{santiagoOffset}</span>
-          </div>
-          <div className="clock-time">{timeFormatted}</div>
-          <div className="clock-date">{dateFormatted}</div>
+      <div className="header-clock-strip">
+        <div className="header-clock-location">
+          <span className="live-dot" />
+          <span className="location-name">Santiago</span>
         </div>
 
-        <div className="status-summary-bar">
-          <div className="open-pill">
-            <Activity size={14} className="animate-pulse text-emerald-400" />
-            <span>
-              <strong>{openMarketsCount}</strong> de {totalMarketsCount} mercados abiertos ahora
-            </span>
-          </div>
-        </div>
+        <span className="header-clock-time">{timeFormatted}</span>
+        <span className="header-offset-chip">{santiagoOffset}</span>
+        <span className="header-clock-date">{dateFormatted}</span>
       </div>
     </header>
   );
 };
-

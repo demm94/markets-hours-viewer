@@ -67,22 +67,22 @@ body {
   gap: clamp(1rem, 2.5vw, 1.75rem);
 }
 
-/* Header */
+/* Compact Terminal Top Bar */
 .app-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.75) 0%, rgba(10, 15, 28, 0.85) 100%);
+  align-items: center;
+  gap: 1rem;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(10, 15, 28, 0.9) 100%);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--border-subtle);
-  border-radius: 20px;
-  padding: clamp(1.25rem, 2.8vw, 2rem);
+  border-radius: 14px;
+  padding: 0.55rem 1.15rem;
   box-shadow: 
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.12),
-    0 20px 48px -12px rgba(0, 0, 0, 0.75);
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.1),
+    0 10px 24px -8px rgba(0, 0, 0, 0.6);
+  min-height: 52px;
   position: relative;
   overflow: hidden;
 }
@@ -94,91 +94,79 @@ body {
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.4), transparent);
+  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.35), transparent);
   pointer-events: none;
 }
 
-.header-left {
+.header-brand {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  flex: 1;
-  min-width: 280px;
-}
-
-.app-badge {
-  display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #34d399;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.16) 0%, rgba(6, 182, 212, 0.08) 100%);
-  border: 1px solid rgba(16, 185, 129, 0.35);
-  box-shadow: 0 0 16px rgba(16, 185, 129, 0.15);
-  padding: 0.25rem 0.65rem;
-  border-radius: 9999px;
-  width: fit-content;
+  gap: 0.75rem;
 }
 
-.header-title {
-  font-size: clamp(1.35rem, 3.4vw, 1.95rem);
+.header-logo {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  filter: drop-shadow(0 2px 5px rgba(56, 189, 248, 0.3));
+}
+
+.header-app-name {
+  font-size: 1.05rem;
   font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1.15;
+  letter-spacing: -0.02em;
   background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  white-space: nowrap;
 }
 
-.header-subtitle {
-  color: var(--text-secondary);
-  font-size: clamp(0.82rem, 1.8vw, 0.9rem);
-  max-width: 620px;
-  line-height: 1.5;
+.header-open-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #ecfdf5;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.16) 0%, rgba(16, 185, 129, 0.05) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.12);
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  white-space: nowrap;
 }
 
-.header-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.85rem;
-  min-width: 260px;
+.header-open-badge strong {
+  color: #34d399;
 }
 
-/* Terminal Clock Card */
-.clock-card {
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.92) 0%, rgba(8, 12, 22, 0.96) 100%);
-  border: 1px solid rgba(56, 189, 248, 0.22);
-  border-radius: 14px;
-  padding: 0.85rem 1.25rem;
-  text-align: right;
-  width: 100%;
-  box-shadow: 
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.1),
-    0 10px 28px -6px rgba(0, 0, 0, 0.65),
-    0 0 24px -8px rgba(56, 189, 248, 0.2);
-  position: relative;
-}
-
-.clock-header {
+.header-clock-strip {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 0.5rem;
+  gap: 0.65rem;
+  background: rgba(4, 7, 15, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 0.3rem 0.75rem;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.header-clock-location {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   font-size: 0.75rem;
-  color: var(--text-secondary);
+  font-weight: 600;
+  color: #94a3b8;
 }
 
 .live-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background-color: #10b981;
-  box-shadow: 0 0 12px #10b981;
+  box-shadow: 0 0 10px #10b981;
   animation: pulse-dot 2s infinite ease-in-out;
 }
 
@@ -186,78 +174,48 @@ body {
   0%, 100% {
     opacity: 1;
     transform: scale(1);
-    box-shadow: 0 0 12px #10b981;
+    box-shadow: 0 0 10px #10b981;
   }
   50% {
-    opacity: 0.5;
+    opacity: 0.4;
     transform: scale(0.8);
     box-shadow: 0 0 4px #10b981;
   }
 }
 
-.clock-location {
-  font-weight: 600;
+.location-name {
   color: #e2e8f0;
 }
 
-.offset-tag {
-  font-size: 0.68rem;
-  font-weight: 600;
-  color: #38bdf8;
-  font-family: var(--font-mono);
-  background: rgba(56, 189, 248, 0.12);
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  padding: 0.1rem 0.4rem;
-  border-radius: 4px;
-}
-
-.clock-time {
+.header-clock-time {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1, "zero" 1;
-  font-size: clamp(1.5rem, 3.8vw, 1.95rem);
+  font-size: 1.05rem;
   font-weight: 800;
   color: #ffffff;
-  letter-spacing: -0.03em;
-  line-height: 1.15;
-  margin: 0.2rem 0;
-  text-shadow: 0 0 24px rgba(255, 255, 255, 0.25);
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 16px rgba(255, 255, 255, 0.2);
 }
 
-.clock-date {
-  font-size: 0.75rem;
+.header-offset-chip {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.header-clock-date {
+  font-size: 0.72rem;
   font-weight: 500;
   color: var(--text-muted);
   text-transform: capitalize;
-}
-
-.status-summary-bar {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  width: 100%;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-}
-
-.open-pill {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  font-size: 0.78rem;
-  font-weight: 500;
-  color: #ecfdf5;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.16) 0%, rgba(16, 185, 129, 0.06) 100%);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  box-shadow: 0 0 14px rgba(16, 185, 129, 0.15);
-  padding: 0.4rem 0.8rem;
-  border-radius: 10px;
-}
-
-.open-pill strong {
-  color: #34d399;
-  font-family: var(--font-mono);
-  font-weight: 700;
+  white-space: nowrap;
 }
 
 /* Main Content Layout */
@@ -1142,23 +1100,18 @@ body {
   .app-header {
     flex-direction: column;
     align-items: stretch;
-    border-radius: 16px;
+    gap: 0.6rem;
+    padding: 0.6rem 0.85rem;
+    border-radius: 12px;
   }
 
-  .header-right {
-    align-items: stretch;
+  .header-brand {
+    justify-content: space-between;
   }
 
-  .clock-card {
-    text-align: left;
-  }
-
-  .clock-header {
-    justify-content: flex-start;
-  }
-
-  .status-summary-bar {
-    justify-content: flex-start;
+  .header-clock-strip {
+    justify-content: space-between;
+    padding: 0.35rem 0.65rem;
   }
 
   .timeline-left-column {
@@ -1176,12 +1129,8 @@ body {
     padding: 0.65rem;
   }
 
-  .app-header {
-    padding: 1rem;
-  }
-
-  .header-title {
-    font-size: 1.3rem;
+  .header-clock-date {
+    display: none;
   }
 
   .timeline-left-column {
