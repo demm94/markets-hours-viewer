@@ -28,7 +28,11 @@ export const MarketCards: React.FC<MarketCardsProps> = ({ markets, evaluations }
         }
 
         return (
-          <div key={market.id} className={`market-card ${statusClass}`}>
+          <div 
+            key={market.id} 
+            className={`market-card ${statusClass}`}
+            title={`${market.name} (${market.code}) - ${statusText} - ${ev?.localTimeFormatted ?? '--:--'}`}
+          >
             <div className="market-card-top">
               <div className="market-card-flag-group">
                 <span className="market-flag">{market.flag}</span>
@@ -39,7 +43,7 @@ export const MarketCards: React.FC<MarketCardsProps> = ({ markets, evaluations }
               </div>
               <span className={`status-badge ${statusClass}`}>
                 <span className="status-dot" />
-                {statusText}
+                <span className="status-text">{statusText}</span>
               </span>
             </div>
 
