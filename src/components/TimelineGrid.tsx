@@ -235,25 +235,27 @@ export const TimelineGrid: React.FC<TimelineGridProps> = ({
             className="now-indicator-line"
             style={{ left: `${nowPercent}%` }}
           >
-            <div className="now-indicator-badge">
+            <div
+              className="now-indicator-badge"
+              style={{
+                transform:
+                  nowPercent < 4
+                    ? 'translate(6px, 0)'
+                    : nowPercent > 96
+                    ? 'translate(calc(-100% - 6px), 0)'
+                    : 'translateX(-50%)'
+              }}
+            >
               <span className="now-pulse" />
-              <span>AHORA</span>
-            </div>
-          </div>
-
-          {/* Interactive Scrubber Line */}
-          <div
-            className={`scrubber-crosshair-line ${isHovering ? 'scrubber-active' : ''}`}
-            style={{ left: `${scrubberPercent}%` }}
-          >
-            <div className="scrubber-badge">
-              <span className="scrubber-badge-text">
-                🇨🇱 {formatMinutes(scrubberMinutes)}
+              <span>
+                {isHovering && Math.abs(scrubberMinutes - currentMinutes) > 2
+                  ? 'AHORA'
+                  : `AHORA 🇨🇱 ${formatMinutes(currentMinutes)}`}
               </span>
             </div>
 
-            {/* When left column is collapsed, show each country's local time along the vertical line */}
-            {isColumnCollapsed && (
+            {/* When left column is collapsed and idle, show current country times on Now line */}
+            {isColumnCollapsed && !(isHovering && Math.abs(scrubberMinutes - currentMinutes) > 2) && (
               <div className="scrubber-row-times-overlay">
                 {allMarkets.map((market, idx) => {
                   const isChile = market.id === 'chile';
@@ -268,9 +270,9 @@ export const TimelineGrid: React.FC<TimelineGridProps> = ({
 
                   const topPx = 40 + idx * 54 + 27;
                   const edgeTransform =
-                    scrubberPercent < 4
+                    nowPercent < 4
                       ? 'translate(6px, -50%)'
-                      : scrubberPercent > 96
+                      : nowPercent > 96
                       ? 'translate(calc(-100% - 6px), -50%)'
                       : 'translate(-50%, -50%)';
 
@@ -294,6 +296,72 @@ export const TimelineGrid: React.FC<TimelineGridProps> = ({
               </div>
             )}
           </div>
+
+          {/* Interactive Scrubber Line (rendered when user actively scrubs to a different time) */}
+          {isHovering && Math.abs(scrubberMinutes - currentMinutes) > 2 && (
+            <div
+              className="scrubber-crosshair-line scrubber-active"
+              style={{ left: `${scrubberPercent}%` }}
+            >
+              <div
+                className="scrubber-badge"
+                style={{
+                  transform:
+                    scrubberPercent < 4
+                      ? 'translate(6px, 0)'
+                      : scrubberPercent > 96
+                      ? 'translate(calc(-100% - 6px), 0)'
+                      : 'translateX(-50%)'
+                }}
+              >
+                <span className="scrubber-badge-text">
+                  🇨🇱 {formatMinutes(scrubberMinutes)}
+                </span>
+              </div>
+
+              {/* When left column is collapsed and scrubbing, show projected country times on scrubber line */}
+              {isColumnCollapsed && (
+                <div className="scrubber-row-times-overlay">
+                  {allMarkets.map((market, idx) => {
+                    const isChile = market.id === 'chile';
+                    const ev = isChile
+                      ? chileScrubberEvaluation
+                      : (scrubberEvaluations[market.id] ?? {
+                          marketId: market.id,
+                          status: 'closed',
+                          localTimeFormatted: '--:--',
+                          localDateFormatted: ''
+                        });
+
+                    const topPx = 40 + idx * 54 + 27;
+                    const edgeTransform =
+                      scrubberPercent < 4
+                        ? 'translate(6px, -50%)'
+                        : scrubberPercent > 96
+                        ? 'translate(calc(-100% - 6px), -50%)'
+                        : 'translate(-50%, -50%)';
+
+                    const statusClass = isChile ? 'status-reference' : `status-${ev.status}`;
+
+                    return (
+                      <div
+                        key={market.id}
+                        className={`scrubber-row-pill ${statusClass}`}
+                        style={{
+                          top: `${topPx}px`,
+                          transform: edgeTransform
+                        }}
+                        title={`${market.name}: ${ev.localTimeFormatted}`}
+                      >
+                        <span className="scrubber-row-flag">{market.flag}</span>
+                        <span className="scrubber-row-time">{ev.localTimeFormatted}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
