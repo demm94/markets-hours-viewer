@@ -23,8 +23,8 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="app-header">
       <div className="header-brand">
-        <img src="/favicon.svg" alt="Markets View Logo" className="header-logo" />
-        <span className="header-app-name">Markets View</span>
+        <img src="/favicon.svg" alt="Markets View Logo" className="header-logo" width="24" height="24" />
+        <h1 className="header-app-name">Markets View</h1>
         <div className="header-open-badge">
           <Activity size={12} className="animate-pulse text-emerald-400" />
           <span>
