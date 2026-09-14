@@ -148,22 +148,22 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
   }, []);
 
   return (
-    <div className="timeline-section">
-      <div className="timeline-header-bar">
-        <h2 className="timeline-title">Línea de Tiempo 24 Horas (Hora de Chile)</h2>
-        <div className="timeline-header-actions">
+    <div className="flex flex-col gap-2.5">
+      <div className="flex justify-between items-center flex-wrap gap-2">
+        <h2 className="text-[clamp(0.85rem,3.2vw,1.05rem)] font-bold text-slate-100 tracking-tight">Línea de Tiempo 24 Horas (Hora de Chile)</h2>
+        <div className="flex items-center gap-3">
           <motion.button
             type="button"
             onClick={toggleColumn}
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.95 }}
-            className="column-toggle-pill"
+            className="inline-flex items-center gap-1.5 bg-slate-900/80 border border-sky-400/30 text-sky-400 rounded-lg px-2.5 py-1.5 font-mono text-xs font-semibold cursor-pointer shadow-[0_0_10px_rgba(56,189,248,0.12)] min-h-[36px]"
             title={isColumnCollapsed ? 'Expandir nombres y detalles de mercados' : 'Colapsar a solo banderas para más espacio'}
           >
             {isColumnCollapsed ? <PanelLeftOpen size={13} /> : <PanelLeftClose size={13} />}
             <span>{isColumnCollapsed ? 'Ver mercados' : 'Colapsar mercados'}</span>
           </motion.button>
-          <span className="timeline-hint">
+          <span className="font-mono text-xs font-semibold text-sky-400 bg-sky-400/10 px-2.5 py-1 rounded-lg border border-sky-400/25 shadow-[0_0_12px_rgba(56,189,248,0.12)] hidden md:inline">
             Pasa el cursor o desliza sobre la cuadrícula para sincronizar horarios
           </span>
         </div>
@@ -450,9 +450,9 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
       </div>
 
       {/* Horizontal Viewport Navigator Slider */}
-      <div className="timeline-slider-bar">
-        <span className="slider-edge-label">00:00</span>
-        <div className="slider-track-container">
+      <div className="timeline-slider-bar flex items-center gap-2.5 bg-slate-950/95 backdrop-blur-xl border border-sky-400/20 rounded-xl px-3 py-2 mt-2.5 shadow-[inset_0_1px_3px_rgba(0,0,0,0.5),0_8px_24px_-6px_rgba(0,0,0,0.7)] min-h-[52px]">
+        <span className="font-mono text-xs font-bold text-slate-400 tabular-nums select-none">00:00</span>
+        <div className="flex-1 flex items-center relative min-h-[44px]">
           <input
             type="range"
             min="0"
@@ -464,14 +464,14 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
             aria-label="Deslizar horizontalmente por las 24 horas"
           />
         </div>
-        <span className="slider-edge-label">24:00</span>
+        <span className="font-mono text-xs font-bold text-slate-400 tabular-nums select-none">24:00</span>
 
         <motion.button
           type="button"
           onClick={scrollToNow}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.94 }}
-          className="slider-now-btn"
+          className="inline-flex items-center justify-center gap-1.5 bg-gradient-to-br from-rose-600/20 to-rose-600/10 text-rose-300 border border-rose-500/45 rounded-lg px-3.5 py-2 min-h-[44px] min-w-[44px] font-mono text-xs font-bold cursor-pointer whitespace-nowrap shadow-[0_0_12px_rgba(225,29,72,0.2)] select-none hover:bg-rose-600/30 hover:border-rose-500/65 hover:text-white transition-all"
           title="Centrar vista en la hora actual"
           aria-label="Centrar en hora actual"
         >
@@ -481,25 +481,25 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
       </div>
 
       {/* Legend */}
-      <div className="timeline-legend">
-        <div className="legend-item">
-          <span className="legend-box legend-open" />
+      <div className="flex flex-wrap items-center justify-start md:justify-center gap-x-5 gap-y-2.5 border-t border-white/10 pt-4 text-xs font-medium text-slate-300">
+        <div className="flex items-center gap-2">
+          <span className="w-3.5 h-2.5 rounded-sm bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
           <span>Mercado Abierto</span>
         </div>
-        <div className="legend-item">
-          <span className="legend-box legend-lunch" />
+        <div className="flex items-center gap-2">
+          <span className="w-3.5 h-2.5 rounded-sm bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]" />
           <span>Almuerzo / Pre-apertura</span>
         </div>
-        <div className="legend-item">
-          <span className="legend-box legend-closed" />
+        <div className="flex items-center gap-2">
+          <span className="w-3.5 h-2.5 rounded-sm bg-[#151d2f] border border-slate-600" />
           <span>Cerrado</span>
         </div>
-        <div className="legend-item">
-          <span className="legend-line legend-now" />
+        <div className="flex items-center gap-2">
+          <span className="w-3.5 h-[2.5px] rounded-[1px] bg-rose-600 shadow-[0_0_8px_rgba(244,63,94,0.6)]" />
           <span>Hora actual (Chile)</span>
         </div>
-        <div className="legend-item">
-          <span className="legend-line legend-cursor" />
+        <div className="flex items-center gap-2">
+          <span className="w-3.5 h-[2.5px] rounded-[1px] bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.6)]" />
           <span>Cursor interactivo</span>
         </div>
       </div>

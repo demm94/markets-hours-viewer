@@ -89,21 +89,21 @@ export const App: React.FC = () => {
     <div className="app-layout">
       {/* Native-style Pull to Refresh indicator */}
       <div
-        className={`ptr-container ${isRefreshing ? 'ptr-refreshing' : ''}`}
+        className="fixed top-3 left-0 right-0 flex justify-center items-center z-[1000] pointer-events-none transition-opacity duration-200"
         style={{
           transform: `translateY(${Math.max(0, pullDistance - 45)}px)`,
           opacity: pullDistance > 10 ? Math.min((pullDistance - 10) / 40, 1) : 0
         }}
       >
-        <div className="ptr-pill">
+        <div className="inline-flex items-center gap-2 bg-slate-900/95 backdrop-blur-xl border border-sky-400/40 shadow-[0_8px_24px_-4px_rgba(0,0,0,0.8),0_0_16px_rgba(56,189,248,0.25)] px-3.5 py-1.5 rounded-full text-white font-mono text-xs font-bold">
           <RotateCw
             size={14}
-            className={`ptr-icon ${isRefreshing ? 'animate-spin' : ''}`}
+            className={`text-sky-400 transition-transform duration-75 ${isRefreshing ? 'animate-spin !text-emerald-400' : ''}`}
             style={{
               transform: isRefreshing ? undefined : `rotate(${pullDistance * 5}deg)`
             }}
           />
-          <span className="ptr-text">
+          <span className="tracking-wide">
             {isRefreshing
               ? 'Actualizando...'
               : isTriggered
@@ -128,7 +128,7 @@ export const App: React.FC = () => {
           totalMarketsCount={MARKETS.length}
         />
 
-        <main className="main-content">
+        <main className="flex flex-col gap-6 md:gap-8">
           <MarketCards markets={MARKETS} evaluations={evaluationsNow} />
 
           <TimelineGrid
@@ -148,12 +148,12 @@ export const App: React.FC = () => {
           />
         </main>
 
-        <footer className="app-footer">
-          <div className="footer-content">
-            <div className="footer-note">
-              <strong>Zonas Horarias Dinámicas IANA:</strong> Cálculos recalculados en vivo para evitar offsets estáticos. Chile se encuentra en horario de verano (UTC-3) hasta abril de 2027.
+        <footer className="border-t border-white/10 pt-6 pb-4">
+          <div className="flex justify-between items-center flex-wrap gap-3.5 text-xs text-slate-400">
+            <div className="max-w-2xl leading-relaxed">
+              <strong className="text-slate-200">Zonas Horarias Dinámicas IANA:</strong> Cálculos recalculados en vivo para evitar offsets estáticos. Chile se encuentra en horario de verano (UTC-3) hasta abril de 2027.
             </div>
-            <div className="footer-meta">
+            <div className="font-mono font-semibold text-slate-300">
               PWA instalable · Base de datos IANA v2026 · {CHILE_CONFIG.country}
             </div>
           </div>
