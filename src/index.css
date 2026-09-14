@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 /* Typography: JetBrains Mono (latin) */
 @font-face {
   font-family: 'JetBrains Mono';
