@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { DateTime } from 'luxon';
 import { Activity } from 'lucide-react';
+import { Badge } from './ui/badge';
 import { getSantiagoOffsetDescription } from '../core/timezone';
 
 interface HeaderProps {
@@ -37,12 +38,13 @@ export const Header: React.FC<HeaderProps> = React.memo(({
           initial={{ scale: 0.92 }}
           animate={{ scale: 1 }}
           transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-          className="inline-flex items-center gap-1.5 font-mono text-[clamp(0.68rem,2.8vw,0.72rem)] font-semibold text-emerald-100 bg-emerald-500/15 border border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.12)] px-2 py-1 rounded-md whitespace-nowrap"
         >
-          <Activity size={12} className="animate-pulse text-emerald-400" />
-          <span>
-            <strong className="text-emerald-400 font-bold">{openMarketsCount}</strong>/{totalMarketsCount} abiertos
-          </span>
+          <Badge variant="open" showDot={false} className="gap-1.5 px-2 py-1 text-[clamp(0.68rem,2.8vw,0.72rem)]">
+            <Activity size={12} className="animate-pulse text-emerald-400" />
+            <span>
+              <strong className="text-emerald-300 font-bold">{openMarketsCount}</strong>/{totalMarketsCount} abiertos
+            </span>
+          </Badge>
         </motion.div>
       </div>
 
