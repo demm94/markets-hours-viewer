@@ -1,8 +1,15 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { MarketConfig, MarketEvaluation, TimelineSegment } from '../core/types';
 import { CHILE_CONFIG } from '../core/markets';
 import { formatMinutes } from '../core/timezone';
 import { ChevronLeft, ChevronRight, PanelLeftClose, PanelLeftOpen, Target } from 'lucide-react';
+
+const HOURS = Array.from({ length: 13 }, (_, i) => i * 2); // 0, 2, 4, ... 24
+
+const CHILE_MARKET: MarketConfig = {
+  ...CHILE_CONFIG,
+  sessions: []
+};
 
 interface TimelineGridProps {
   markets: MarketConfig[];
@@ -20,7 +27,7 @@ interface TimelineGridProps {
   onPointerLeave: () => void;
 }
 
-export const TimelineGrid: React.FC<TimelineGridProps> = ({
+export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
   markets,
   marketSegments,
   scrubberEvaluations,
@@ -38,7 +45,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = ({
   const tableWrapperRef = useRef<HTMLDivElement | null>(null);
   const [scrollRatio, setScrollRatio] = useState<number>(0);
 
-  const hours = Array.from({ length: 13 }, (_, i) => i * 2); // 0, 2, 4, ... 24
+  const hours = HOURS;
   const scrubberPercent = (scrubberMinutes / 1440) * 100;
   const nowPercent = (currentMinutes / 1440) * 100;
 
@@ -50,7 +57,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = ({
     return false;
   });
 
-  const toggleColumn = () => setIsColumnCollapsed((prev) => !prev);
+  const toggleColumn = useCallback(() => setIsColumnCollapsed((prev) => !prev), []);
 
   // Synchronize range slider when user scrolls table natively
   const handleTableScroll = useCallback(() => {
@@ -63,7 +70,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = ({
   }, []);
 
   // Synchronize table position when user drags slider
-  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSliderChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newRatio = parseFloat(e.target.value);
     setScrollRatio(newRatio);
     if (tableWrapperRef.current) {
@@ -71,7 +78,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = ({
       const maxScroll = scrollWidth - clientWidth;
       tableWrapperRef.current.scrollLeft = newRatio * maxScroll;
     }
-  };
+  }, []);
 
   // Center timeline viewport on the red "AHORA" indicator line
   const scrollToNow = useCallback(() => {
@@ -112,14 +119,9 @@ export const TimelineGrid: React.FC<TimelineGridProps> = ({
     };
   }, [handleTableScroll, scrollToNow]);
 
-  const chileMarket: MarketConfig = {
-    ...CHILE_CONFIG,
-    sessions: []
-  };
+  const allMarkets = useMemo(() => [CHILE_MARKET, ...markets], [markets]);
 
-  const allMarkets = [chileMarket, ...markets];
-
-  const getStatusBadge = (marketId: string, evaluation: MarketEvaluation) => {
+  const getStatusBadge = useCallback((marketId: string, evaluation: MarketEvaluation) => {
     if (marketId === 'chile') {
       return <span className="status-badge-compact status-reference">Referencia</span>;
     }
@@ -133,7 +135,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = ({
       default:
         return <span className="status-badge-compact status-closed">Cerrado</span>;
     }
-  };
+  }, []);
 
   return (
     <div className="timeline-section">
@@ -486,4 +488,6 @@ export const TimelineGrid: React.FC<TimelineGridProps> = ({
       </div>
     </div>
   );
-};
+});
+
+TimelineGrid.displayName = 'TimelineGrid';

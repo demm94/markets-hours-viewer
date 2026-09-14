@@ -18,10 +18,12 @@ import { RotateCw } from 'lucide-react';
 export const App: React.FC = () => {
   const { now, currentMinutes, timeFormatted, dateFormatted } = useCurrentTime();
 
+  const handleRefresh = React.useCallback(() => {
+    window.location.reload();
+  }, []);
+
   const { pullDistance, isRefreshing, isTriggered } = usePullToRefresh({
-    onRefresh: () => {
-      window.location.reload();
-    }
+    onRefresh: handleRefresh
   });
 
   const {
@@ -76,9 +78,10 @@ export const App: React.FC = () => {
     };
   }, [scrubberMinutes, scrubberInstant]);
 
-  const openMarketsCount = Object.values(evaluationsNow).filter(
-    (ev) => ev.status === 'open'
-  ).length;
+  const openMarketsCount = useMemo(
+    () => Object.values(evaluationsNow).filter((ev) => ev.status === 'open').length,
+    [evaluationsNow]
+  );
 
   const isScrubbing = isHovering || isDragging || Math.abs(scrubberMinutes - currentMinutes) > 2;
 

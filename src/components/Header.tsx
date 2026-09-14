@@ -11,7 +11,7 @@ interface HeaderProps {
   totalMarketsCount: number;
 }
 
-export const Header: React.FC<HeaderProps> = ({
+export const Header: React.FC<HeaderProps> = React.memo(({
   now,
   timeFormatted,
   dateFormatted,
@@ -45,4 +45,6 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
     </header>
   );
-};
+});
+
+Header.displayName = 'Header';

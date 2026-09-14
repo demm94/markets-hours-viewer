@@ -6,7 +6,7 @@ interface MarketCardsProps {
   evaluations: Record<string, MarketEvaluation>;
 }
 
-export const MarketCards: React.FC<MarketCardsProps> = ({ markets, evaluations }) => {
+export const MarketCards: React.FC<MarketCardsProps> = React.memo(({ markets, evaluations }) => {
   return (
     <div className="market-cards-grid">
       {markets.map((market) => {
@@ -61,4 +61,6 @@ export const MarketCards: React.FC<MarketCardsProps> = ({ markets, evaluations }
       })}
     </div>
   );
-};
+});
+
+MarketCards.displayName = 'MarketCards';
