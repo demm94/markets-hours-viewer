@@ -1,10 +1,6 @@
-# timeline-visualizer Specification
+# Delta for timeline-visualizer
 
-## Purpose
-
-Defines the presentation, synchronization, and interaction behavior for the stacked 24-hour market trading timeline visualizer, including the crosshair scrubber and live real-time marker.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Stacked 24-Hour Timeline Grid Presentation
 
@@ -40,17 +36,3 @@ The visualizer MUST render a synchronized vertical scrubber line traversing all 
 - WHEN user places finger on the timeline grid to drag the scrubber line
 - THEN `touch-action` MUST prevent accidental browser pull-to-refresh or vertical page jump during horizontal dragging
 - AND lifting finger MUST finalize scrubber state cleanly without sticking or ghost pointer capture
-### Requirement: Real-Time "Now" Indicator
-
-The visualizer MUST display a persistent indicator marking the current real-time minute on the Chilean axis.
-
-#### Scenario: Live Position Rendering
-- GIVEN current time is 11:15 in `America/Santiago`
-- WHEN the timeline is displayed
-- THEN a distinct vertical line (accent/vibrant, dashed or dotted) MUST be placed exactly at 11:15
-- AND each market row badge MUST display whether the market is currently open at this real-time moment
-
-#### Scenario: Automatic Position Increment
-- GIVEN the application remains open
-- WHEN one minute elapses
-- THEN the "Now" indicator position MUST automatically update to the new minute without requiring a manual page refresh

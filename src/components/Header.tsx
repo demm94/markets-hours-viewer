@@ -24,8 +24,10 @@ export const Header: React.FC<HeaderProps> = React.memo(({
   return (
     <header className="app-header">
       <div className="header-brand">
-        <img src="/favicon.svg" alt="Markets View Logo" className="header-logo" width="24" height="24" />
-        <h1 className="header-app-name">Markets View</h1>
+        <div className="header-brand-left">
+          <img src="/favicon.svg" alt="Markets View Logo" className="header-logo" width="24" height="24" />
+          <h1 className="header-app-name">Markets View</h1>
+        </div>
         <motion.div
           key={openMarketsCount}
           initial={{ scale: 0.92 }}

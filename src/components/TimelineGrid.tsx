@@ -475,7 +475,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
           title="Centrar vista en la hora actual"
           aria-label="Centrar en hora actual"
         >
-          <Target size={13} />
+          <Target size={15} />
           <span>Ahora</span>
         </motion.button>
       </div>

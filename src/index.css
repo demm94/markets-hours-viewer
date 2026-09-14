@@ -76,6 +76,11 @@
   --color-scrubber: #38bdf8;
   --color-scrubber-glow: rgba(56, 189, 248, 0.75);
 
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
@@ -146,6 +151,7 @@ body {
 /* Base Layout & Ambient Grid */
 .app-layout {
   min-height: 100vh;
+  min-height: 100dvh;
   background-color: var(--bg-main);
   background-image: 
     radial-gradient(ellipse 90% 50% at 50% -15%, rgba(37, 99, 235, 0.18), transparent 70%),
@@ -154,33 +160,38 @@ body {
     linear-gradient(to right, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
   background-size: 100% 100%, 100% 100%, 100% 100%, 48px 48px, 48px 48px;
-  padding: clamp(0.75rem, 2vw, 1.75rem);
+  padding-top: max(0.6rem, var(--safe-top));
+  padding-bottom: max(0.85rem, var(--safe-bottom));
+  padding-left: max(0.6rem, var(--safe-left));
+  padding-right: max(0.6rem, var(--safe-right));
+  overflow-x: hidden;
 }
 
 .app-container {
   max-width: 1320px;
+  width: 100%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: clamp(1rem, 2.5vw, 1.75rem);
+  gap: clamp(0.85rem, 2.2vw, 1.75rem);
+  overflow-x: hidden;
 }
 
-/* Compact Terminal Top Bar */
+/* Mobile-First Terminal Top Bar */
 .app-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(10, 15, 28, 0.9) 100%);
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.55rem;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(10, 15, 28, 0.95) 100%);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--border-subtle);
   border-radius: 14px;
-  padding: 0.55rem 1.15rem;
+  padding: 0.65rem 0.85rem;
   box-shadow: 
     inset 0 1px 0 0 rgba(255, 255, 255, 0.1),
     0 10px 24px -8px rgba(0, 0, 0, 0.6);
-  min-height: 52px;
   position: relative;
   overflow: hidden;
 }
@@ -199,7 +210,14 @@ body {
 .header-brand {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.header-brand-left {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
 }
 
 .header-logo {
@@ -210,7 +228,7 @@ body {
 }
 
 .header-app-name {
-  font-size: 1.05rem;
+  font-size: clamp(0.95rem, 3.8vw, 1.15rem);
   font-weight: 800;
   letter-spacing: -0.02em;
   background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
@@ -224,13 +242,13 @@ body {
   align-items: center;
   gap: 0.35rem;
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: clamp(0.68rem, 2.8vw, 0.72rem);
   font-weight: 600;
   color: #ecfdf5;
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.16) 0%, rgba(16, 185, 129, 0.05) 100%);
   border: 1px solid rgba(16, 185, 129, 0.3);
   box-shadow: 0 0 10px rgba(16, 185, 129, 0.12);
-  padding: 0.2rem 0.55rem;
+  padding: 0.22rem 0.55rem;
   border-radius: 6px;
   white-space: nowrap;
 }
@@ -242,11 +260,13 @@ body {
 .header-clock-strip {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.5rem;
   background: rgba(4, 7, 15, 0.65);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 8px;
-  padding: 0.3rem 0.75rem;
+  padding: 0.35rem 0.65rem;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
@@ -289,7 +309,7 @@ body {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1, "zero" 1;
-  font-size: 1.05rem;
+  font-size: clamp(0.92rem, 3.4vw, 1.05rem);
   font-weight: 800;
   color: #ffffff;
   letter-spacing: -0.02em;
@@ -298,18 +318,18 @@ body {
 
 .header-offset-chip {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: clamp(0.62rem, 2.4vw, 0.68rem);
   font-weight: 600;
   color: #38bdf8;
   background: rgba(56, 189, 248, 0.12);
   border: 1px solid rgba(56, 189, 248, 0.25);
-  padding: 0.1rem 0.4rem;
+  padding: 0.12rem 0.4rem;
   border-radius: 4px;
   white-space: nowrap;
 }
 
 .header-clock-date {
-  font-size: 0.72rem;
+  font-size: clamp(0.66rem, 2.4vw, 0.72rem);
   font-weight: 500;
   color: var(--text-muted);
   text-transform: capitalize;
@@ -323,28 +343,42 @@ body {
   gap: clamp(1.25rem, 2.5vw, 2rem);
 }
 
-/* Market Cards Grid */
+/* Market Cards Container: Mobile Snap-Carousel by Default */
 .market-cards-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
-  gap: 0.95rem;
+  display: flex;
+  flex-direction: row;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  gap: 0.75rem;
+  padding: 0.25rem 0.25rem 0.6rem 0.25rem;
+  margin: 0 -0.25rem;
   min-height: 104px;
 }
 
+.market-cards-grid::-webkit-scrollbar {
+  display: none;
+}
+
 .market-card {
-  background: linear-gradient(160deg, rgba(15, 23, 42, 0.72) 0%, rgba(9, 14, 24, 0.82) 100%);
+  flex: 0 0 clamp(210px, 64vw, 270px);
+  scroll-snap-align: start;
+  scroll-snap-stop: normal;
+  background: linear-gradient(160deg, rgba(15, 23, 42, 0.75) 0%, rgba(9, 14, 24, 0.88) 100%);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-subtle);
   border-radius: 14px;
-  padding: 0.95rem;
+  padding: 0.85rem 0.95rem;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.55rem;
   box-shadow: 
     inset 0 1px 0 0 rgba(255, 255, 255, 0.06),
-    0 8px 20px -4px rgba(0, 0, 0, 0.55);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    0 6px 18px -4px rgba(0, 0, 0, 0.55);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
   position: relative;
   overflow: hidden;
 }
@@ -577,6 +611,8 @@ body {
 .timeline-table-wrapper {
   display: flex;
   overflow-x: auto;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   background: rgba(6, 9, 17, 0.96);
@@ -1110,17 +1146,22 @@ body {
 }
 
 /* Legend */
-/* Horizontal Timeline Viewport Navigator Slider */
+/* Horizontal Timeline Viewport Navigator Slider (Thumb Zone) */
 .timeline-slider-bar {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  background: rgba(8, 12, 22, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
-  padding: 0.4rem 0.75rem;
+  gap: 0.65rem;
+  background: rgba(8, 12, 22, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 12px;
+  padding: 0.45rem 0.75rem;
   margin-top: 0.65rem;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+  box-shadow: 
+    inset 0 1px 3px rgba(0, 0, 0, 0.5),
+    0 8px 24px -6px rgba(0, 0, 0, 0.7);
+  min-height: 52px;
 }
 
 .slider-edge-label {
@@ -1138,13 +1179,14 @@ body {
   display: flex;
   align-items: center;
   position: relative;
+  min-height: 44px;
 }
 
 .timeline-range-slider {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 24px;
+  height: 36px;
   background: transparent;
   cursor: pointer;
   margin: 0;
@@ -1158,7 +1200,7 @@ body {
 /* WebKit Track */
 .timeline-range-slider::-webkit-slider-runnable-track {
   width: 100%;
-  height: 6px;
+  height: 8px;
   background: rgba(15, 23, 42, 0.95);
   border-radius: 9999px;
   border: 1px solid rgba(56, 189, 248, 0.25);
@@ -1169,16 +1211,16 @@ body {
 .timeline-range-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 38px;
-  height: 18px;
+  width: 44px;
+  height: 24px;
   border-radius: 9999px;
   background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   box-shadow: 
-    0 0 12px rgba(56, 189, 248, 0.65),
-    0 2px 4px rgba(0, 0, 0, 0.4);
+    0 0 14px rgba(56, 189, 248, 0.75),
+    0 2px 5px rgba(0, 0, 0, 0.5);
   cursor: grab;
-  margin-top: -6px;
+  margin-top: -8px;
   transition: transform 0.15s ease, background 0.15s ease;
 }
 
@@ -1186,13 +1228,13 @@ body {
   cursor: grabbing;
   transform: scale(1.08);
   background: linear-gradient(180deg, #7dd3fc 0%, #0ea5e9 100%);
-  box-shadow: 0 0 16px rgba(56, 189, 248, 0.9);
+  box-shadow: 0 0 18px rgba(56, 189, 248, 0.95);
 }
 
 /* Firefox Track */
 .timeline-range-slider::-moz-range-track {
   width: 100%;
-  height: 6px;
+  height: 8px;
   background: rgba(15, 23, 42, 0.95);
   border-radius: 9999px;
   border: 1px solid rgba(56, 189, 248, 0.25);
@@ -1200,38 +1242,42 @@ body {
 
 /* Firefox Thumb */
 .timeline-range-slider::-moz-range-thumb {
-  width: 38px;
-  height: 18px;
+  width: 44px;
+  height: 24px;
   border-radius: 9999px;
   background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 0 12px rgba(56, 189, 248, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.75);
   cursor: grab;
 }
 
 .slider-now-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  background: rgba(225, 29, 72, 0.16);
+  justify-content: center;
+  gap: 0.4rem;
+  background: linear-gradient(135deg, rgba(225, 29, 72, 0.2) 0%, rgba(225, 29, 72, 0.1) 100%);
   color: #fda4af;
-  border: 1px solid rgba(225, 29, 72, 0.35);
-  border-radius: 6px;
-  padding: 0.22rem 0.55rem;
+  border: 1px solid rgba(225, 29, 72, 0.45);
+  border-radius: 8px;
+  padding: 0.45rem 0.85rem;
+  min-height: 44px;
+  min-width: 44px;
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.2s ease;
   user-select: none;
+  box-shadow: 0 0 12px rgba(225, 29, 72, 0.2);
 }
 
 .slider-now-btn:hover {
-  background: rgba(225, 29, 72, 0.3);
-  border-color: rgba(225, 29, 72, 0.6);
+  background: rgba(225, 29, 72, 0.32);
+  border-color: rgba(225, 29, 72, 0.65);
   color: #ffffff;
-  box-shadow: 0 0 10px rgba(225, 29, 72, 0.35);
+  box-shadow: 0 0 16px rgba(225, 29, 72, 0.45);
 }
 
 .timeline-legend {
@@ -1318,178 +1364,61 @@ body {
   color: var(--text-secondary);
 }
 
-/* Responsive Breakpoints */
-/* Responsive Breakpoints */
-@media (max-width: 768px) {
+/* Progressive Enhancement: Tablet & Desktop */
+@media (min-width: 768px) {
+  .app-layout {
+    padding: clamp(0.75rem, 2vw, 1.75rem);
+  }
+
   .app-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.6rem;
-    padding: 0.6rem 0.85rem;
-    border-radius: 12px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.55rem 1.15rem;
+    min-height: 52px;
   }
 
   .header-brand {
-    justify-content: space-between;
+    width: auto;
   }
 
   .header-clock-strip {
-    justify-content: space-between;
-    padding: 0.35rem 0.65rem;
+    width: auto;
   }
 
-  /* Condensed 5-column single-row ticker on Mobile */
+  .timeline-hint {
+    display: inline;
+  }
+
+  /* Expand Market Cards into 3-column grid on Tablet */
   .market-cards-grid {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-    overflow: hidden;
-    gap: 0.35rem;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    overflow-x: visible;
+    scroll-snap-type: none;
+    gap: 0.85rem;
     padding: 0;
-    min-height: 40px;
+    margin: 0;
   }
 
   .market-card {
-    flex: 1 1 0;
-    min-width: 0;
-    padding: 0.35rem 0.25rem;
-    gap: 0.2rem;
-    border-radius: 8px;
-    border-left-width: 2px;
-    box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.4);
-    align-items: center;
-    text-align: center;
+    flex: initial;
+    width: auto;
   }
 
-  .market-card-top {
-    width: 100%;
-    display: flex;
-    align-items: center;
+  .timeline-legend {
     justify-content: center;
-    gap: 0.25rem;
-  }
-
-  .market-card-flag-group {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-  }
-
-  .market-flag {
-    font-size: 0.95rem;
-    line-height: 1;
-  }
-
-  .market-country,
-  .market-code {
-    display: none;
-  }
-
-  .status-badge {
-    display: inline-flex;
-    padding: 0;
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    gap: 0;
-  }
-
-  .status-badge .status-text {
-    display: none;
-  }
-
-  .status-dot {
-    width: 5px;
-    height: 5px;
-  }
-
-  .market-card-time-row {
-    margin-top: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-  }
-
-  .market-time-label {
-    display: none;
-  }
-
-  .market-time-val {
-    font-size: 0.84rem;
-    font-weight: 800;
-    line-height: 1.1;
-    color: #ffffff;
-    letter-spacing: -0.01em;
-  }
-
-  .market-card-footer {
-    display: none;
-  }
-
-  .timeline-header-actions {
-    display: none;
-  }
-
-  .timeline-left-column {
-    width: 180px;
-    min-width: 180px;
+    gap: clamp(0.85rem, 2vw, 1.75rem);
+    padding-top: 1.15rem;
+    font-size: 0.75rem;
   }
 }
 
-@media (max-width: 480px) {
-  .app-layout {
-    padding: 0.5rem;
-  }
-
-  .header-clock-date {
-    display: none;
-  }
-
+@media (min-width: 1024px) {
+  /* Expand Market Cards into 5-column grid on Desktop */
   .market-cards-grid {
-    gap: 0.25rem;
-  }
-
-  .market-card {
-    padding: 0.3rem 0.15rem;
-    gap: 0.12rem;
-  }
-
-  .market-time-val {
-    font-size: 0.78rem;
-  }
-
-  .timeline-left-column {
-    width: 160px;
-    min-width: 160px;
-  }
-
-  .cell-name {
-    font-size: 0.78rem;
-  }
-
-  .cell-scrubber-time {
-    font-size: 0.78rem;
-  }
-
-  .timeline-slider-bar {
-    gap: 0.45rem;
-    padding: 0.35rem 0.55rem;
-  }
-
-  .timeline-range-slider::-webkit-slider-thumb {
-    width: 32px;
-    height: 16px;
-    margin-top: -5px;
-  }
-
-  .slider-edge-label {
-    font-size: 0.65rem;
-  }
-
-  .slider-now-btn {
-    padding: 0.2rem 0.45rem;
-    font-size: 0.65rem;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.95rem;
   }
 }
 
