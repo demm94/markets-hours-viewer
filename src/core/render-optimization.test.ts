@@ -30,4 +30,10 @@ describe('React memoization & render optimization verification', () => {
     }
     expect(trackRowExists).toBe(false);
   });
+
+  it('verifies framer-motion library is available and exports motion', async () => {
+    const motionModule = await import('framer-motion');
+    expect(motionModule.motion).toBeDefined();
+    expect(typeof motionModule.motion.div).toBe('object');
+  });
 });

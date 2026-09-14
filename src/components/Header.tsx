@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { DateTime } from 'luxon';
 import { Activity } from 'lucide-react';
 import { getSantiagoOffsetDescription } from '../core/timezone';
@@ -25,17 +26,27 @@ export const Header: React.FC<HeaderProps> = React.memo(({
       <div className="header-brand">
         <img src="/favicon.svg" alt="Markets View Logo" className="header-logo" width="24" height="24" />
         <h1 className="header-app-name">Markets View</h1>
-        <div className="header-open-badge">
+        <motion.div
+          key={openMarketsCount}
+          initial={{ scale: 0.92 }}
+          animate={{ scale: 1 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+          className="header-open-badge"
+        >
           <Activity size={12} className="animate-pulse text-emerald-400" />
           <span>
             <strong>{openMarketsCount}</strong>/{totalMarketsCount} abiertos
           </span>
-        </div>
+        </motion.div>
       </div>
 
       <div className="header-clock-strip">
         <div className="header-clock-location">
-          <span className="live-dot" />
+          <motion.span
+            className="live-dot"
+            animate={{ scale: [1, 1.25, 1], opacity: [1, 0.65, 1] }}
+            transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+          />
           <span className="location-name">Santiago</span>
         </div>
 

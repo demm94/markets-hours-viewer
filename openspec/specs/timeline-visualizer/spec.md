@@ -8,7 +8,8 @@ Defines the presentation, synchronization, and interaction behavior for the stac
 
 ### Requirement: Stacked 24-Hour Timeline Grid Presentation
 
-The visualizer MUST render stacked horizontal tracks sharing a normalized 00:00 to 24:00 Chile reference time axis.
+The visualizer MUST render stacked horizontal tracks sharing a normalized 00:00 to 24:00 Chile reference time axis with fluid layout animation transitions when expanding or collapsing the left market identity column.
+(Previously: The visualizer rendered stacked horizontal tracks without explicit layout animation transitions during column toggle.)
 
 #### Scenario: Visual Ordering and Layout
 - GIVEN the visualizer is loaded
@@ -23,6 +24,11 @@ The visualizer MUST render stacked horizontal tracks sharing a normalized 00:00 
 - AND lunch break or pre-market segments MUST display in amber/orange
 - AND closed hours MUST display in dark muted slate
 
+#### Scenario: Animated Column Width Transition
+- GIVEN the timeline table is displayed
+- WHEN the user toggles the left column between collapsed (icons only) and expanded states
+- THEN the column width transition MUST animate smoothly using layout animation without breaking horizontal track alignment
+- AND timeline scrubbing during or after the transition MUST continue to track accurately
 ### Requirement: Synchronized Interactive Scrubber
 
 The visualizer MUST render a synchronized vertical scrubber line traversing all market tracks when the user moves a pointer or performs a touch drag across the timeline, isolating horizontal drag gestures from vertical document scrolling and maintaining high-frequency render isolation without re-rendering unaffected visual subtrees.

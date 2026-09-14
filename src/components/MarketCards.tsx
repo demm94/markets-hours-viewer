@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion, type Variants } from 'framer-motion';
 import { MarketConfig, MarketEvaluation } from '../core/types';
 
 interface MarketCardsProps {
@@ -6,9 +7,38 @@ interface MarketCardsProps {
   evaluations: Record<string, MarketEvaluation>;
 }
 
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05
+    }
+  }
+};
+
+const cardVariants: Variants = {
+  hidden: { opacity: 0, y: 12, scale: 0.98 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      type: 'spring',
+      stiffness: 350,
+      damping: 25
+    }
+  }
+};
+
 export const MarketCards: React.FC<MarketCardsProps> = React.memo(({ markets, evaluations }) => {
   return (
-    <div className="market-cards-grid">
+    <motion.div
+      className="market-cards-grid"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
       {markets.map((market) => {
         const ev = evaluations[market.id];
         const status = ev?.status ?? 'closed';
@@ -28,8 +58,12 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({ markets, ev
         }
 
         return (
-          <div 
-            key={market.id} 
+          <motion.div 
+            key={market.id}
+            variants={cardVariants}
+            whileHover={{ scale: 1.02, transition: { duration: 0.15 } }}
+            whileTap={{ scale: 0.98 }}
+            layout
             className={`market-card ${statusClass}`}
             title={`${market.name} (${market.code}) - ${statusText} - ${ev?.localTimeFormatted ?? '--:--'}`}
           >
@@ -56,10 +90,10 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({ markets, ev
               <span className="market-tz">{market.timezone}</span>
               <span className="market-date">{ev?.localDateFormatted}</span>
             </div>
-          </div>
+          </motion.div>
         );
       })}
-    </div>
+    </motion.div>
   );
 });
 

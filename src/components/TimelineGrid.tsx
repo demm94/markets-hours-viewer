@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { MarketConfig, MarketEvaluation, TimelineSegment } from '../core/types';
 import { CHILE_CONFIG } from '../core/markets';
 import { formatMinutes } from '../core/timezone';
@@ -151,15 +152,17 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
       <div className="timeline-header-bar">
         <h2 className="timeline-title">Línea de Tiempo 24 Horas (Hora de Chile)</h2>
         <div className="timeline-header-actions">
-          <button
+          <motion.button
             type="button"
             onClick={toggleColumn}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.95 }}
             className="column-toggle-pill"
             title={isColumnCollapsed ? 'Expandir nombres y detalles de mercados' : 'Colapsar a solo banderas para más espacio'}
           >
             {isColumnCollapsed ? <PanelLeftOpen size={13} /> : <PanelLeftClose size={13} />}
             <span>{isColumnCollapsed ? 'Ver mercados' : 'Colapsar mercados'}</span>
-          </button>
+          </motion.button>
           <span className="timeline-hint">
             Pasa el cursor o desliza sobre la cuadrícula para sincronizar horarios
           </span>
@@ -172,18 +175,20 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
         onScroll={handleTableScroll}
       >
         {/* Left Frozen Column: Market Identity & Scrubber readout */}
-        <div className={`timeline-left-column ${isColumnCollapsed ? 'column-collapsed' : ''}`}>
+        <motion.div layout className={`timeline-left-column ${isColumnCollapsed ? 'column-collapsed' : ''}`}>
           <div className="timeline-col-header">
             {!isColumnCollapsed && <span>Mercado</span>}
-            <button
+            <motion.button
               type="button"
               onClick={toggleColumn}
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.92 }}
               className="collapse-toggle-icon-btn"
               title={isColumnCollapsed ? 'Expandir columna de mercados' : 'Colapsar a solo banderas'}
               aria-label={isColumnCollapsed ? 'Expandir columna' : 'Colapsar columna'}
             >
               {isColumnCollapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
-            </button>
+            </motion.button>
           </div>
 
           {allMarkets.map((market) => {
@@ -196,7 +201,8 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
             });
 
             return (
-              <div
+              <motion.div
+                layout
                 key={market.id}
                 className={`market-info-cell ${isChile ? 'cell-anchor' : ''} ${isColumnCollapsed ? 'cell-collapsed' : ''}`}
                 title={isColumnCollapsed ? `${market.name} (${market.code}) - ${ev.localTimeFormatted}` : undefined}
@@ -217,10 +223,10 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
                     {getStatusBadge(market.id, ev)}
                   </div>
                 )}
-              </div>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
 
         {/* Right Scrollable/Interactive Column: 24h Bars Grid */}
         <div
@@ -460,16 +466,18 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
         </div>
         <span className="slider-edge-label">24:00</span>
 
-        <button
+        <motion.button
           type="button"
           onClick={scrollToNow}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.94 }}
           className="slider-now-btn"
           title="Centrar vista en la hora actual"
           aria-label="Centrar en hora actual"
         >
           <Target size={13} />
           <span>Ahora</span>
-        </button>
+        </motion.button>
       </div>
 
       {/* Legend */}
