@@ -251,6 +251,48 @@ export const TimelineGrid: React.FC<TimelineGridProps> = ({
                 🇨🇱 {formatMinutes(scrubberMinutes)}
               </span>
             </div>
+
+            {/* When left column is collapsed, show each country's local time along the vertical line */}
+            {isColumnCollapsed && (
+              <div className="scrubber-row-times-overlay">
+                {allMarkets.map((market, idx) => {
+                  const isChile = market.id === 'chile';
+                  const ev = isChile
+                    ? chileScrubberEvaluation
+                    : (scrubberEvaluations[market.id] ?? {
+                        marketId: market.id,
+                        status: 'closed',
+                        localTimeFormatted: '--:--',
+                        localDateFormatted: ''
+                      });
+
+                  const topPx = 40 + idx * 54 + 27;
+                  const edgeTransform =
+                    scrubberPercent < 4
+                      ? 'translate(6px, -50%)'
+                      : scrubberPercent > 96
+                      ? 'translate(calc(-100% - 6px), -50%)'
+                      : 'translate(-50%, -50%)';
+
+                  const statusClass = isChile ? 'status-reference' : `status-${ev.status}`;
+
+                  return (
+                    <div
+                      key={market.id}
+                      className={`scrubber-row-pill ${statusClass}`}
+                      style={{
+                        top: `${topPx}px`,
+                        transform: edgeTransform
+                      }}
+                      title={`${market.name}: ${ev.localTimeFormatted}`}
+                    >
+                      <span className="scrubber-row-flag">{market.flag}</span>
+                      <span className="scrubber-row-time">{ev.localTimeFormatted}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </div>
