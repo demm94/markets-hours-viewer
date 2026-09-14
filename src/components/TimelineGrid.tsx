@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { MarketConfig, MarketEvaluation, TimelineSegment } from '../core/types';
 import { CHILE_CONFIG } from '../core/markets';
 import { formatMinutes } from '../core/timezone';
-import { ChevronLeft, ChevronRight, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { ChevronLeft, ChevronRight, PanelLeftClose, PanelLeftOpen, Target } from 'lucide-react';
 
 interface TimelineGridProps {
   markets: MarketConfig[];
@@ -35,6 +35,9 @@ export const TimelineGrid: React.FC<TimelineGridProps> = ({
   onPointerCancel,
   onPointerLeave
 }) => {
+  const tableWrapperRef = useRef<HTMLDivElement | null>(null);
+  const [scrollRatio, setScrollRatio] = useState<number>(0);
+
   const hours = Array.from({ length: 13 }, (_, i) => i * 2); // 0, 2, 4, ... 24
   const scrubberPercent = (scrubberMinutes / 1440) * 100;
   const nowPercent = (currentMinutes / 1440) * 100;
@@ -48,6 +51,66 @@ export const TimelineGrid: React.FC<TimelineGridProps> = ({
   });
 
   const toggleColumn = () => setIsColumnCollapsed((prev) => !prev);
+
+  // Synchronize range slider when user scrolls table natively
+  const handleTableScroll = useCallback(() => {
+    if (!tableWrapperRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = tableWrapperRef.current;
+    const maxScroll = scrollWidth - clientWidth;
+    if (maxScroll > 0) {
+      setScrollRatio(scrollLeft / maxScroll);
+    }
+  }, []);
+
+  // Synchronize table position when user drags slider
+  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newRatio = parseFloat(e.target.value);
+    setScrollRatio(newRatio);
+    if (tableWrapperRef.current) {
+      const { scrollWidth, clientWidth } = tableWrapperRef.current;
+      const maxScroll = scrollWidth - clientWidth;
+      tableWrapperRef.current.scrollLeft = newRatio * maxScroll;
+    }
+  };
+
+  // Center timeline viewport on the red "AHORA" indicator line
+  const scrollToNow = useCallback(() => {
+    if (!tableWrapperRef.current) return;
+    const { scrollWidth, clientWidth } = tableWrapperRef.current;
+    const maxScroll = scrollWidth - clientWidth;
+    if (maxScroll <= 0) return;
+
+    const leftCol = tableWrapperRef.current.querySelector('.timeline-left-column') as HTMLElement | null;
+    const leftWidth = leftCol?.offsetWidth ?? (isColumnCollapsed ? 52 : 180);
+    const barsWidth = scrollWidth - leftWidth;
+    const nowPx = leftWidth + (nowPercent / 100) * barsWidth;
+
+    const target = Math.max(0, Math.min(maxScroll, nowPx - clientWidth / 2));
+    tableWrapperRef.current.scrollTo({
+      left: target,
+      behavior: 'smooth'
+    });
+  }, [nowPercent, isColumnCollapsed]);
+
+  // Initial center on current time and resize listener
+  useEffect(() => {
+    const update = () => {
+      handleTableScroll();
+    };
+
+    update();
+    window.addEventListener('resize', update);
+
+    const timer = setTimeout(() => {
+      scrollToNow();
+      update();
+    }, 150);
+
+    return () => {
+      window.removeEventListener('resize', update);
+      clearTimeout(timer);
+    };
+  }, [handleTableScroll, scrollToNow]);
 
   const chileMarket: MarketConfig = {
     ...CHILE_CONFIG,
@@ -92,7 +155,11 @@ export const TimelineGrid: React.FC<TimelineGridProps> = ({
         </div>
       </div>
 
-      <div className="timeline-table-wrapper">
+      <div 
+        className="timeline-table-wrapper"
+        ref={tableWrapperRef}
+        onScroll={handleTableScroll}
+      >
         {/* Left Frozen Column: Market Identity & Scrubber readout */}
         <div className={`timeline-left-column ${isColumnCollapsed ? 'column-collapsed' : ''}`}>
           <div className="timeline-col-header">
@@ -363,6 +430,35 @@ export const TimelineGrid: React.FC<TimelineGridProps> = ({
             </div>
           )}
         </div>
+      </div>
+
+      {/* Horizontal Viewport Navigator Slider */}
+      <div className="timeline-slider-bar">
+        <span className="slider-edge-label">00:00</span>
+        <div className="slider-track-container">
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.002"
+            value={scrollRatio}
+            onChange={handleSliderChange}
+            className="timeline-range-slider"
+            aria-label="Deslizar horizontalmente por las 24 horas"
+          />
+        </div>
+        <span className="slider-edge-label">24:00</span>
+
+        <button
+          type="button"
+          onClick={scrollToNow}
+          className="slider-now-btn"
+          title="Centrar vista en la hora actual"
+          aria-label="Centrar en hora actual"
+        >
+          <Target size={13} />
+          <span>Ahora</span>
+        </button>
       </div>
 
       {/* Legend */}
