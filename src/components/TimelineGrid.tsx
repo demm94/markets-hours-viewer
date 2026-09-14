@@ -99,25 +99,34 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
     });
   }, [nowPercent, isColumnCollapsed]);
 
-  // Initial center on current time and resize listener
+  const scrollToNowRef = useRef(scrollToNow);
+  scrollToNowRef.current = scrollToNow;
+
+  const hasInitialCenteredRef = useRef<boolean>(false);
+
+  // Initial center on current time (once) and window resize listener
   useEffect(() => {
-    const update = () => {
+    const handleResize = () => {
       handleTableScroll();
     };
 
-    update();
-    window.addEventListener('resize', update);
+    window.addEventListener('resize', handleResize);
+    handleResize();
 
-    const timer = setTimeout(() => {
-      scrollToNow();
-      update();
-    }, 150);
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    if (!hasInitialCenteredRef.current) {
+      hasInitialCenteredRef.current = true;
+      timer = setTimeout(() => {
+        scrollToNowRef.current();
+        handleTableScroll();
+      }, 150);
+    }
 
     return () => {
-      window.removeEventListener('resize', update);
-      clearTimeout(timer);
+      window.removeEventListener('resize', handleResize);
+      if (timer) clearTimeout(timer);
     };
-  }, [handleTableScroll, scrollToNow]);
+  }, [handleTableScroll]);
 
   const allMarkets = useMemo(() => [CHILE_MARKET, ...markets], [markets]);
 

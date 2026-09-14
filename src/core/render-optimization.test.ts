@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import React from 'react';
 import { Header } from '../components/Header';
 import { MarketCards } from '../components/MarketCards';
 import { TimelineGrid } from '../components/TimelineGrid';
