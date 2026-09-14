@@ -9,12 +9,20 @@ import {
 import { MarketEvaluation } from './core/types';
 import { useCurrentTime } from './hooks/useCurrentTime';
 import { useScrubber } from './hooks/useScrubber';
+import { usePullToRefresh } from './hooks/usePullToRefresh';
 import { Header } from './components/Header';
 import { MarketCards } from './components/MarketCards';
 import { TimelineGrid } from './components/TimelineGrid';
+import { RotateCw } from 'lucide-react';
 
 export const App: React.FC = () => {
   const { now, currentMinutes, timeFormatted, dateFormatted } = useCurrentTime();
+
+  const { pullDistance, isRefreshing, isTriggered } = usePullToRefresh({
+    onRefresh: () => {
+      window.location.reload();
+    }
+  });
 
   const {
     scrubberMinutes,
@@ -76,7 +84,39 @@ export const App: React.FC = () => {
 
   return (
     <div className="app-layout">
-      <div className="app-container">
+      {/* Native-style Pull to Refresh indicator */}
+      <div
+        className={`ptr-container ${isRefreshing ? 'ptr-refreshing' : ''}`}
+        style={{
+          transform: `translateY(${Math.max(0, pullDistance - 45)}px)`,
+          opacity: pullDistance > 10 ? Math.min((pullDistance - 10) / 40, 1) : 0
+        }}
+      >
+        <div className="ptr-pill">
+          <RotateCw
+            size={14}
+            className={`ptr-icon ${isRefreshing ? 'animate-spin' : ''}`}
+            style={{
+              transform: isRefreshing ? undefined : `rotate(${pullDistance * 5}deg)`
+            }}
+          />
+          <span className="ptr-text">
+            {isRefreshing
+              ? 'Actualizando...'
+              : isTriggered
+              ? 'Soltá para actualizar'
+              : 'Deslizá para actualizar'}
+          </span>
+        </div>
+      </div>
+
+      <div
+        className="app-container"
+        style={{
+          transform: pullDistance > 0 ? `translateY(${pullDistance * 0.55}px)` : undefined,
+          transition: pullDistance === 0 ? 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)' : 'none'
+        }}
+      >
         <Header
           now={now}
           timeFormatted={timeFormatted}

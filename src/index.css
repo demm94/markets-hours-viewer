@@ -45,6 +45,52 @@ body {
   letter-spacing: -0.01em;
 }
 
+/* Native Pull to Refresh Indicator */
+.ptr-container {
+  position: fixed;
+  top: 12px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.ptr-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  box-shadow: 
+    0 8px 24px -4px rgba(0, 0, 0, 0.8),
+    0 0 16px rgba(56, 189, 248, 0.25);
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  color: #ffffff;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.ptr-icon {
+  color: #38bdf8;
+  transition: transform 0.08s linear;
+}
+
+.ptr-refreshing .ptr-icon {
+  color: #34d399;
+}
+
+.ptr-text {
+  letter-spacing: 0.02em;
+}
+
 /* Base Layout & Ambient Grid */
 .app-layout {
   min-height: 100vh;
@@ -1096,6 +1142,7 @@ body {
 }
 
 /* Responsive Breakpoints */
+/* Responsive Breakpoints */
 @media (max-width: 768px) {
   .app-header {
     flex-direction: column;
@@ -1114,23 +1161,114 @@ body {
     padding: 0.35rem 0.65rem;
   }
 
+  /* Condensed Horizontal Ticker on Mobile */
+  .market-cards-grid {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 0.5rem;
+    padding: 0.15rem 0.1rem 0.45rem 0.1rem;
+    scrollbar-width: none;
+  }
+
+  .market-cards-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .market-card {
+    flex: 0 0 auto;
+    width: 146px;
+    scroll-snap-align: start;
+    padding: 0.5rem 0.65rem;
+    gap: 0.25rem;
+    border-radius: 10px;
+  }
+
+  .market-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .market-card-flag-group {
+    gap: 0.35rem;
+  }
+
+  .market-flag {
+    font-size: 1.15rem;
+  }
+
+  .market-country {
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
+  .market-code {
+    display: none;
+  }
+
+  .status-badge {
+    padding: 0.1rem 0.35rem;
+    font-size: 0.58rem;
+  }
+
+  .status-dot {
+    width: 4px;
+    height: 4px;
+  }
+
+  .market-card-time-row {
+    margin-top: 0;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+
+  .market-time-label {
+    display: none;
+  }
+
+  .market-time-val {
+    font-size: 1.15rem;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+
+  .market-card-footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.58rem;
+    padding-top: 0.15rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+  }
+
+  .market-tz {
+    display: none;
+  }
+
+  .market-date {
+    font-size: 0.62rem;
+    color: var(--text-muted);
+  }
+
   .timeline-left-column {
     width: 180px;
     min-width: 180px;
-  }
-
-  .market-cards-grid {
-    grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
   }
 }
 
 @media (max-width: 480px) {
   .app-layout {
-    padding: 0.65rem;
+    padding: 0.5rem;
   }
 
   .header-clock-date {
     display: none;
+  }
+
+  .market-card {
+    width: 138px;
+    padding: 0.45rem 0.6rem;
   }
 
   .timeline-left-column {
@@ -1144,22 +1282,5 @@ body {
 
   .cell-scrubber-time {
     font-size: 0.78rem;
-  }
-
-  .market-cards-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.65rem;
-  }
-
-  .market-card {
-    padding: 0.75rem;
-  }
-
-  .market-country {
-    font-size: 0.82rem;
-  }
-
-  .market-time-val {
-    font-size: 1.1rem;
   }
 }
