@@ -37,7 +37,7 @@ const cardVariants: Variants = {
 export const MarketCards: React.FC<MarketCardsProps> = React.memo(({ markets, evaluations }) => {
   return (
     <motion.div
-      className="flex flex-row md:grid md:grid-cols-3 lg:grid-cols-5 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory md:snap-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden gap-3 p-1 md:p-0 min-h-[104px]"
+      className="flex flex-row md:grid md:grid-cols-3 lg:grid-cols-5 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory md:snap-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden gap-4 lg:gap-5 p-1 md:p-0 min-h-[116px]"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
@@ -85,37 +85,37 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({ markets, ev
             whileHover={{ scale: 1.02, transition: { duration: 0.15 } }}
             whileTap={{ scale: 0.98 }}
             layout
-            className="flex-shrink-0 flex-grow-0 basis-[clamp(210px,64vw,270px)] md:basis-auto snap-start"
+            className="flex-shrink-0 flex-grow-0 basis-[clamp(230px,68vw,280px)] md:basis-auto snap-start"
           >
             <Card
               className={cn(
-                "border-l-[3px] rounded-2xl p-3.5 flex flex-col gap-2 transition-colors overflow-hidden h-full",
+                "border-l-[3px] rounded-2xl p-3.5 sm:p-4 flex flex-col gap-3 transition-colors overflow-hidden h-full shadow-lg",
                 cardBorderClass,
                 cardBgClass
               )}
               title={`${market.name} (${market.code}) - ${statusText} - ${ev?.localTimeFormatted ?? '--:--'}`}
             >
-              <div className="flex justify-between items-start">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl leading-none drop-shadow-md">{market.flag}</span>
-                  <div>
-                    <div className="text-sm font-bold text-white tracking-tight">{market.name}</div>
-                    <div className="text-[10px] font-semibold text-slate-400 font-mono">{market.code}</div>
+              <div className="flex justify-between items-start gap-1.5 min-w-0">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-2xl leading-none drop-shadow-md shrink-0">{market.flag}</span>
+                  <div className="min-w-0">
+                    <div className="text-sm font-bold text-white tracking-tight leading-tight truncate">{market.name}</div>
+                    <div className="text-[11px] font-semibold text-slate-400 font-mono mt-0.5">{market.code}</div>
                   </div>
                 </div>
-                <Badge variant={badgeVariant} className="text-[10px] px-2 py-0.5">
+                <Badge variant={badgeVariant} className="text-[9.5px] px-1.5 py-0.5 shrink-0 tracking-normal">
                   {statusText}
                 </Badge>
               </div>
 
-              <div className="flex items-baseline justify-between mt-1 px-2.5 py-1 bg-black/25 rounded-md border border-white/5">
+              <div className="flex items-baseline justify-between mt-1 px-3 py-1.5 bg-black/30 rounded-lg border border-white/5">
                 <span className="text-xs font-medium text-slate-400">Hora local:</span>
                 <span className="font-mono text-base font-extrabold text-white tabular-nums tracking-tight">
                   {ev?.localTimeFormatted ?? '--:--'}
                 </span>
               </div>
 
-              <div className="flex justify-between items-center text-[10px] font-mono text-slate-400 border-t border-white/5 pt-1.5 mt-auto">
+              <div className="flex justify-between items-center text-[11px] font-mono text-slate-400 border-t border-white/5 pt-2 mt-auto">
                 <span>{market.timezone}</span>
                 <span>{ev?.localDateFormatted}</span>
               </div>

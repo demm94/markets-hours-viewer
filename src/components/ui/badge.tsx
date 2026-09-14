@@ -3,7 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../../lib/utils";
 
 const badgeVariants = cva(
-  "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 select-none",
+  "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 select-none whitespace-nowrap",
   {
     variants: {
       variant: {
@@ -14,10 +14,10 @@ const badgeVariants = cva(
         destructive:
           "border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80",
         outline: "text-foreground border border-white/10",
-        open: "border border-emerald-500/40 bg-emerald-500/15 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.2)] font-mono font-bold tracking-wider uppercase",
-        lunch: "border border-amber-500/40 bg-amber-500/15 text-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.2)] font-mono font-bold tracking-wider uppercase",
-        pre: "border border-cyan-500/40 bg-cyan-500/15 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.2)] font-mono font-bold tracking-wider uppercase",
-        closed: "border border-slate-700/40 bg-slate-800/40 text-slate-400 font-mono font-bold tracking-wider uppercase"
+        open: "border border-emerald-500/40 bg-emerald-500/15 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.2)] font-sans font-semibold tracking-normal text-[11px]",
+        lunch: "border border-amber-500/40 bg-amber-500/15 text-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.2)] font-sans font-semibold tracking-normal text-[11px]",
+        pre: "border border-cyan-500/40 bg-cyan-500/15 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.2)] font-sans font-semibold tracking-normal text-[11px]",
+        closed: "border border-slate-700/50 bg-slate-800/50 text-slate-300 font-sans font-medium tracking-normal text-[11px]"
       }
     },
     defaultVariants: {

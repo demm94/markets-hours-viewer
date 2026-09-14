@@ -128,7 +128,7 @@ export const App: React.FC = () => {
           totalMarketsCount={MARKETS.length}
         />
 
-        <main className="flex flex-col gap-6 md:gap-8">
+        <main className="flex flex-col gap-8 md:gap-10">
           <MarketCards markets={MARKETS} evaluations={evaluationsNow} />
 
           <TimelineGrid
@@ -148,8 +148,8 @@ export const App: React.FC = () => {
           />
         </main>
 
-        <footer className="border-t border-white/10 pt-6 pb-4">
-          <div className="flex justify-between items-center flex-wrap gap-3.5 text-xs text-slate-400">
+        <footer className="border-t border-white/10 pt-8 pb-6 mt-4">
+          <div className="flex justify-between items-center flex-wrap gap-4 md:gap-6 text-xs text-slate-400">
             <div className="max-w-2xl leading-relaxed">
               <strong className="text-slate-200">Zonas Horarias Dinámicas IANA:</strong> Cálculos recalculados en vivo para evitar offsets estáticos. Chile se encuentra en horario de verano (UTC-3) hasta abril de 2027.
             </div>

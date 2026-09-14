@@ -91,7 +91,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
     if (maxScroll <= 0) return;
 
     const leftCol = tableWrapperRef.current.querySelector('.timeline-left-column') as HTMLElement | null;
-    const leftWidth = leftCol?.offsetWidth ?? (isColumnCollapsed ? 52 : 180);
+    const leftWidth = leftCol?.offsetWidth ?? (isColumnCollapsed ? 56 : 270);
     const barsWidth = scrollWidth - leftWidth;
     const nowPx = leftWidth + (nowPercent / 100) * barsWidth;
 
@@ -166,21 +166,21 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
   }, []);
 
   return (
-    <div className="flex flex-col gap-2.5">
-      <div className="flex justify-between items-center flex-wrap gap-2">
-        <h2 className="text-[clamp(0.85rem,3.2vw,1.05rem)] font-bold text-slate-100 tracking-tight">Línea de Tiempo 24 Horas (Hora de Chile)</h2>
+    <div className="flex flex-col gap-4 md:gap-5">
+      <div className="flex justify-between items-center flex-wrap gap-3 pb-1">
+        <h2 className="text-[clamp(0.95rem,3.2vw,1.2rem)] font-extrabold text-slate-100 tracking-tight">Línea de Tiempo 24 Horas (Hora de Chile)</h2>
         <div className="flex items-center gap-3">
           <Button
             variant="pill"
             size="sm"
             onClick={toggleColumn}
-            className="gap-1.5 min-h-[36px]"
+            className="gap-1.5 min-h-[38px] px-3 text-xs"
             title={isColumnCollapsed ? 'Expandir nombres y detalles de mercados' : 'Colapsar a solo banderas para más espacio'}
           >
-            {isColumnCollapsed ? <PanelLeftOpen size={13} /> : <PanelLeftClose size={13} />}
+            {isColumnCollapsed ? <PanelLeftOpen size={14} /> : <PanelLeftClose size={14} />}
             <span>{isColumnCollapsed ? 'Ver mercados' : 'Colapsar mercados'}</span>
           </Button>
-          <span className="font-mono text-xs font-semibold text-sky-400 bg-sky-400/10 px-2.5 py-1 rounded-lg border border-sky-400/25 shadow-[0_0_12px_rgba(56,189,248,0.12)] hidden md:inline">
+          <span className="font-mono text-xs font-semibold text-sky-400 bg-sky-400/10 px-3 py-1.5 rounded-lg border border-sky-400/25 shadow-[0_0_12px_rgba(56,189,248,0.12)] hidden md:inline">
             Pasa el cursor o desliza sobre la cuadrícula para sincronizar horarios
           </span>
         </div>
@@ -467,7 +467,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
       </div>
 
       {/* Horizontal Viewport Navigator Slider */}
-      <div className="timeline-slider-bar flex items-center gap-2.5 bg-slate-950/95 backdrop-blur-xl border border-sky-400/20 rounded-xl px-3 py-2 mt-2.5 shadow-[inset_0_1px_3px_rgba(0,0,0,0.5),0_8px_24px_-6px_rgba(0,0,0,0.7)] min-h-[52px]">
+      <div className="timeline-slider-bar flex items-center gap-3 bg-slate-950/95 backdrop-blur-xl border border-sky-400/20 rounded-xl px-4 py-2.5 mt-5 md:mt-6 shadow-[inset_0_1px_3px_rgba(0,0,0,0.5),0_8px_24px_-6px_rgba(0,0,0,0.7)] min-h-[56px]">
         <span className="font-mono text-xs font-bold text-slate-400 tabular-nums select-none">00:00</span>
         <div className="flex-1 flex items-center relative min-h-[44px]">
           <input
@@ -487,17 +487,17 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
           type="button"
           variant="now"
           onClick={scrollToNow}
-          className="gap-1.5 px-3.5 py-2 min-h-[44px] min-w-[44px] cursor-pointer"
+          className="gap-2 px-4 py-2 min-h-[44px] min-w-[44px] cursor-pointer text-xs"
           title="Centrar vista en la hora actual"
           aria-label="Centrar en hora actual"
         >
-          <Target size={15} />
+          <Target size={16} />
           <span>Ahora</span>
         </Button>
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap items-center justify-start md:justify-center gap-x-5 gap-y-2.5 border-t border-white/10 pt-4 text-xs font-medium text-slate-300">
+      <div className="flex flex-wrap items-center justify-start md:justify-center gap-x-6 gap-y-3 border-t border-white/10 pt-5 pb-2 text-xs font-medium text-slate-300 mt-2">
         <div className="flex items-center gap-2">
           <span className="w-3.5 h-2.5 rounded-sm bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
           <span>Mercado Abierto</span>
