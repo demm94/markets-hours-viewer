@@ -114,7 +114,7 @@ export const App: React.FC = () => {
       </div>
 
       <div
-        className="max-w-[1480px] w-full mx-auto flex flex-col gap-3.5 sm:gap-4 md:gap-5 overflow-x-hidden"
+        className="max-w-[1480px] w-full mx-auto flex flex-col gap-4 sm:gap-5 md:gap-6 overflow-x-hidden"
         style={{
           transform: pullDistance > 0 ? `translateY(${pullDistance * 0.55}px)` : undefined,
           transition: pullDistance === 0 ? 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)' : 'none'
@@ -128,7 +128,7 @@ export const App: React.FC = () => {
           totalMarketsCount={MARKETS.length}
         />
 
-        <main className="flex flex-col gap-3.5 sm:gap-4 md:gap-5">
+        <main className="flex flex-col gap-4 sm:gap-5 md:gap-6">
           <MarketCards markets={MARKETS} evaluations={evaluationsNow} />
 
           <TimelineGrid

@@ -7,7 +7,8 @@ import { ChevronLeft, ChevronRight, PanelLeftClose, PanelLeftOpen, Target } from
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 
-const HOURS = Array.from({ length: 13 }, (_, i) => i * 2); // 0, 2, 4, ... 24
+const HOURS = [0, 3, 6, 9, 12, 15, 18, 21, 24];
+const GRID_LINES = Array.from({ length: 25 }, (_, i) => i);
 
 const CHILE_MARKET: MarketConfig = {
   ...CHILE_CONFIG,
@@ -170,7 +171,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-sky-400/30 to-transparent pointer-events-none" />
 
       {/* Top Controls Row */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5 mb-2.5">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
         <h2 className="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-2">
           <span>Línea de Tiempo 24 Horas (Hora de Chile)</span>
         </h2>
@@ -204,7 +205,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
           }`}
         >
           <div
-            className={`h-10 flex items-center border-b border-white/10 bg-[#060912] font-mono text-[11px] font-bold uppercase tracking-wider text-slate-400 ${
+            className={`h-11 flex items-center border-b border-white/10 bg-[#060912] font-mono text-[11px] font-bold uppercase tracking-wider text-slate-400 ${
               isColumnCollapsed ? 'justify-center px-0' : 'justify-between px-3.5'
             }`}
           >
@@ -267,7 +268,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
 
         {/* Right Scrollable/Interactive Column: 24h Bars Grid */}
         <div
-          className="flex-1 min-w-[720px] relative flex flex-col cursor-crosshair touch-none select-none"
+          className="flex-1 min-w-[800px] relative flex flex-col cursor-crosshair touch-none select-none"
           ref={containerRef}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
@@ -276,19 +277,19 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
           onPointerLeave={onPointerLeave}
         >
           {/* Hour Labels at Top */}
-          <div className="h-10 relative border-b border-white/10 bg-[#060912]">
+          <div className="h-11 relative border-b border-white/10 bg-[#060912]">
             {hours.map((h) => {
               const transform =
                 h === 0
-                  ? 'translate(4px, -50%)'
+                  ? 'translate(6px, -50%)'
                   : h === 24
-                  ? 'translate(calc(-100% - 4px), -50%)'
+                  ? 'translate(calc(-100% - 6px), -50%)'
                   : 'translate(-50%, -50%)';
 
               return (
                 <div
                   key={h}
-                  className="absolute top-1/2 font-mono text-xs font-semibold text-slate-400 tabular-nums select-none -translate-y-1/2"
+                  className="absolute top-1/2 font-mono text-xs font-semibold text-slate-400 tabular-nums select-none"
                   style={{ left: `${(h / 24) * 100}%`, transform }}
                 >
                   {h.toString().padStart(2, '0')}:00
@@ -298,11 +299,11 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
           </div>
 
           {/* Background Vertical Grid Lines */}
-          <div className="absolute top-10 bottom-0 left-0 right-0 pointer-events-none z-[1]">
-            {hours.map((h) => (
+          <div className="absolute top-11 bottom-0 left-0 right-0 pointer-events-none z-[1]">
+            {GRID_LINES.map((h) => (
               <div
                 key={h}
-                className={`absolute top-0 bottom-0 w-[1px] ${h % 6 === 0 ? 'bg-white/[0.08]' : 'bg-white/[0.04]'}`}
+                className={`absolute top-0 bottom-0 w-[1px] ${h % 3 === 0 ? 'bg-white/[0.08]' : 'bg-white/[0.02]'}`}
                 style={{ left: `${(h / 24) * 100}%` }}
               />
             ))}
@@ -402,7 +403,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
                         localDateFormatted: ''
                       });
 
-                  const topPx = 40 + idx * 50 + 25;
+                  const topPx = 44 + idx * 50 + 25;
                   const edgeTransform =
                     nowPercent < 4
                       ? 'translate(6px, -50%)'
@@ -476,7 +477,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
                           localDateFormatted: ''
                         });
 
-                    const topPx = 40 + idx * 50 + 25;
+                    const topPx = 44 + idx * 50 + 25;
                     const edgeTransform =
                       scrubberPercent < 4
                         ? 'translate(6px, -50%)'
