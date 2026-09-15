@@ -166,21 +166,25 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
   }, []);
 
   return (
-    <div className="flex flex-col gap-4 md:gap-5">
-      <div className="flex justify-between items-center flex-wrap gap-3 pb-1">
-        <h2 className="text-[clamp(0.95rem,3.2vw,1.2rem)] font-extrabold text-slate-100 tracking-tight">Línea de Tiempo 24 Horas (Hora de Chile)</h2>
+    <section className="rounded-3xl border border-white/10 bg-gradient-to-b from-slate-900/80 via-slate-900/60 to-slate-950/90 backdrop-blur-2xl p-5 sm:p-7 md:p-8 lg:p-9 shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_20px_rgba(56,189,248,0.05)] flex flex-col gap-6 md:gap-7 relative overflow-hidden">
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-sky-400/30 to-transparent pointer-events-none" />
+
+      <div className="flex justify-between items-center flex-wrap gap-4 pb-0.5">
+        <h2 className="text-[clamp(1.05rem,2.5vw,1.3rem)] font-extrabold text-white tracking-tight">
+          Línea de Tiempo 24 Horas (Hora de Chile)
+        </h2>
         <div className="flex items-center gap-3">
           <Button
             variant="pill"
             size="sm"
             onClick={toggleColumn}
-            className="gap-1.5 min-h-[38px] px-3 text-xs"
+            className="gap-1.5 min-h-[38px] px-3.5 text-xs font-semibold"
             title={isColumnCollapsed ? 'Expandir nombres y detalles de mercados' : 'Colapsar a solo banderas para más espacio'}
           >
             {isColumnCollapsed ? <PanelLeftOpen size={14} /> : <PanelLeftClose size={14} />}
             <span>{isColumnCollapsed ? 'Ver mercados' : 'Colapsar mercados'}</span>
           </Button>
-          <span className="font-mono text-xs font-semibold text-sky-400 bg-sky-400/10 px-3 py-1.5 rounded-lg border border-sky-400/25 shadow-[0_0_12px_rgba(56,189,248,0.12)] hidden md:inline">
+          <span className="font-mono text-xs font-semibold text-sky-400 bg-sky-400/10 px-3.5 py-1.5 rounded-lg border border-sky-400/25 shadow-[0_0_12px_rgba(56,189,248,0.12)] hidden md:inline">
             Pasa el cursor o desliza sobre la cuadrícula para sincronizar horarios
           </span>
         </div>
@@ -369,7 +373,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
                         localDateFormatted: ''
                       });
 
-                  const topPx = 40 + idx * 54 + 27;
+                  const topPx = 40 + idx * 58 + 29;
                   const edgeTransform =
                     nowPercent < 4
                       ? 'translate(6px, -50%)'
@@ -434,7 +438,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
                           localDateFormatted: ''
                         });
 
-                    const topPx = 40 + idx * 54 + 27;
+                    const topPx = 40 + idx * 58 + 29;
                     const edgeTransform =
                       scrubberPercent < 4
                         ? 'translate(6px, -50%)'
@@ -467,7 +471,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
       </div>
 
       {/* Horizontal Viewport Navigator Slider */}
-      <div className="timeline-slider-bar flex items-center gap-3 bg-slate-950/95 backdrop-blur-xl border border-sky-400/20 rounded-xl px-4 py-2.5 mt-5 md:mt-6 shadow-[inset_0_1px_3px_rgba(0,0,0,0.5),0_8px_24px_-6px_rgba(0,0,0,0.7)] min-h-[56px]">
+      <div className="timeline-slider-bar flex items-center gap-3 bg-slate-950/90 backdrop-blur-xl border border-sky-400/20 rounded-2xl px-4 sm:px-5 py-3 mt-4 md:mt-5 shadow-[inset_0_1px_3px_rgba(0,0,0,0.5),0_8px_24px_-6px_rgba(0,0,0,0.7)] min-h-[58px]">
         <span className="font-mono text-xs font-bold text-slate-400 tabular-nums select-none">00:00</span>
         <div className="flex-1 flex items-center relative min-h-[44px]">
           <input
@@ -487,7 +491,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
           type="button"
           variant="now"
           onClick={scrollToNow}
-          className="gap-2 px-4 py-2 min-h-[44px] min-w-[44px] cursor-pointer text-xs"
+          className="gap-2 px-4 py-2 min-h-[42px] min-w-[42px] cursor-pointer text-xs font-semibold"
           title="Centrar vista en la hora actual"
           aria-label="Centrar en hora actual"
         >
@@ -497,7 +501,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap items-center justify-start md:justify-center gap-x-6 gap-y-3 border-t border-white/10 pt-5 pb-2 text-xs font-medium text-slate-300 mt-2">
+      <div className="flex flex-wrap items-center justify-start md:justify-center gap-x-8 gap-y-3.5 border-t border-white/10 pt-5 pb-1 text-xs font-medium text-slate-300 mt-2">
         <div className="flex items-center gap-2">
           <span className="w-3.5 h-2.5 rounded-sm bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
           <span>Mercado Abierto</span>
@@ -519,7 +523,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
           <span>Cursor interactivo</span>
         </div>
       </div>
-    </div>
+    </section>
   );
 });
 
