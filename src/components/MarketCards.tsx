@@ -37,7 +37,7 @@ const cardVariants: Variants = {
 export const MarketCards: React.FC<MarketCardsProps> = React.memo(({ markets, evaluations }) => {
   return (
     <motion.div
-      className="flex flex-row md:grid md:grid-cols-3 lg:grid-cols-5 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory md:snap-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden gap-4 lg:gap-5 p-1 md:p-0 min-h-[116px]"
+      className="flex flex-row md:grid md:grid-cols-3 lg:grid-cols-5 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory md:snap-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden gap-4.5 sm:gap-5 lg:gap-6 p-1 md:p-0 min-h-[120px]"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
@@ -85,11 +85,11 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({ markets, ev
             whileHover={{ scale: 1.02, transition: { duration: 0.15 } }}
             whileTap={{ scale: 0.98 }}
             layout
-            className="flex-shrink-0 flex-grow-0 basis-[clamp(240px,68vw,280px)] md:basis-auto snap-start"
+            className="flex-shrink-0 flex-grow-0 basis-[clamp(250px,68vw,290px)] md:basis-auto snap-start"
           >
             <Card
               className={cn(
-                "border-l-[4px] rounded-2xl p-4 sm:p-5 flex flex-col gap-3.5 transition-colors overflow-hidden h-full shadow-lg",
+                "border-l-[4px] rounded-2xl p-5 sm:p-6 flex flex-col gap-4 transition-colors overflow-hidden h-full shadow-xl",
                 cardBorderClass,
                 cardBgClass
               )}
@@ -101,27 +101,27 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({ markets, ev
                   <span className="text-2xl leading-none drop-shadow-md select-none">{market.flag}</span>
                   <span className="text-xs font-bold text-slate-400 font-mono tracking-wider">{market.code}</span>
                 </div>
-                <Badge variant={badgeVariant} className="px-2.5 py-0.5 text-xs font-semibold shrink-0">
+                <Badge variant={badgeVariant} className="px-3 py-1 text-xs font-semibold shrink-0">
                   {statusText}
                 </Badge>
               </div>
 
               {/* Row 2: Full Country Name (never truncated) */}
-              <div className="text-base font-bold text-white tracking-tight leading-snug">
+              <div className="text-base sm:text-lg font-bold text-white tracking-tight leading-snug">
                 {market.name}
               </div>
 
               {/* Row 3: Local Time in prominent pill */}
-              <div className="flex items-baseline justify-between px-3.5 py-2.5 bg-black/40 rounded-xl border border-white/5 my-0.5 shadow-inner">
+              <div className="flex items-baseline justify-between px-4 py-3 bg-black/45 rounded-xl border border-white/10 my-0.5 shadow-inner">
                 <span className="text-xs font-medium text-slate-400">Hora local:</span>
-                <span className="font-mono text-lg font-extrabold text-white tabular-nums tracking-tight">
+                <span className="font-mono text-xl font-extrabold text-white tabular-nums tracking-tight">
                   {ev?.localTimeFormatted ?? '--:--'}
                 </span>
               </div>
 
               {/* Row 4: Timezone & Date */}
-              <div className="flex justify-between items-center text-[11px] font-mono text-slate-400 border-t border-white/5 pt-2.5 mt-auto gap-2">
-                <span className="truncate" title={market.timezone}>
+              <div className="flex justify-between items-center text-xs font-mono text-slate-400 border-t border-white/10 pt-3 mt-auto gap-2">
+                <span className="truncate text-slate-400" title={market.timezone}>
                   {market.timezone.replace('_', ' ')}
                 </span>
                 <span className="shrink-0 text-slate-300 font-medium">

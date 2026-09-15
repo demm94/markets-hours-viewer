@@ -86,7 +86,7 @@ export const App: React.FC = () => {
   const isScrubbing = isHovering || isDragging || Math.abs(scrubberMinutes - currentMinutes) > 2;
 
   return (
-    <div className="app-layout">
+    <div className="min-h-screen min-h-[100dvh] bg-[#06080f] text-slate-100 px-4 py-5 sm:px-6 sm:py-7 md:px-8 md:py-9 lg:px-12 lg:py-10 overflow-x-hidden ambient-grid">
       {/* Native-style Pull to Refresh indicator */}
       <div
         className="fixed top-3 left-0 right-0 flex justify-center items-center z-[1000] pointer-events-none transition-opacity duration-200"
@@ -114,7 +114,7 @@ export const App: React.FC = () => {
       </div>
 
       <div
-        className="app-container"
+        className="max-w-[1480px] w-full mx-auto flex flex-col gap-7 md:gap-9 lg:gap-11 overflow-x-hidden"
         style={{
           transform: pullDistance > 0 ? `translateY(${pullDistance * 0.55}px)` : undefined,
           transition: pullDistance === 0 ? 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)' : 'none'

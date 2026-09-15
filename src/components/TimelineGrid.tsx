@@ -135,7 +135,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
   const getStatusBadge = useCallback((marketId: string, evaluation: MarketEvaluation) => {
     if (marketId === 'chile') {
       return (
-        <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-sky-400/40 text-sky-300 font-mono">
+        <Badge variant="outline" className="text-[10px] px-2.5 py-0.5 min-h-[20px] border-sky-400/40 text-sky-300 font-mono leading-none">
           Referencia
         </Badge>
       );
@@ -159,7 +159,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
         : 'Cerrado';
 
     return (
-      <Badge variant={variant} showDot={false} className="text-[9px] px-1.5 py-0 h-4 font-mono font-bold">
+      <Badge variant={variant} showDot={false} className="text-[10px] px-2.5 py-0.5 min-h-[20px] font-mono font-bold leading-none">
         {text}
       </Badge>
     );
@@ -191,20 +191,29 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
       </div>
 
       <div 
-        className="timeline-table-wrapper"
+        className="relative flex overflow-x-auto select-none rounded-2xl border border-white/10 bg-[#060911]/95 shadow-[inset_0_2px_14px_rgba(0,0,0,0.6)] touch-pan-y [scrollbar-width:thin] [scrollbar-color:rgba(56,189,248,0.35)_rgba(15,23,42,0.85)] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-slate-900/85 [&::-webkit-scrollbar-thumb]:bg-sky-400/35 hover:[&::-webkit-scrollbar-thumb]:bg-sky-400/60 [&::-webkit-scrollbar-thumb]:rounded"
         ref={tableWrapperRef}
         onScroll={handleTableScroll}
       >
         {/* Left Frozen Column: Market Identity & Scrubber readout */}
-        <motion.div layout className={`timeline-left-column ${isColumnCollapsed ? 'column-collapsed' : ''}`}>
-          <div className="timeline-col-header">
+        <motion.div
+          layout
+          className={`timeline-left-column sticky left-0 bg-[#080c16] border-r border-white/10 shadow-[6px_0_20px_rgba(0,0,0,0.7)] flex flex-col z-10 transition-[width,min-width] duration-200 ease-out ${
+            isColumnCollapsed ? 'w-14 min-w-[56px]' : 'w-[270px] min-w-[270px]'
+          }`}
+        >
+          <div
+            className={`h-10 flex items-center border-b border-white/10 bg-[#060912] font-mono text-[11px] font-bold uppercase tracking-wider text-slate-400 ${
+              isColumnCollapsed ? 'justify-center px-0' : 'justify-between px-3.5'
+            }`}
+          >
             {!isColumnCollapsed && <span>Mercado</span>}
             <motion.button
               type="button"
               onClick={toggleColumn}
               whileHover={{ scale: 1.08 }}
               whileTap={{ scale: 0.92 }}
-              className="collapse-toggle-icon-btn"
+              className="inline-flex items-center justify-center bg-white/5 border border-white/10 text-slate-300 rounded-md w-6 h-6 hover:bg-sky-400/20 hover:border-sky-400/40 hover:text-sky-400 transition-colors"
               title={isColumnCollapsed ? 'Expandir columna de mercados' : 'Colapsar a solo banderas'}
               aria-label={isColumnCollapsed ? 'Expandir columna' : 'Colapsar columna'}
             >
@@ -225,22 +234,28 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
               <motion.div
                 layout
                 key={market.id}
-                className={`market-info-cell ${isChile ? 'cell-anchor' : ''} ${isColumnCollapsed ? 'cell-collapsed' : ''}`}
+                className={`h-[58px] flex items-center border-b border-white/5 transition-colors ${
+                  isChile
+                    ? 'bg-gradient-to-r from-sky-400/[0.12] to-sky-400/[0.04] border-b-sky-400/35'
+                    : 'hover:bg-white/[0.02]'
+                } ${isColumnCollapsed ? 'justify-center px-0' : 'justify-between px-4'}`}
                 title={isColumnCollapsed ? `${market.name} (${market.code}) - ${ev.localTimeFormatted}` : undefined}
               >
-                <div className="cell-identity">
-                  <span className="cell-flag">{market.flag}</span>
+                <div className={`flex items-center ${isColumnCollapsed ? 'justify-center gap-0' : 'gap-2.5'}`}>
+                  <span className={`leading-none filter drop-shadow select-none ${isColumnCollapsed ? 'text-2xl' : 'text-xl'}`}>
+                    {market.flag}
+                  </span>
                   {!isColumnCollapsed && (
-                    <div className="cell-names">
-                      <span className="cell-name">{market.name}</span>
-                      <span className="cell-code">{market.code}</span>
+                    <div className="flex flex-col">
+                      <span className="text-xs font-bold text-white whitespace-nowrap">{market.name}</span>
+                      <span className="text-[10px] font-semibold text-slate-400 font-mono">{market.code}</span>
                     </div>
                   )}
                 </div>
 
                 {!isColumnCollapsed && (
-                  <div className="cell-scrubber-peek">
-                    <span className="cell-scrubber-time">{ev.localTimeFormatted}</span>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className="font-mono text-sm font-extrabold text-white tabular-nums">{ev.localTimeFormatted}</span>
                     {getStatusBadge(market.id, ev)}
                   </div>
                 )}
@@ -251,7 +266,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
 
         {/* Right Scrollable/Interactive Column: 24h Bars Grid */}
         <div
-          className="timeline-bars-container"
+          className="flex-1 min-w-[720px] relative flex flex-col cursor-crosshair touch-none select-none"
           ref={containerRef}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
@@ -260,7 +275,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
           onPointerLeave={onPointerLeave}
         >
           {/* Hour Labels at Top */}
-          <div className="timeline-col-header-bars">
+          <div className="h-10 relative border-b border-white/10 bg-[#060912]">
             {hours.map((h) => {
               const transform =
                 h === 0
@@ -272,7 +287,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
               return (
                 <div
                   key={h}
-                  className="hour-tick-label"
+                  className="absolute top-1/2 font-mono text-xs font-semibold text-slate-400 tabular-nums select-none -translate-y-1/2"
                   style={{ left: `${(h / 24) * 100}%`, transform }}
                 >
                   {h.toString().padStart(2, '0')}:00
@@ -282,18 +297,18 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
           </div>
 
           {/* Background Vertical Grid Lines */}
-          <div className="bars-grid-overlay">
+          <div className="absolute top-10 bottom-0 left-0 right-0 pointer-events-none z-[1]">
             {hours.map((h) => (
               <div
                 key={h}
-                className={`grid-line ${h % 6 === 0 ? 'grid-line-major' : ''}`}
+                className={`absolute top-0 bottom-0 w-[1px] ${h % 6 === 0 ? 'bg-white/[0.08]' : 'bg-white/[0.04]'}`}
                 style={{ left: `${(h / 24) * 100}%` }}
               />
             ))}
           </div>
 
           {/* Market Bar Rows */}
-          <div className="bars-rows-stack">
+          <div className="relative z-[2] flex flex-col">
             {allMarkets.map((market) => {
               const isChile = market.id === 'chile';
               const segments = isChile ? [] : (marketSegments[market.id] ?? []);
@@ -301,13 +316,17 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
               return (
                 <div
                   key={market.id}
-                  className={`bar-row-track ${isChile ? 'bar-row-anchor' : ''}`}
+                  className={`h-[58px] px-2 flex items-center border-b border-white/5 transition-colors ${
+                    isChile ? 'bg-gradient-to-r from-sky-400/[0.08] to-sky-400/[0.02] border-b-sky-400/35' : 'hover:bg-white/[0.02]'
+                  }`}
                 >
-                  <div className="bar-track-bg">
+                  <div className="relative w-full h-[34px] bg-[#0c111e]/90 border border-white/10 rounded-lg overflow-hidden shadow-[inset_0_2px_6px_rgba(0,0,0,0.5)]">
                     {/* If Chile anchor, show continuous subtle reference track */}
                     {isChile && (
-                      <div className="chile-reference-bar">
-                        <span className="chile-ref-text">Eje 24h Santiago de Chile</span>
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-sky-400/[0.06] via-sky-400/[0.16] to-sky-400/[0.06]">
+                        <span className="font-mono text-xs font-bold text-sky-400 tracking-wider uppercase">
+                          Eje 24h Santiago de Chile
+                        </span>
                       </div>
                     )}
 
@@ -317,10 +336,19 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
                       const widthPercent = ((seg.endMinute - seg.startMinute) / 1440) * 100;
                       const isActive = scrubberMinutes >= seg.startMinute && scrubberMinutes < seg.endMinute;
 
+                      let blockStyle = 'bg-gradient-to-b from-emerald-500 to-emerald-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_0_16px_rgba(16,185,129,0.3)]';
+                      if (seg.type === 'lunch') {
+                        blockStyle = 'bg-gradient-to-b from-amber-500 to-amber-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_0_14px_rgba(245,158,11,0.3)]';
+                      } else if (seg.type === 'pre_market') {
+                        blockStyle = 'bg-gradient-to-b from-cyan-500 to-sky-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_0_14px_rgba(6,182,212,0.3)]';
+                      }
+
                       return (
                         <div
                           key={idx}
-                          className={`session-block session-${seg.type} ${isActive ? 'session-scrubber-active' : ''}`}
+                          className={`absolute top-0 bottom-0 flex items-center justify-center text-[11px] font-bold rounded-md overflow-hidden whitespace-nowrap shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5)] transition-[filter,box-shadow] ${blockStyle} ${
+                            isActive ? 'brightness-125 ring-2 ring-white shadow-[0_0_24px_rgba(16,185,129,0.45)]' : ''
+                          }`}
                           style={{
                             left: `${leftPercent}%`,
                             width: `${widthPercent}%`
@@ -337,11 +365,11 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
 
           {/* Persistent "Now" Line */}
           <div
-            className="now-indicator-line"
+            className="absolute top-0 bottom-0 -translate-x-1/2 w-[2px] bg-rose-600 shadow-[0_0_14px_rgba(225,29,72,0.65)] z-[5] pointer-events-none"
             style={{ left: `${nowPercent}%` }}
           >
             <div
-              className="now-indicator-badge"
+              className="absolute top-1.5 left-0 inline-flex items-center gap-1.5 bg-rose-600 text-white font-mono text-xs font-extrabold px-3 py-1 rounded-lg shadow-[0_4px_14px_rgba(225,29,72,0.65)] whitespace-nowrap tabular-nums"
               style={{
                 transform:
                   nowPercent < 4
@@ -351,7 +379,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
                     : 'translateX(-50%)'
               }}
             >
-              <span className="now-pulse" />
+              <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
               <span>
                 {isHovering && Math.abs(scrubberMinutes - currentMinutes) > 2
                   ? 'AHORA'
@@ -361,7 +389,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
 
             {/* When left column is collapsed and idle, show current country times on Now line */}
             {isColumnCollapsed && !(isHovering && Math.abs(scrubberMinutes - currentMinutes) > 2) && (
-              <div className="scrubber-row-times-overlay">
+              <div className="absolute top-0 left-0 w-0 h-full pointer-events-none">
                 {allMarkets.map((market, idx) => {
                   const isChile = market.id === 'chile';
                   const ev = isChile
@@ -381,20 +409,29 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
                       ? 'translate(calc(-100% - 6px), -50%)'
                       : 'translate(-50%, -50%)';
 
-                  const statusClass = isChile ? 'status-reference' : `status-${ev.status}`;
+                  let statusClasses = 'border-slate-700/60 text-slate-300';
+                  if (isChile) {
+                    statusClasses = 'border-sky-400/70 text-sky-300 shadow-[0_4px_14px_rgba(0,0,0,0.75),0_0_12px_rgba(56,189,248,0.25)]';
+                  } else if (ev.status === 'open') {
+                    statusClasses = 'border-emerald-500/70 text-emerald-300 shadow-[0_4px_14px_rgba(0,0,0,0.75),0_0_12px_rgba(16,185,129,0.3)]';
+                  } else if (ev.status === 'lunch') {
+                    statusClasses = 'border-amber-500/70 text-amber-300 shadow-[0_4px_14px_rgba(0,0,0,0.75),0_0_10px_rgba(245,158,11,0.3)]';
+                  } else if (ev.status === 'pre_market') {
+                    statusClasses = 'border-cyan-500/70 text-cyan-300 shadow-[0_4px_14px_rgba(0,0,0,0.75),0_0_10px_rgba(6,182,212,0.3)]';
+                  }
 
                   return (
                     <div
                       key={market.id}
-                      className={`scrubber-row-pill ${statusClass}`}
+                      className={`absolute left-0 inline-flex items-center gap-2 bg-[#080c16]/95 backdrop-blur-md border rounded-lg px-3 py-1 font-mono text-xs font-bold whitespace-nowrap shadow-lg z-10 pointer-events-none tabular-nums ${statusClasses}`}
                       style={{
                         top: `${topPx}px`,
                         transform: edgeTransform
                       }}
                       title={`${market.name}: ${ev.localTimeFormatted}`}
                     >
-                      <span className="scrubber-row-flag">{market.flag}</span>
-                      <span className="scrubber-row-time">{ev.localTimeFormatted}</span>
+                      <span className="text-xs leading-none">{market.flag}</span>
+                      <span>{ev.localTimeFormatted}</span>
                     </div>
                   );
                 })}
@@ -405,11 +442,11 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
           {/* Interactive Scrubber Line (rendered when user actively scrubs to a different time) */}
           {isHovering && Math.abs(scrubberMinutes - currentMinutes) > 2 && (
             <div
-              className="scrubber-crosshair-line scrubber-active"
+              className="absolute top-0 bottom-0 -translate-x-1/2 w-[2.5px] bg-sky-400 shadow-[0_0_16px_rgba(56,189,248,0.75)] z-[6] pointer-events-none"
               style={{ left: `${scrubberPercent}%` }}
             >
               <div
-                className="scrubber-badge"
+                className="absolute top-1.5 left-0 bg-gradient-to-br from-sky-600 to-sky-700 text-white font-mono text-xs font-extrabold px-3 py-1 rounded-lg border border-white/25 shadow-[0_4px_16px_rgba(2,132,199,0.7)] whitespace-nowrap tabular-nums"
                 style={{
                   transform:
                     scrubberPercent < 4
@@ -419,14 +456,14 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
                       : 'translateX(-50%)'
                 }}
               >
-                <span className="scrubber-badge-text">
+                <span>
                   🇨🇱 {formatMinutes(scrubberMinutes)}
                 </span>
               </div>
 
               {/* When left column is collapsed and scrubbing, show projected country times on scrubber line */}
               {isColumnCollapsed && (
-                <div className="scrubber-row-times-overlay">
+                <div className="absolute top-0 left-0 w-0 h-full pointer-events-none">
                   {allMarkets.map((market, idx) => {
                     const isChile = market.id === 'chile';
                     const ev = isChile
@@ -446,20 +483,29 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
                         ? 'translate(calc(-100% - 6px), -50%)'
                         : 'translate(-50%, -50%)';
 
-                    const statusClass = isChile ? 'status-reference' : `status-${ev.status}`;
+                    let statusClasses = 'border-slate-700/60 text-slate-300';
+                    if (isChile) {
+                      statusClasses = 'border-sky-400/70 text-sky-300 shadow-[0_4px_14px_rgba(0,0,0,0.75),0_0_12px_rgba(56,189,248,0.25)]';
+                    } else if (ev.status === 'open') {
+                      statusClasses = 'border-emerald-500/70 text-emerald-300 shadow-[0_4px_14px_rgba(0,0,0,0.75),0_0_12px_rgba(16,185,129,0.3)]';
+                    } else if (ev.status === 'lunch') {
+                      statusClasses = 'border-amber-500/70 text-amber-300 shadow-[0_4px_14px_rgba(0,0,0,0.75),0_0_10px_rgba(245,158,11,0.3)]';
+                    } else if (ev.status === 'pre_market') {
+                      statusClasses = 'border-cyan-500/70 text-cyan-300 shadow-[0_4px_14px_rgba(0,0,0,0.75),0_0_10px_rgba(6,182,212,0.3)]';
+                    }
 
                     return (
                       <div
                         key={market.id}
-                        className={`scrubber-row-pill ${statusClass}`}
+                        className={`absolute left-0 inline-flex items-center gap-2 bg-[#080c16]/95 backdrop-blur-md border rounded-lg px-3 py-1 font-mono text-xs font-bold whitespace-nowrap shadow-lg z-10 pointer-events-none tabular-nums ${statusClasses}`}
                         style={{
                           top: `${topPx}px`,
                           transform: edgeTransform
                         }}
                         title={`${market.name}: ${ev.localTimeFormatted}`}
                       >
-                        <span className="scrubber-row-flag">{market.flag}</span>
-                        <span className="scrubber-row-time">{ev.localTimeFormatted}</span>
+                        <span className="text-xs leading-none">{market.flag}</span>
+                        <span>{ev.localTimeFormatted}</span>
                       </div>
                     );
                   })}

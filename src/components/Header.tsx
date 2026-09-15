@@ -39,8 +39,8 @@ export const Header: React.FC<HeaderProps> = React.memo(({
           animate={{ scale: 1 }}
           transition={{ type: 'spring', stiffness: 400, damping: 20 }}
         >
-          <Badge variant="open" showDot={false} className="gap-2 px-2.5 py-1 text-[clamp(0.72rem,2.8vw,0.78rem)]">
-            <Activity size={13} className="animate-pulse text-emerald-400" />
+          <Badge variant="open" showDot={false} className="gap-2.5 px-3.5 py-1.5 text-xs font-semibold shadow-md">
+            <Activity size={14} className="animate-pulse text-emerald-400 shrink-0" />
             <span>
               <strong className="text-emerald-300 font-bold">{openMarketsCount}</strong>/{totalMarketsCount} abiertos
             </span>
@@ -48,23 +48,23 @@ export const Header: React.FC<HeaderProps> = React.memo(({
         </motion.div>
       </div>
 
-      <div className="flex items-center justify-between w-full md:w-auto gap-3 md:gap-4 bg-[#04070f]/75 border border-white/10 rounded-xl px-3.5 py-2 md:px-4 md:py-2 shadow-inner">
-        <div className="flex items-center gap-2 font-mono text-xs font-semibold text-slate-300">
+      <div className="flex items-center justify-between w-full md:w-auto gap-3.5 md:gap-5 bg-[#04070f]/85 border border-white/10 rounded-xl px-4 py-2.5 md:px-5 md:py-2.5 shadow-inner">
+        <div className="flex items-center gap-2.5 font-mono text-xs font-semibold text-slate-300">
           <motion.span
-            className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981]"
+            className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981]"
             animate={{ scale: [1, 1.25, 1], opacity: [1, 0.65, 1] }}
             transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
           />
-          <span className="text-slate-200">Santiago</span>
+          <span className="text-slate-200 font-bold">Santiago</span>
         </div>
 
-        <span className="font-mono text-[clamp(0.95rem,3.4vw,1.15rem)] font-extrabold text-white tracking-tight tabular-nums [text-shadow:0_0_16px_rgba(255,255,255,0.2)]">
+        <span className="font-mono text-[clamp(1rem,3.4vw,1.25rem)] font-extrabold text-white tracking-tight tabular-nums [text-shadow:0_0_16px_rgba(255,255,255,0.2)]">
           {timeFormatted}
         </span>
-        <span className="font-mono text-[clamp(0.65rem,2.4vw,0.72rem)] font-semibold text-sky-400 bg-sky-500/15 border border-sky-400/30 px-2 py-0.5 rounded whitespace-nowrap">
+        <span className="font-mono text-xs font-semibold text-sky-400 bg-sky-500/15 border border-sky-400/30 px-3 py-1.5 rounded-lg whitespace-nowrap shadow-sm leading-none">
           {santiagoOffset}
         </span>
-        <span className="text-[clamp(0.7rem,2.4vw,0.75rem)] font-medium text-slate-400 capitalize whitespace-nowrap">
+        <span className="text-xs font-medium text-slate-400 capitalize whitespace-nowrap">
           {dateFormatted}
         </span>
       </div>
