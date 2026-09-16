@@ -1,7 +1,7 @@
 # Feature: Neon Financial Redesign
 
 **Workflow:** ODD (Organic Driven Development)
-**Status:** implemented, all phases green, **committed as `5fefc36`** (unpushed) — unreviewed, see "Native review status" below
+**Status:** implemented, all phases green, **committed as `5fefc36`**, and **native review APPROVED + acknowledged** (lineage `review-f4e1f1a75f27ef96`). See "Native review status" below.
 **Created:** 2026-09-16
 
 ## Goal
@@ -129,8 +129,55 @@ committed or ignored.
 
 ## Native review status
 
-**This change is UNREVIEWED.** It is not a declined review and not a review that found nothing —
-the review tooling could not run.
+**APPROVED and acknowledged.** Lineage `review-f4e1f1a75f27ef96`, tier `medium`, 17 changed
+files, 784 changed lines, correction budget 200, one consolidated lens
+(`review-reliability`). Medium tier gets ONE consolidated review, not four lenses. Authority
+was burned with `burn_evidence: gentle-ai.review-acknowledged/v1`, and the envelope reported
+`delivery: ordinary-repository-policy` — i.e. the approval does **not** authorise commit, push,
+PR or release.
+
+Two advisory findings, both non-blocking. The provider's own words: *"This review is approved
+and its receipt stands. Every finding listed here is non-blocking: none opened a correction,
+none reopens this review, and no correction transition is offered for this candidate. Treat them
+as separate later work, never as a reason to re-run review on this candidate."*
+
+| ID | Severity | Location | Issue |
+| --- | --- | --- | --- |
+| `R3-1` | WARNING | `src/core/timeline-visualizer.test.ts:42` | `readFileSync('src/index.css')` uses a path relative to the process CWD, so the test breaks if the runner starts from another directory. |
+| `R3-2` | SUGGESTION | `src/core/timeline-visualizer.test.ts:43` | The `--background` extraction regex is fragile: it can match a commented-out declaration and breaks if the CSS structure changes. |
+
+Both land on the manifest assertion rewritten in Phase 2, which is a fair hit — that code was
+written in this work. **Carried forward as separate work** by explicit user decision: fix later,
+and never as a reason to re-run this candidate's review.
+
+### What finally made the review run
+
+The committed-range START cannot pass its `collect` step while any eligible untracked path
+exists. `select-intended-untracked` rejects every binding that a `committedOnly` candidate
+issues (`intended-untracked-selection-binding-rejected`), and `inspect` with `untrackedScope`
+only ever resolves the workspace-view binding — which then makes the next committed-range START
+fail with `candidate-target-projection-drift` ("candidate view rejected before native START").
+So a committed-range review is unstartable whenever the repo has eligible untracked files. The
+provider's own `nextStep` documents the remedy: *"To keep a path out of the inventory
+permanently, ignore it through `.gitignore` or `.git/info/exclude`."* The sole blocker here was
+the untracked `.codegraph/` tool state; excluding it locally emptied the untracked inventory,
+after which a plain `inspect` followed by the committed-range START completed and created the
+lineage.
+
+**Working sequence, in this order:** (1) empty the eligible-untracked inventory; (2) plain
+`inspect`, never with `untrackedScope`, so the candidate view is not pinned to the workspace
+projection; (3) START with `{"mode":"ordinary","baseRef":"<parent sha>","committedOnly":true}`
+plus a fresh `idempotencyKey` — all three input keys are mandatory; (4) `status` on the returned
+lineage; (5) capture the offered lens slot (forecast, then the same binding with
+`reviewerRunAcknowledged: true`); (6) `acknowledge-approved`. Do not issue STATUS after the
+burn.
+
+### History: why this took so long
+
+The record below is kept because it documents the environment, not because it is still current.
+
+**The change was UNREVIEWED for a long stretch.** Not a declined review, and not a review that
+found nothing — the review tooling could not run.
 
 - `gentle_review` `inspect` initially returned `native-status-package-binary-missing`. The
   package-local native binary was installed on explicit user authorization
