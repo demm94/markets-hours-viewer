@@ -34,8 +34,40 @@ describe('timeline-visualizer & pwa-shell compliance', () => {
 
   it('validates PWA web app manifest requirements without depending on dist build', () => {
     expect(pwaManifest.display).toBe('standalone');
-    expect(pwaManifest.theme_color).toBe('#0f172a');
-    expect(pwaManifest.background_color).toBe('#090d16');
+
+    // The dark theme background has a single source of truth: the --background token in
+    // src/index.css. The manifest and the HTML meta must both agree with it, so the
+    // invariant from openspec/specs/pwa-shell/spec.md is asserted without hardcoding a
+    // palette hex that would rot on every re-skin.
+    const cssSource = readFileSync('src/index.css', 'utf-8');
+    const backgroundToken = /--background:\s*(#[0-9a-fA-F]{6})/.exec(cssSource);
+    expect(
+      backgroundToken,
+      'src/index.css must declare a 6-digit hex --background token (theme source of truth)'
+    ).not.toBeNull();
+
+    const htmlSource = readFileSync('index.html', 'utf-8');
+    const htmlThemeColor = /<meta\s+name="theme-color"\s+content="(#[0-9a-fA-F]{6})"/.exec(htmlSource);
+    expect(
+      htmlThemeColor,
+      'index.html must declare a 6-digit hex theme-color meta content value'
+    ).not.toBeNull();
+
+    const themeBackground = backgroundToken![1];
+
+    expect(
+      pwaManifest.theme_color,
+      'pwaManifest.theme_color must match the --background token in src/index.css'
+    ).toBe(themeBackground);
+    expect(
+      pwaManifest.background_color,
+      'pwaManifest.background_color must match the --background token in src/index.css'
+    ).toBe(themeBackground);
+    expect(
+      htmlThemeColor![1],
+      'index.html theme-color meta must match the --background token in src/index.css'
+    ).toBe(themeBackground);
+
     expect(pwaManifest.icons?.length).toBeGreaterThanOrEqual(2);
     expect(pwaManifest.name).toBe('Markets View');
   });

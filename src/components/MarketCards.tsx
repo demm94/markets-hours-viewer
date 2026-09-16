@@ -52,20 +52,20 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
           const status = ev?.status ?? 'closed';
           const hasCatalyst = catalystsMap?.[market.id];
 
-          let borderClass = 'border-white/10 bg-slate-900/80 text-slate-400';
+          let borderClass = 'border-slate-600/45 bg-slate-900/55 text-slate-400';
           let dotColor = 'bg-slate-500';
           let statusLabel = 'Cerrado';
 
           if (status === 'open') {
-            borderClass = 'border-emerald-500/40 bg-emerald-950/25 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.15)]';
+            borderClass = 'border-emerald-400/50 bg-emerald-500/[0.12] text-emerald-300 shadow-[0_0_0_1px_rgba(16,185,129,0.16),0_0_18px_-6px_rgba(16,185,129,0.60)]';
             dotColor = 'bg-emerald-400 animate-pulse';
             statusLabel = 'Abierto';
           } else if (status === 'lunch') {
-            borderClass = 'border-amber-500/40 bg-amber-950/20 text-amber-400';
+            borderClass = 'border-amber-400/50 bg-amber-500/[0.12] text-amber-300 shadow-[0_0_0_1px_rgba(245,158,11,0.16),0_0_18px_-6px_rgba(245,158,11,0.55)]';
             dotColor = 'bg-amber-400';
             statusLabel = 'Almuerzo';
           } else if (status === 'pre_market') {
-            borderClass = 'border-cyan-500/40 bg-cyan-950/20 text-cyan-400';
+            borderClass = 'border-cyan-400/50 bg-cyan-500/[0.12] text-cyan-300 shadow-[0_0_0_1px_rgba(34,211,238,0.16),0_0_18px_-6px_rgba(34,211,238,0.55)]';
             dotColor = 'bg-cyan-400';
             statusLabel = 'Pre';
           }
@@ -75,17 +75,17 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
               key={market.id}
               onClick={() => onSelectMarketEvents?.(market.id)}
               className={cn(
-                "relative flex flex-col items-center justify-between p-1 sm:p-1.5 rounded-lg border transition-all min-h-[50px] cursor-pointer hover:border-white/20 active:scale-95",
+                "relative flex flex-col items-center justify-between p-1 sm:p-1.5 rounded-lg border transition-[border-color,background-color,box-shadow,transform,scale] duration-200 min-h-[50px] cursor-pointer hover:border-border-strong active:scale-95",
                 borderClass
               )}
               title={`${market.name} (${market.code}) - ${statusLabel} - ${ev?.localTimeFormatted ?? '--:--'}${hasCatalyst ? ' (Evento hoy)' : ''}`}
             >
               {hasCatalyst && (
-                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_4px_#f43f5e]" />
+                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_8px_#f43f5e]" />
               )}
               <div className="flex items-center gap-1 leading-none">
                 <span className="text-xs select-none">{market.flag}</span>
-                <span className="text-[9px] font-mono font-bold tracking-tight text-slate-300">
+                <span className="text-[9px] font-mono font-bold tracking-tight text-foreground/70">
                   {market.code.split(' ')[0]}
                 </span>
               </div>
@@ -93,7 +93,7 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
                 {ev?.localTimeFormatted ?? '--:--'}
               </span>
               <div className="flex items-center gap-1 leading-none">
-                <span className={cn("w-1.5 h-1.5 rounded-full", dotColor)} />
+                <span className={cn("w-1.5 h-1.5 rounded-full shadow-[0_0_8px_currentColor]", dotColor)} />
                 <span className="text-[9px] font-semibold leading-none truncate max-w-[45px]">
                   {statusLabel}
                 </span>
@@ -132,18 +132,18 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
               ? 'Pre-apertura'
               : 'Cerrado';
 
-          let cardBorderClass = 'border-l-slate-600';
-          let cardBgClass = 'bg-gradient-to-br from-slate-900/75 to-slate-950/90';
+          let cardBorderClass = 'border-l-slate-500/60';
+          let cardBgClass = '';
 
           if (status === 'open') {
-            cardBorderClass = 'border-l-emerald-500 shadow-[0_0_18px_-6px_rgba(16,185,129,0.2)]';
-            cardBgClass = 'bg-gradient-to-br from-emerald-950/20 via-slate-900/80 to-slate-950/90';
+            cardBorderClass = 'border-l-emerald-400 shadow-[0_0_0_1px_rgba(16,185,129,0.22),0_0_28px_-8px_rgba(16,185,129,0.65),0_14px_40px_-18px_rgba(2,6,23,0.95)]';
+            cardBgClass = 'bg-gradient-to-br from-emerald-500/[0.12] via-transparent to-violet-500/[0.07]';
           } else if (status === 'lunch') {
-            cardBorderClass = 'border-l-amber-500';
-            cardBgClass = 'bg-gradient-to-br from-amber-950/15 via-slate-900/80 to-slate-950/90';
+            cardBorderClass = 'border-l-amber-400 shadow-[0_0_0_1px_rgba(245,158,11,0.22),0_0_28px_-8px_rgba(245,158,11,0.58),0_14px_40px_-18px_rgba(2,6,23,0.95)]';
+            cardBgClass = 'bg-gradient-to-br from-amber-500/[0.12] via-transparent to-violet-500/[0.07]';
           } else if (status === 'pre_market') {
-            cardBorderClass = 'border-l-cyan-500';
-            cardBgClass = 'bg-gradient-to-br from-cyan-950/15 via-slate-900/80 to-slate-950/90';
+            cardBorderClass = 'border-l-cyan-400 shadow-[0_0_0_1px_rgba(34,211,238,0.22),0_0_28px_-8px_rgba(34,211,238,0.58),0_14px_40px_-18px_rgba(2,6,23,0.95)]';
+            cardBgClass = 'bg-gradient-to-br from-cyan-500/[0.12] via-transparent to-violet-500/[0.07]';
           }
 
           return (
@@ -156,7 +156,7 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
             >
               <Card
                 className={cn(
-                  "border-l-[3px] rounded-xl p-3.5 sm:p-4 flex flex-col justify-between gap-3 transition-colors overflow-hidden h-full shadow-lg",
+                  "border-l-[3px] p-3.5 sm:p-4 flex flex-col justify-between gap-3 overflow-hidden h-full",
                   cardBorderClass,
                   cardBgClass
                 )}
@@ -170,7 +170,7 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
                       <div className="text-sm font-bold text-white tracking-tight leading-tight truncate">
                         {market.name}
                       </div>
-                      <div className="text-[10px] font-mono font-semibold text-slate-400 tracking-wider uppercase">
+                      <div className="text-[10px] font-mono font-semibold text-muted-foreground tracking-wider uppercase">
                         {market.code}
                       </div>
                     </div>
@@ -183,13 +183,13 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
                           e.stopPropagation();
                           onSelectMarketEvents(market.id);
                         }}
-                        className="relative flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold text-slate-400 hover:text-sky-300 hover:bg-white/5 transition-colors cursor-pointer"
+                        className="relative flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold text-muted-foreground hover:text-sky-300 hover:bg-white/[0.06] hover:shadow-[0_0_14px_-4px_rgba(56,189,248,0.55)] transition-[color,background-color,box-shadow] duration-200 cursor-pointer"
                         title="Ver eventos de este mercado"
                       >
                         <Calendar className="w-3 h-3" />
                         <span className="hidden xl:inline">Eventos</span>
                         {catalystsMap?.[market.id] && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_4px_#f43f5e]" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_8px_#f43f5e]" />
                         )}
                       </button>
                     )}
@@ -200,9 +200,9 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
                 </div>
 
                 {/* Row 2: Local Time (prominent) on left, Date & Timezone on right */}
-                <div className="flex items-end justify-between gap-2 pt-2 border-t border-white/5">
+                <div className="flex items-end justify-between gap-2 pt-2 border-t border-border">
                   <div>
-                    <span className="text-[10px] uppercase font-semibold text-slate-400 tracking-wider block leading-none mb-1">
+                    <span className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider block leading-none mb-1">
                       Hora local
                     </span>
                     <span className="font-mono text-xl sm:text-2xl font-black text-white tabular-nums tracking-tight leading-none">
@@ -210,10 +210,10 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
                     </span>
                   </div>
                   <div className="flex flex-col items-end text-right min-w-0">
-                    <span className="font-mono text-xs font-semibold text-slate-300 leading-none">
+                    <span className="font-mono text-xs font-semibold text-foreground/80 leading-none">
                       {ev?.localDateFormatted}
                     </span>
-                    <span className="font-mono text-[10px] text-slate-500 truncate max-w-[110px] mt-1 leading-none" title={market.timezone}>
+                    <span className="font-mono text-[10px] text-muted-foreground/70 truncate max-w-[110px] mt-1 leading-none" title={market.timezone}>
                       {market.timezone.replace('_', ' ')}
                     </span>
                   </div>

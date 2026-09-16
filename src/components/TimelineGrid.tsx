@@ -131,9 +131,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
   const allMarkets = useMemo(() => [CHILE_MARKET, ...markets], [markets]);
 
   return (
-    <section className="rounded-xl sm:rounded-2xl border border-white/10 bg-gradient-to-b from-slate-900/80 via-slate-900/60 to-slate-950/90 backdrop-blur-2xl p-2 sm:p-3.5 md:p-5 shadow-xl flex flex-col gap-2 sm:gap-3.5 relative overflow-hidden">
-      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-sky-400/30 to-transparent pointer-events-none" />
-
+    <section className="rounded-2xl border border-border bg-card backdrop-blur-2xl p-2 sm:p-3.5 md:p-5 shadow-neon flex flex-col gap-2 sm:gap-3.5 relative overflow-hidden neon-edge">
       {/* Top Controls Row */}
       <TimelineHeader
         isColumnCollapsed={isColumnCollapsed}
@@ -142,7 +140,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
 
       {/* Horizontal Scrollable Table with Left Frozen Column + 24h Bars */}
       <div 
-        className="timeline-table-wrapper relative flex overflow-x-auto select-none rounded-2xl border border-white/10 bg-[#060911]/95 shadow-[inset_0_2px_14px_rgba(0,0,0,0.6)] touch-pan-y [scrollbar-width:thin] [scrollbar-color:rgba(56,189,248,0.35)_rgba(15,23,42,0.85)] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-slate-900/85 [&::-webkit-scrollbar-thumb]:bg-sky-400/35 hover:[&::-webkit-scrollbar-thumb]:bg-sky-400/60 [&::-webkit-scrollbar-thumb]:rounded"
+        className="timeline-table-wrapper relative flex overflow-x-auto select-none rounded-2xl border border-border bg-muted shadow-[inset_0_2px_14px_rgba(0,0,0,0.6)] touch-pan-y [scrollbar-width:thin] [scrollbar-color:rgba(56,189,248,0.35)_rgba(15,23,42,0.85)] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-muted [&::-webkit-scrollbar-thumb]:bg-sky-400/35 hover:[&::-webkit-scrollbar-thumb]:bg-sky-400/60 [&::-webkit-scrollbar-thumb]:rounded"
         ref={tableWrapperRef}
         onScroll={handleTableScroll}
       >

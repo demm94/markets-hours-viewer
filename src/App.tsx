@@ -116,7 +116,7 @@ export const App: React.FC = () => {
   }, [catalystsMap]);
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-[#06080f] text-slate-100 safe-area-container px-2.5 py-2 sm:px-5 sm:py-4 md:px-8 md:py-5 lg:px-10 overflow-x-hidden ambient-grid">
+    <div className="min-h-screen min-h-[100dvh] bg-background text-foreground safe-area-container px-2.5 py-2 sm:px-5 sm:py-4 md:px-8 md:py-5 lg:px-10 overflow-x-hidden neon-grid">
       {/* Native-style Pull to Refresh indicator */}
       <div
         className="fixed top-3 left-0 right-0 flex justify-center items-center z-[1000] pointer-events-none transition-opacity duration-200"
@@ -125,10 +125,10 @@ export const App: React.FC = () => {
           opacity: pullDistance > 10 ? Math.min((pullDistance - 10) / 40, 1) : 0
         }}
       >
-        <div className="inline-flex items-center gap-2 bg-slate-900/95 backdrop-blur-xl border border-sky-400/40 shadow-[0_8px_24px_-4px_rgba(0,0,0,0.8),0_0_16px_rgba(56,189,248,0.25)] px-3.5 py-1.5 rounded-full text-white font-mono text-xs font-bold">
+        <div className="inline-flex items-center gap-2 bg-card backdrop-blur-xl border border-border-strong shadow-neon px-3.5 py-1.5 rounded-full text-foreground font-mono text-xs font-bold">
           <RotateCw
             size={14}
-            className={`text-sky-400 transition-transform duration-75 ${isRefreshing ? 'animate-spin !text-emerald-400' : ''}`}
+            className={`text-neon-sky transition-transform duration-75 ${isRefreshing ? 'animate-spin !text-emerald-400' : ''}`}
             style={{
               transform: isRefreshing ? undefined : `rotate(${pullDistance * 5}deg)`
             }}
@@ -186,12 +186,12 @@ export const App: React.FC = () => {
           />
         </main>
 
-        <footer className="border-t border-white/10 pt-3 pb-4 mt-2 md:pt-8 md:pb-8 md:mt-4">
-          <div className="flex justify-between items-center flex-wrap gap-2 md:gap-6 text-[11px] sm:text-xs text-slate-400">
+        <footer className="border-t border-border neon-edge pt-3 pb-4 mt-2 md:pt-8 md:pb-8 md:mt-4">
+          <div className="flex justify-between items-center flex-wrap gap-2 md:gap-6 text-[11px] sm:text-xs text-muted-foreground">
             <div className="max-w-2xl leading-relaxed">
-              <strong className="text-slate-200">Zonas Horarias Dinámicas IANA:</strong> Cálculos recalculados en vivo para evitar offsets estáticos. Chile se encuentra en horario de verano (UTC-3) hasta abril de 2027.
+              <strong className="text-foreground">Zonas Horarias Dinámicas IANA:</strong> Cálculos recalculados en vivo para evitar offsets estáticos. Chile se encuentra en horario de verano (UTC-3) hasta abril de 2027.
             </div>
-            <div className="font-mono font-semibold text-slate-300">
+            <div className="font-mono font-semibold text-foreground/80">
               PWA instalable · Base de datos IANA v2026 · {CHILE_CONFIG.country}
             </div>
           </div>

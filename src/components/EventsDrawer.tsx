@@ -82,7 +82,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm"
+            className="fixed inset-0 bg-background/80 backdrop-blur-sm"
             aria-hidden="true"
           />
 
@@ -92,19 +92,19 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-            className="relative z-10 flex flex-col w-full max-w-md h-full bg-slate-900 border-l border-white/10 shadow-2xl overflow-hidden"
+            className="relative z-10 flex flex-col w-full max-w-md h-full bg-popover border-l border-border shadow-neon-lg overflow-hidden"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/10 bg-slate-900/90 backdrop-blur-md">
+            <div className="flex items-center justify-between px-4 py-3.5 border-b border-border bg-popover/90 backdrop-blur-md">
               <div className="flex items-center gap-2.5">
-                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/[0.15] border border-emerald-400/45 text-emerald-300 shadow-[0_0_0_1px_rgba(16,185,129,0.18),0_0_18px_-6px_rgba(16,185,129,0.55)]">
                   <Calendar className="w-4 h-4" />
                 </div>
                 <div>
                   <h2 className="text-sm font-semibold text-white tracking-wide">
                     Próximos Eventos
                   </h2>
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-[11px] text-muted-foreground">
                     Catalizadores macro y eventos clave
                   </p>
                 </div>
@@ -112,7 +112,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex items-center justify-center w-9 h-9 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 active:bg-white/10 transition-colors"
+                className="flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:text-white hover:bg-white/5 active:bg-white/10 transition-[color,background-color,border-color,box-shadow] duration-200"
                 aria-label="Cerrar panel de eventos"
               >
                 <X className="w-5 h-5" />
@@ -120,7 +120,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
             </div>
 
             {/* Filter Bar */}
-            <div className="p-3 bg-slate-900/50 border-b border-white/5 space-y-2.5">
+            <div className="p-3 bg-popover/90 border-b border-border space-y-2.5">
               {/* Market Filter Chips */}
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
                 {marketTabs.map((tab) => {
@@ -131,10 +131,10 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                       type="button"
                       onClick={() => onSelectMarketId(tab.id)}
                       className={cn(
-                        'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md font-medium whitespace-nowrap transition-all select-none',
+                        'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md font-medium whitespace-nowrap transition-[color,background-color,border-color,box-shadow] duration-200 select-none',
                         isActive
-                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
-                          : 'bg-slate-800/80 text-slate-400 border border-white/5 hover:bg-slate-800 hover:text-slate-200'
+                          ? 'bg-emerald-500/[0.15] text-emerald-300 border border-emerald-400/45 shadow-[0_0_0_1px_rgba(16,185,129,0.18),0_0_18px_-6px_rgba(16,185,129,0.55)]'
+                          : 'bg-white/[0.05] text-muted-foreground border border-border hover:bg-white/[0.08] hover:text-foreground/80'
                       )}
                     >
                       <span>{tab.flag}</span>
@@ -146,7 +146,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
 
               {/* Toggle High Importance */}
               <div className="flex items-center justify-between pt-0.5">
-                <span className="text-[11px] text-slate-400">
+                <span className="text-[11px] text-muted-foreground">
                   {upcomingEvents.length}{' '}
                   {upcomingEvents.length === 1 ? 'evento encontrado' : 'eventos encontrados'}
                 </span>
@@ -154,10 +154,10 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                   type="button"
                   onClick={() => setOnlyHighImportance((prev) => !prev)}
                   className={cn(
-                    'flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border transition-colors',
+                    'flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border transition-[color,background-color,border-color,box-shadow] duration-200',
                     onlyHighImportance
-                      ? 'bg-rose-500/20 border-rose-500/40 text-rose-300'
-                      : 'bg-slate-800/60 border-white/5 text-slate-400 hover:text-slate-300'
+                      ? 'bg-rose-500/[0.15] border-rose-400/45 text-rose-300 shadow-[0_0_0_1px_rgba(244,63,94,0.18),0_0_18px_-6px_rgba(244,63,94,0.55)]'
+                      : 'bg-white/[0.05] border-border text-muted-foreground hover:text-foreground/80'
                   )}
                 >
                   <Flame className="w-3.5 h-3.5" />
@@ -167,16 +167,16 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
             </div>
 
             {/* Events List */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-2.5 divide-y divide-white/5">
+            <div className="flex-1 overflow-y-auto p-3 space-y-2.5 divide-y divide-border">
               {upcomingEvents.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-slate-800/80 text-slate-500 mb-3">
+                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-secondary text-muted-foreground/70 mb-3">
                     <Calendar className="w-6 h-6" />
                   </div>
-                  <p className="text-sm font-medium text-slate-300">
+                  <p className="text-sm font-medium text-foreground/80">
                     No hay eventos programados
                   </p>
-                  <p className="text-xs text-slate-500 mt-1 max-w-xs">
+                  <p className="text-xs text-muted-foreground/70 mt-1 max-w-xs">
                     No encontramos eventos con los filtros actuales en la ventana de los próximos 30 días.
                   </p>
                 </div>
@@ -197,17 +197,17 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                   return (
                     <div
                       key={ev.id}
-                      className="pt-2.5 first:pt-0 group flex flex-col gap-2 p-3 rounded-xl bg-slate-800/40 border border-white/5 hover:border-white/10 hover:bg-slate-800/70 transition-all"
+                      className="pt-2.5 first:pt-0 group flex flex-col gap-2 p-3 rounded-xl bg-white/[0.03] border border-border hover:border-border-strong hover:bg-white/[0.06] transition-[background-color,border-color] duration-200"
                     >
                       {/* Top row: tags & badges */}
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-700/60 text-slate-300 border border-white/5">
+                          <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-white/[0.05] text-foreground/80 border border-border">
                             <span>{market?.flag ?? '🌐'}</span>
                             <span>{market?.name ?? ev.marketId.toUpperCase()}</span>
                           </span>
 
-                          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-800 text-slate-400">
+                          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-white/[0.05] text-muted-foreground">
                             <CatIcon className="w-3 h-3" />
                             <span>{catInfo.label}</span>
                           </span>
@@ -218,13 +218,13 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                             className={cn(
                               'px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider',
                               isHigh
-                                ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                                : 'bg-amber-500/15 text-amber-300 border border-amber-500/25'
+                                ? 'bg-rose-500/[0.15] text-rose-300 border border-rose-400/45 shadow-[0_0_0_1px_rgba(244,63,94,0.18),0_0_18px_-6px_rgba(244,63,94,0.55)]'
+                                : 'bg-amber-500/[0.15] text-amber-300 border border-amber-400/45 shadow-[0_0_0_1px_rgba(245,158,11,0.18),0_0_18px_-6px_rgba(245,158,11,0.55)]'
                             )}
                           >
                             {isHigh ? 'Alta' : 'Media'}
                           </span>
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-950/40 text-emerald-400 border border-emerald-500/20">
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/[0.15] text-emerald-300 border border-emerald-400/45 shadow-[0_0_0_1px_rgba(16,185,129,0.18),0_0_18px_-6px_rgba(16,185,129,0.55)]">
                             {ev.relativeTimeDescriptor}
                           </span>
                         </div>
@@ -236,27 +236,27 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                           {ev.title}
                         </h3>
                         {ev.description && (
-                          <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
+                          <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
                             {ev.description}
                           </p>
                         )}
                       </div>
 
                       {/* Timestamps conversion grid */}
-                      <div className="grid grid-cols-2 gap-2 mt-1 p-2 rounded-lg bg-slate-900/70 border border-white/5 text-[11px]">
+                      <div className="grid grid-cols-2 gap-2 mt-1 p-2 rounded-lg bg-muted border border-border text-[11px]">
                         <div>
-                          <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-400 flex items-center gap-1">
+                          <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-300 flex items-center gap-1">
                             <span>🇨🇱</span> Hora Chile
                           </span>
-                          <span className="font-mono font-medium text-slate-200 mt-0.5 block">
+                          <span className="font-mono font-medium text-foreground/80 mt-0.5 block">
                             {ev.chileTimeFormatted}
                           </span>
                         </div>
                         <div>
-                          <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 flex items-center gap-1">
+                          <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground flex items-center gap-1">
                             <span>{market?.flag ?? '🌐'}</span> Hora Bolsa
                           </span>
-                          <span className="font-mono font-medium text-slate-300 mt-0.5 block">
+                          <span className="font-mono font-medium text-foreground/80 mt-0.5 block">
                             {ev.exchangeTimeFormatted}
                           </span>
                         </div>
@@ -264,15 +264,15 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
 
                       {/* Forecast / Previous metrics if available */}
                       {(ev.forecast || ev.previous) && (
-                        <div className="flex items-center gap-4 text-[10px] text-slate-400 pt-0.5 px-0.5">
+                        <div className="flex items-center gap-4 text-[10px] text-muted-foreground pt-0.5 px-0.5">
                           {ev.forecast && (
                             <span>
-                              <strong className="text-slate-300">Previsto:</strong> {ev.forecast}
+                              <strong className="text-foreground/80">Previsto:</strong> {ev.forecast}
                             </span>
                           )}
                           {ev.previous && (
                             <span>
-                              <strong className="text-slate-300">Previo:</strong> {ev.previous}
+                              <strong className="text-foreground/80">Previo:</strong> {ev.previous}
                             </span>
                           )}
                         </div>
@@ -284,7 +284,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
             </div>
 
             {/* Footer */}
-            <div className="px-4 py-2.5 border-t border-white/10 bg-slate-900/90 text-[10px] text-slate-400 flex items-center justify-between">
+            <div className="px-4 py-2.5 border-t border-border bg-popover/90 text-[10px] text-muted-foreground flex items-center justify-between">
               <span>Sincronizado con IANA America/Santiago</span>
               <span className="font-mono">PWA Offline ready</span>
             </div>

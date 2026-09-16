@@ -14,8 +14,8 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = React.memo(({
   onScrollToNow
 }) => {
   return (
-    <div className="timeline-slider-bar flex items-center gap-2 sm:gap-3 bg-slate-950/90 backdrop-blur-xl border border-sky-400/20 rounded-xl sm:rounded-2xl px-3 sm:px-5 py-1.5 sm:py-2.5 mt-2 sm:mt-3 md:mt-4 shadow-[inset_0_1px_3px_rgba(0,0,0,0.5),0_8px_24px_-6px_rgba(0,0,0,0.7)] min-h-[40px] sm:min-h-[52px]">
-      <span className="font-mono text-[10px] sm:text-xs font-bold text-slate-400 tabular-nums select-none">00:00</span>
+    <div className="timeline-slider-bar flex items-center gap-2 sm:gap-3 bg-muted backdrop-blur-xl border border-sky-400/20 rounded-xl sm:rounded-2xl px-3 sm:px-5 py-1.5 sm:py-2.5 mt-2 sm:mt-3 md:mt-4 shadow-[inset_0_1px_3px_rgba(0,0,0,0.5),0_8px_24px_-6px_rgba(0,0,0,0.7)] min-h-[40px] sm:min-h-[52px]">
+      <span className="font-mono text-[10px] sm:text-xs font-bold text-muted-foreground tabular-nums select-none">00:00</span>
       <div className="flex-1 flex items-center relative min-h-[32px] sm:min-h-[44px]">
         <input
           type="range"
@@ -28,7 +28,7 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = React.memo(({
           aria-label="Deslizar horizontalmente por las 24 horas"
         />
       </div>
-      <span className="font-mono text-[10px] sm:text-xs font-bold text-slate-400 tabular-nums select-none">24:00</span>
+      <span className="font-mono text-[10px] sm:text-xs font-bold text-muted-foreground tabular-nums select-none">24:00</span>
 
       <Button
         type="button"

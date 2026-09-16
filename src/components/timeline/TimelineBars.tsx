@@ -63,7 +63,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
       onKeyDown={onKeyDown}
     >
       {/* Hour Labels at Top */}
-      <div className="h-9 sm:h-11 relative border-b border-white/10 bg-[#060912]">
+      <div className="h-9 sm:h-11 relative border-b border-border bg-muted">
         {HOURS.map((h) => {
           const transform =
             h === 0
@@ -75,7 +75,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
           return (
             <div
               key={h}
-              className="absolute top-1/2 font-mono text-[10px] sm:text-xs font-semibold text-slate-400 tabular-nums select-none"
+              className="absolute top-1/2 font-mono text-[10px] sm:text-xs font-semibold text-muted-foreground tabular-nums select-none"
               style={{ left: `${(h / 24) * 100}%`, transform }}
             >
               {h.toString().padStart(2, '0')}:00
@@ -104,11 +104,11 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
           return (
             <div
               key={market.id}
-              className={`h-[38px] sm:h-[46px] md:h-[50px] px-1.5 sm:px-2 flex items-center border-b border-white/5 transition-colors ${
+              className={`h-[38px] sm:h-[46px] md:h-[50px] px-1.5 sm:px-2 flex items-center border-b border-border transition-colors ${
                 isChile ? 'bg-gradient-to-r from-sky-400/[0.08] to-sky-400/[0.02] border-b-sky-400/35' : 'hover:bg-white/[0.02]'
               }`}
             >
-              <div className="relative w-full h-[22px] sm:h-[26px] md:h-[30px] bg-[#0c111e]/90 border border-white/10 rounded sm:rounded-lg overflow-hidden shadow-[inset_0_2px_6px_rgba(0,0,0,0.5)]">
+              <div className="relative w-full h-[22px] sm:h-[26px] md:h-[30px] bg-white/[0.02] border border-border rounded sm:rounded-lg overflow-hidden shadow-[inset_0_2px_6px_rgba(0,0,0,0.5)]">
                 {/* Chile reference track */}
                 {isChile && (
                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-sky-400/[0.06] via-sky-400/[0.16] to-sky-400/[0.06]">
@@ -124,18 +124,24 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                   const widthPercent = ((seg.endMinute - seg.startMinute) / 1440) * 100;
                   const isActive = scrubberMinutes >= seg.startMinute && scrubberMinutes < seg.endMinute;
 
-                  let blockStyle = 'bg-gradient-to-b from-emerald-500 to-emerald-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_0_16px_rgba(16,185,129,0.3)]';
+                  let blockStyle = 'bg-gradient-to-b from-emerald-500 to-emerald-600';
+                  let shadowStyle = 'shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5),0_0_16px_rgba(16,185,129,0.30)]';
+                  let activeShadowStyle = 'shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5),0_0_28px_rgba(16,185,129,0.80)]';
                   if (seg.type === 'lunch') {
-                    blockStyle = 'bg-gradient-to-b from-amber-500 to-amber-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_0_14px_rgba(245,158,11,0.3)]';
+                    blockStyle = 'bg-gradient-to-b from-amber-500 to-amber-600';
+                    shadowStyle = 'shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5),0_0_16px_rgba(245,158,11,0.30)]';
+                    activeShadowStyle = 'shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5),0_0_28px_rgba(245,158,11,0.80)]';
                   } else if (seg.type === 'pre_market') {
-                    blockStyle = 'bg-gradient-to-b from-cyan-500 to-sky-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_0_14px_rgba(6,182,212,0.3)]';
+                    blockStyle = 'bg-gradient-to-b from-cyan-500 to-sky-600';
+                    shadowStyle = 'shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5),0_0_16px_rgba(34,211,238,0.30)]';
+                    activeShadowStyle = 'shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5),0_0_28px_rgba(34,211,238,0.80)]';
                   }
 
                   return (
                     <div
                       key={idx}
-                      className={`absolute top-0 bottom-0 flex items-center justify-center text-[11px] font-bold rounded-md overflow-hidden whitespace-nowrap shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5)] transition-[filter,box-shadow] ${blockStyle} ${
-                        isActive ? 'brightness-125 ring-2 ring-white shadow-[0_0_24px_rgba(16,185,129,0.45)]' : ''
+                      className={`absolute top-0 bottom-0 flex items-center justify-center text-[11px] font-bold rounded-md overflow-hidden whitespace-nowrap transition-[box-shadow] ${blockStyle} ${
+                        isActive ? `ring-2 ring-white ${activeShadowStyle}` : shadowStyle
                       }`}
                       style={{
                         left: `${leftPercent}%`,
@@ -202,7 +208,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                   ? 'translate(calc(-100% - 6px), -50%)'
                   : 'translate(-50%, -50%)';
 
-              let statusClasses = 'border-slate-700/60 text-slate-300';
+              let statusClasses = 'border-border text-foreground/80';
               if (isChile) {
                 statusClasses = 'border-sky-400/70 text-sky-300 shadow-[0_4px_14px_rgba(0,0,0,0.75),0_0_12px_rgba(56,189,248,0.25)]';
               } else if (ev.status === 'open') {
@@ -216,7 +222,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
               return (
                 <div
                   key={market.id}
-                  className={`absolute left-0 inline-flex items-center gap-1.5 sm:gap-2 bg-[#080c16]/95 backdrop-blur-md border rounded-md sm:rounded-lg px-2 sm:px-3 py-0.5 sm:py-1 font-mono text-[10px] sm:text-xs font-bold whitespace-nowrap shadow-lg z-10 pointer-events-none tabular-nums ${statusClasses}`}
+                  className={`absolute left-0 inline-flex items-center gap-1.5 sm:gap-2 bg-popover/95 backdrop-blur-md border rounded-md sm:rounded-lg px-2 sm:px-3 py-0.5 sm:py-1 font-mono text-[10px] sm:text-xs font-bold whitespace-nowrap shadow-neon z-10 pointer-events-none tabular-nums ${statusClasses}`}
                   style={{
                     top: `${topPx}px`,
                     transform: edgeTransform
@@ -239,7 +245,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
           style={{ left: `${scrubberPercent}%` }}
         >
           <div
-            className="absolute top-1 sm:top-1.5 left-0 bg-gradient-to-br from-sky-600 to-sky-700 text-white font-mono text-[10px] sm:text-xs font-extrabold px-2 sm:px-3 py-0.5 sm:py-1 rounded sm:rounded-lg border border-white/25 shadow-[0_4px_16px_rgba(2,132,199,0.7)] whitespace-nowrap tabular-nums"
+            className="absolute top-1 sm:top-1.5 left-0 bg-gradient-to-br from-sky-600 to-sky-700 text-white font-mono text-[10px] sm:text-xs font-extrabold px-2 sm:px-3 py-0.5 sm:py-1 rounded sm:rounded-lg border border-border-strong shadow-[0_4px_16px_rgba(2,132,199,0.7)] whitespace-nowrap tabular-nums"
             style={{
               transform:
                 scrubberPercent < 4
@@ -279,7 +285,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                     ? 'translate(calc(-100% - 6px), -50%)'
                     : 'translate(-50%, -50%)';
 
-                let statusClasses = 'border-slate-700/60 text-slate-300';
+                let statusClasses = 'border-border text-foreground/80';
                 if (isChile) {
                   statusClasses = 'border-sky-400/70 text-sky-300 shadow-[0_4px_14px_rgba(0,0,0,0.75),0_0_12px_rgba(56,189,248,0.25)]';
                 } else if (ev.status === 'open') {
@@ -293,7 +299,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                 return (
                   <div
                     key={market.id}
-                    className={`absolute left-0 inline-flex items-center gap-1.5 sm:gap-2 bg-[#080c16]/95 backdrop-blur-md border rounded-md sm:rounded-lg px-2 sm:px-3 py-0.5 sm:py-1 font-mono text-[10px] sm:text-xs font-bold whitespace-nowrap shadow-lg z-10 pointer-events-none tabular-nums ${statusClasses}`}
+                    className={`absolute left-0 inline-flex items-center gap-1.5 sm:gap-2 bg-popover/95 backdrop-blur-md border rounded-md sm:rounded-lg px-2 sm:px-3 py-0.5 sm:py-1 font-mono text-[10px] sm:text-xs font-bold whitespace-nowrap shadow-neon z-10 pointer-events-none tabular-nums ${statusClasses}`}
                     style={{
                       top: `${topPx}px`,
                       transform: edgeTransform

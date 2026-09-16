@@ -4,8 +4,8 @@ export const pwaManifest: Partial<ManifestOptions> = {
   name: 'Markets View',
   short_name: 'Markets View',
   description: 'Comparador en tiempo real de horarios de apertura y cierre bursátil contra hora de Chile',
-  theme_color: '#0f172a',
-  background_color: '#090d16',
+  theme_color: '#05060a',
+  background_color: '#05060a',
   display: 'standalone',
   orientation: 'portrait',
   icons: [
