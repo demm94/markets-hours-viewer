@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion, type Variants } from 'framer-motion';
+import { Calendar } from 'lucide-react';
 import { MarketConfig, MarketEvaluation } from '../core/types';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
@@ -8,6 +9,8 @@ import { cn } from '../lib/utils';
 interface MarketCardsProps {
   markets: MarketConfig[];
   evaluations: Record<string, MarketEvaluation>;
+  onSelectMarketEvents?: (marketId: string) => void;
+  catalystsMap?: Record<string, boolean>;
 }
 
 const containerVariants: Variants = {
@@ -34,7 +37,12 @@ const cardVariants: Variants = {
   }
 };
 
-export const MarketCards: React.FC<MarketCardsProps> = React.memo(({ markets, evaluations }) => {
+export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
+  markets,
+  evaluations,
+  onSelectMarketEvents,
+  catalystsMap
+}) => {
   return (
     <>
       {/* Mobile Condensed Strip (All 5 markets visible at a glance) */}
@@ -42,6 +50,7 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({ markets, ev
         {markets.map((market) => {
           const ev = evaluations[market.id];
           const status = ev?.status ?? 'closed';
+          const hasCatalyst = catalystsMap?.[market.id];
 
           let borderClass = 'border-white/10 bg-slate-900/80 text-slate-400';
           let dotColor = 'bg-slate-500';
@@ -64,12 +73,16 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({ markets, ev
           return (
             <div
               key={market.id}
+              onClick={() => onSelectMarketEvents?.(market.id)}
               className={cn(
-                "flex flex-col items-center justify-between p-1 sm:p-1.5 rounded-lg border transition-all min-h-[50px]",
+                "relative flex flex-col items-center justify-between p-1 sm:p-1.5 rounded-lg border transition-all min-h-[50px] cursor-pointer hover:border-white/20 active:scale-95",
                 borderClass
               )}
-              title={`${market.name} (${market.code}) - ${statusLabel} - ${ev?.localTimeFormatted ?? '--:--'}`}
+              title={`${market.name} (${market.code}) - ${statusLabel} - ${ev?.localTimeFormatted ?? '--:--'}${hasCatalyst ? ' (Evento hoy)' : ''}`}
             >
+              {hasCatalyst && (
+                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_4px_#f43f5e]" />
+              )}
               <div className="flex items-center gap-1 leading-none">
                 <span className="text-xs select-none">{market.flag}</span>
                 <span className="text-[9px] font-mono font-bold tracking-tight text-slate-300">
@@ -162,9 +175,28 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({ markets, ev
                       </div>
                     </div>
                   </div>
-                  <Badge variant={badgeVariant} className="px-2.5 py-0.5 text-[11px] font-semibold shrink-0">
-                    {statusText}
-                  </Badge>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {onSelectMarketEvents && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectMarketEvents(market.id);
+                        }}
+                        className="relative flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold text-slate-400 hover:text-sky-300 hover:bg-white/5 transition-colors cursor-pointer"
+                        title="Ver eventos de este mercado"
+                      >
+                        <Calendar className="w-3 h-3" />
+                        <span className="hidden xl:inline">Eventos</span>
+                        {catalystsMap?.[market.id] && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_4px_#f43f5e]" />
+                        )}
+                      </button>
+                    )}
+                    <Badge variant={badgeVariant} className="px-2.5 py-0.5 text-[11px] font-semibold shrink-0">
+                      {statusText}
+                    </Badge>
+                  </div>
                 </div>
 
                 {/* Row 2: Local Time (prominent) on left, Date & Timezone on right */}

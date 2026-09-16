@@ -13,10 +13,24 @@ import { usePullToRefresh } from './hooks/usePullToRefresh';
 import { Header } from './components/Header';
 import { MarketCards } from './components/MarketCards';
 import { TimelineGrid } from './components/TimelineGrid';
+import { EventsDrawer } from './components/EventsDrawer';
+import { hasHighImpactEventsToday } from './core/events';
 import { RotateCw } from 'lucide-react';
 
 export const App: React.FC = () => {
   const { now, currentMinutes, timeFormatted, dateFormatted, minuteKey } = useCurrentTime();
+
+  const [isEventsDrawerOpen, setIsEventsDrawerOpen] = React.useState(false);
+  const [selectedEventMarket, setSelectedEventMarket] = React.useState('all');
+
+  const handleOpenEvents = React.useCallback((marketId: string = 'all') => {
+    setSelectedEventMarket(marketId);
+    setIsEventsDrawerOpen(true);
+  }, []);
+
+  const handleCloseEvents = React.useCallback(() => {
+    setIsEventsDrawerOpen(false);
+  }, []);
 
   const handleRefresh = React.useCallback(() => {
     window.location.reload();
@@ -89,6 +103,18 @@ export const App: React.FC = () => {
 
   const isScrubbing = isHovering || isDragging || Math.abs(scrubberMinutes - currentMinutes) > 2;
 
+  const catalystsMap = useMemo(() => {
+    const map: Record<string, boolean> = {};
+    for (const m of MARKETS) {
+      map[m.id] = hasHighImpactEventsToday(m.id, now);
+    }
+    return map;
+  }, [referenceDayKey, now]);
+
+  const hasUpcomingCatalysts = useMemo(() => {
+    return Object.values(catalystsMap).some(Boolean);
+  }, [catalystsMap]);
+
   return (
     <div className="min-h-screen min-h-[100dvh] bg-[#06080f] text-slate-100 safe-area-container px-2.5 py-2 sm:px-5 sm:py-4 md:px-8 md:py-5 lg:px-10 overflow-x-hidden ambient-grid">
       {/* Native-style Pull to Refresh indicator */}
@@ -130,10 +156,17 @@ export const App: React.FC = () => {
           dateFormatted={dateFormatted}
           openMarketsCount={openMarketsCount}
           totalMarketsCount={MARKETS.length}
+          onOpenEvents={() => handleOpenEvents('all')}
+          hasUpcomingCatalysts={hasUpcomingCatalysts}
         />
 
         <main className="flex flex-col gap-2.5 sm:gap-4 md:gap-6">
-          <MarketCards markets={MARKETS} evaluations={evaluationsNow} />
+          <MarketCards
+            markets={MARKETS}
+            evaluations={evaluationsNow}
+            onSelectMarketEvents={handleOpenEvents}
+            catalystsMap={catalystsMap}
+          />
 
           <TimelineGrid
             markets={MARKETS}
@@ -164,6 +197,14 @@ export const App: React.FC = () => {
           </div>
         </footer>
       </div>
+
+      <EventsDrawer
+        isOpen={isEventsDrawerOpen}
+        onClose={handleCloseEvents}
+        selectedMarketId={selectedEventMarket}
+        onSelectMarketId={setSelectedEventMarket}
+        chileNow={now}
+      />
     </div>
   );
 };

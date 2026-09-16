@@ -33,3 +33,30 @@ export interface MarketEvaluation {
   localDateFormatted: string;
   activeSegmentLabel?: string;
 }
+
+export type EventImportance = 'medium' | 'high';
+
+export type EventCategory =
+  | 'central_bank'
+  | 'inflation'
+  | 'gdp'
+  | 'employment'
+  | 'holidays';
+
+export interface MarketEvent {
+  id: string;
+  marketId: string; // 'nyse' | 'twse' | 'krx' | 'sse' | 'nse' | 'chile'
+  title: string;
+  description?: string;
+  category: EventCategory;
+  importance: EventImportance;
+  timestampUtc: string; // ISO 8601 (e.g., '2026-09-17T18:00:00Z')
+  forecast?: string;
+  previous?: string;
+}
+
+export interface FormattedMarketEvent extends MarketEvent {
+  chileTimeFormatted: string;
+  exchangeTimeFormatted: string;
+  relativeTimeDescriptor: string;
+}

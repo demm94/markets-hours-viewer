@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { DateTime } from 'luxon';
-import { Activity } from 'lucide-react';
+import { Activity, Calendar } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { getSantiagoOffsetDescription } from '../core/timezone';
 
@@ -11,6 +11,8 @@ interface HeaderProps {
   dateFormatted: string;
   openMarketsCount: number;
   totalMarketsCount: number;
+  onOpenEvents?: () => void;
+  hasUpcomingCatalysts?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = React.memo(({
@@ -18,7 +20,9 @@ export const Header: React.FC<HeaderProps> = React.memo(({
   timeFormatted,
   dateFormatted,
   openMarketsCount,
-  totalMarketsCount
+  totalMarketsCount,
+  onOpenEvents,
+  hasUpcomingCatalysts
 }) => {
   const santiagoOffset = getSantiagoOffsetDescription(now);
 
@@ -33,19 +37,36 @@ export const Header: React.FC<HeaderProps> = React.memo(({
             Markets View
           </h1>
         </div>
-        <motion.div
-          key={openMarketsCount}
-          initial={{ scale: 0.92 }}
-          animate={{ scale: 1 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-        >
-          <Badge variant="open" showDot={false} className="gap-1.5 sm:gap-2 px-2.5 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs font-semibold shadow-md">
-            <Activity size={11} className="animate-pulse text-emerald-400 shrink-0" />
-            <span>
-              <strong className="text-emerald-300 font-bold">{openMarketsCount}</strong>/{totalMarketsCount} abiertos
-            </span>
-          </Badge>
-        </motion.div>
+        <div className="flex items-center gap-2">
+          <motion.div
+            key={openMarketsCount}
+            initial={{ scale: 0.92 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+          >
+            <Badge variant="open" showDot={false} className="gap-1.5 sm:gap-2 px-2.5 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs font-semibold shadow-md">
+              <Activity size={11} className="animate-pulse text-emerald-400 shrink-0" />
+              <span>
+                <strong className="text-emerald-300 font-bold">{openMarketsCount}</strong>/{totalMarketsCount} abiertos
+              </span>
+            </Badge>
+          </motion.div>
+
+          {onOpenEvents && (
+            <button
+              type="button"
+              onClick={onOpenEvents}
+              className="relative flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-md border border-white/10 bg-slate-800/80 hover:bg-slate-750 hover:text-white active:bg-slate-700 text-[10px] sm:text-xs font-semibold text-slate-200 transition-colors shadow-sm cursor-pointer"
+              title="Ver próximos eventos y catalizadores"
+            >
+              <Calendar className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+              <span>Eventos</span>
+              {hasUpcomingCatalysts && (
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_6px_#f43f5e]" />
+              )}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center justify-between w-full md:w-auto gap-1.5 sm:gap-3 md:gap-4 bg-[#04070f]/85 border border-white/10 rounded-lg px-2.5 py-1 sm:px-3 sm:py-1.5 md:px-4 md:py-2 shadow-inner">
