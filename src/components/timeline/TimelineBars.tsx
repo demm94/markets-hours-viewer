@@ -20,6 +20,7 @@ interface TimelineBarsProps {
   onPointerUp: (e: React.PointerEvent<HTMLDivElement>) => void;
   onPointerCancel?: (e: React.PointerEvent<HTMLDivElement>) => void;
   onPointerLeave: () => void;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
 }
 
 export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
@@ -36,7 +37,8 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
   onPointerMove,
   onPointerUp,
   onPointerCancel,
-  onPointerLeave
+  onPointerLeave,
+  onKeyDown
 }) => {
   const scrubberPercent = (scrubberMinutes / 1440) * 100;
   const nowPercent = (currentMinutes / 1440) * 100;
@@ -44,13 +46,21 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
 
   return (
     <div
-      className="timeline-bars-container flex-1 min-w-[800px] relative flex flex-col cursor-crosshair touch-none select-none"
+      className="timeline-bars-container flex-1 min-w-[800px] relative flex flex-col cursor-crosshair touch-none select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/50"
       ref={containerRef}
+      tabIndex={0}
+      role="slider"
+      aria-label="Cursor interactivo de línea de tiempo"
+      aria-valuemin={0}
+      aria-valuemax={1440}
+      aria-valuenow={scrubberMinutes}
+      aria-valuetext={`Hora de Chile ${formatMinutes(scrubberMinutes)}`}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerCancel}
       onPointerLeave={onPointerLeave}
+      onKeyDown={onKeyDown}
     >
       {/* Hour Labels at Top */}
       <div className="h-11 relative border-b border-white/10 bg-[#060912]">

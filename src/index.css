@@ -212,3 +212,11 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Safe Area insets for mobile standalone PWA */
+.safe-area-container {
+  padding-top: max(0.875rem, env(safe-area-inset-top));
+  padding-bottom: max(0.875rem, env(safe-area-inset-bottom));
+  padding-left: max(0.875rem, env(safe-area-inset-left));
+  padding-right: max(0.875rem, env(safe-area-inset-right));
+}

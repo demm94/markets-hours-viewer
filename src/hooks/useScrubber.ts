@@ -10,6 +10,7 @@ export interface UseScrubberResult {
   handlePointerUp: (e: React.PointerEvent<HTMLDivElement>) => void;
   handlePointerCancel: (e: React.PointerEvent<HTMLDivElement>) => void;
   handlePointerLeave: () => void;
+  handleKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => void;
   resetToNow: () => void;
   setScrubberMinutes: (minutes: number | null) => void;
 }
@@ -101,6 +102,41 @@ export function useScrubber(defaultMinutes: number): UseScrubberResult {
     setIsDragging(false);
   }, []);
 
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      let step = 0;
+      if (e.key === 'ArrowLeft') step = -15;
+      else if (e.key === 'ArrowRight') step = 15;
+      else if (e.key === 'PageDown') step = -60;
+      else if (e.key === 'PageUp') step = 60;
+      else if (e.key === 'Home') {
+        e.preventDefault();
+        setScrubberMinutes(0);
+        setIsHovering(true);
+        return;
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        setScrubberMinutes(1440);
+        setIsHovering(true);
+        return;
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        resetToNow();
+        return;
+      }
+
+      if (step !== 0) {
+        e.preventDefault();
+        setIsHovering(true);
+        setScrubberMinutes((prev) => {
+          const current = prev ?? defaultMinutes;
+          return Math.max(0, Math.min(1440, current + step));
+        });
+      }
+    },
+    [defaultMinutes, resetToNow]
+  );
+
   return {
     scrubberMinutes: scrubberMinutes ?? defaultMinutes,
     isHovering,
@@ -111,6 +147,7 @@ export function useScrubber(defaultMinutes: number): UseScrubberResult {
     handlePointerUp,
     handlePointerCancel,
     handlePointerLeave,
+    handleKeyDown,
     resetToNow,
     setScrubberMinutes
   };

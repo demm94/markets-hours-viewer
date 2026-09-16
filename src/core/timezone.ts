@@ -72,8 +72,8 @@ export function projectMarketToTimeline(
       const clippedStart = sessionStartChile < refDayStart ? refDayStart : sessionStartChile;
       const clippedEnd = sessionEndChile > refDayEnd ? refDayEnd : sessionEndChile;
 
-      const startMinute = Math.round(clippedStart.diff(refDayStart, 'minutes').minutes);
-      const endMinute = Math.round(clippedEnd.diff(refDayStart, 'minutes').minutes);
+      const startMinute = dateTimeToWallClockMinutes(clippedStart, referenceDate);
+      const endMinute = dateTimeToWallClockMinutes(clippedEnd, referenceDate);
 
       if (endMinute > startMinute) {
         segments.push({
@@ -160,14 +160,47 @@ export function evaluateMarketAt(
 }
 
 /**
+ * Converts a DateTime in Santiago to wall-clock minutes (0-1440) on the reference day.
+ * Uses the clock face (hour * 60 + minute) rather than elapsed physical duration,
+ * preventing timeline distortion on DST transition days (23h or 25h).
+ */
+export function dateTimeToWallClockMinutes(
+  dt: DateTime,
+  referenceDate: DateTime = DateTime.now().setZone(CHILE_TZ)
+): number {
+  const refDayStart = referenceDate.setZone(CHILE_TZ).startOf('day');
+  const refDayEnd = refDayStart.plus({ days: 1 });
+
+  if (dt <= refDayStart) return 0;
+  if (dt >= refDayEnd) return 1440;
+  return dt.hour * 60 + dt.minute;
+}
+
+/**
  * Converts a minute offset (0-1440) on the reference day to a DateTime in Santiago.
+ * Maps directly to wall-clock time (hour and minute on the reference date)
+ * ensuring minute 720 always corresponds to 12:00, even during DST changeover days.
  */
 export function minuteOffsetToDateTime(
   minuteOffset: number,
   referenceDate: DateTime = DateTime.now().setZone(CHILE_TZ)
 ): DateTime {
+  const clamped = Math.max(0, Math.min(1440, minuteOffset));
   const refDayStart = referenceDate.setZone(CHILE_TZ).startOf('day');
-  return refDayStart.plus({ minutes: minuteOffset });
+
+  if (clamped >= 1440) {
+    return refDayStart.plus({ days: 1 });
+  }
+
+  const hour = Math.floor(clamped / 60);
+  const minute = Math.floor(clamped % 60);
+
+  return refDayStart.set({
+    hour,
+    minute,
+    second: 0,
+    millisecond: 0
+  });
 }
 
 /**

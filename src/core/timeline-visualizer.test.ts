@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { existsSync, readFileSync } from 'node:fs';
 import { DateTime } from 'luxon';
 import { CHILE_TZ, formatMinutes, getSantiagoOffsetDescription } from './timezone';
 import { MARKETS } from './markets';
@@ -37,5 +38,17 @@ describe('timeline-visualizer & pwa-shell compliance', () => {
     expect(pwaManifest.background_color).toBe('#090d16');
     expect(pwaManifest.icons?.length).toBeGreaterThanOrEqual(2);
     expect(pwaManifest.name).toBe('Markets View');
+  });
+
+  it('verifies PWA static icon assets exist in public folder', () => {
+    expect(existsSync('public/favicon.svg')).toBe(true);
+    expect(existsSync('public/pwa-192x192.svg')).toBe(true);
+    expect(existsSync('public/pwa-512x512.svg')).toBe(true);
+  });
+
+  it('verifies index.html specifies viewport-fit=cover for notch safe areas', () => {
+    const html = readFileSync('index.html', 'utf-8');
+    expect(html).toContain('viewport-fit=cover');
+    expect(html).toContain('apple-mobile-web-app-title');
   });
 });

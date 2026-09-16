@@ -35,7 +35,8 @@ export const App: React.FC = () => {
     handlePointerMove,
     handlePointerUp,
     handlePointerCancel,
-    handlePointerLeave
+    handlePointerLeave,
+    handleKeyDown
   } = useScrubber(currentMinutes);
 
   const referenceDayKey = `${now.year}-${now.month}-${now.day}`;
@@ -89,7 +90,7 @@ export const App: React.FC = () => {
   const isScrubbing = isHovering || isDragging || Math.abs(scrubberMinutes - currentMinutes) > 2;
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-[#06080f] text-slate-100 px-3.5 py-3.5 sm:px-5 sm:py-4 md:px-8 md:py-5 lg:px-10 overflow-x-hidden ambient-grid">
+    <div className="min-h-screen min-h-[100dvh] bg-[#06080f] text-slate-100 safe-area-container px-3.5 py-3.5 sm:px-5 sm:py-4 md:px-8 md:py-5 lg:px-10 overflow-x-hidden ambient-grid">
       {/* Native-style Pull to Refresh indicator */}
       <div
         className="fixed top-3 left-0 right-0 flex justify-center items-center z-[1000] pointer-events-none transition-opacity duration-200"
@@ -148,6 +149,7 @@ export const App: React.FC = () => {
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerCancel}
             onPointerLeave={handlePointerLeave}
+            onKeyDown={handleKeyDown}
           />
         </main>
 

@@ -6,7 +6,9 @@ import {
   evaluateMarketAt,
   formatMinutes,
   getSantiagoOffsetDescription,
-  isWeekend
+  isWeekend,
+  minuteOffsetToDateTime,
+  dateTimeToWallClockMinutes
 } from './timezone';
 import { MARKETS } from './markets';
 
@@ -134,5 +136,30 @@ describe('timezone engine', () => {
     // Monday
     const monday = DateTime.fromISO('2026-09-21T12:00:00');
     expect(isWeekend(monday)).toBe(false);
+  });
+
+  it('preserves wall-clock hour alignment during Chile DST transition days (23h and 25h days)', () => {
+    // September 6, 2026: Chile spring-forward transition (23-hour day)
+    const springTransitionDate = DateTime.fromISO('2026-09-06T12:00:00', { zone: CHILE_TZ });
+    
+    // Minute 720 (12:00) should produce a DateTime with hour 12, not 13
+    const dtNoon = minuteOffsetToDateTime(720, springTransitionDate);
+    expect(dtNoon.hour).toBe(12);
+    expect(dtNoon.minute).toBe(0);
+
+    // Minute 630 (10:30) should produce a DateTime with hour 10, minute 30
+    const dt1030 = minuteOffsetToDateTime(630, springTransitionDate);
+    expect(dt1030.hour).toBe(10);
+    expect(dt1030.minute).toBe(30);
+
+    // DateTime at 10:30 converted to wall clock minutes should equal 630
+    const wallClockMin = dateTimeToWallClockMinutes(dt1030, springTransitionDate);
+    expect(wallClockMin).toBe(630);
+
+    // April 4, 2027: Chile fall-back transition (25-hour day)
+    const fallTransitionDate = DateTime.fromISO('2027-04-04T12:00:00', { zone: CHILE_TZ });
+    const dtFallNoon = minuteOffsetToDateTime(720, fallTransitionDate);
+    expect(dtFallNoon.hour).toBe(12);
+    expect(dtFallNoon.minute).toBe(0);
   });
 });

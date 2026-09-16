@@ -26,6 +26,7 @@ interface TimelineGridProps {
   onPointerUp: (e: React.PointerEvent<HTMLDivElement>) => void;
   onPointerCancel?: (e: React.PointerEvent<HTMLDivElement>) => void;
   onPointerLeave: () => void;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
 }
 
 export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
@@ -41,7 +42,8 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
   onPointerMove,
   onPointerUp,
   onPointerCancel,
-  onPointerLeave
+  onPointerLeave,
+  onKeyDown
 }) => {
   const tableWrapperRef = useRef<HTMLDivElement | null>(null);
   const [scrollRatio, setScrollRatio] = useState<number>(0);
@@ -167,6 +169,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerCancel}
           onPointerLeave={onPointerLeave}
+          onKeyDown={onKeyDown}
         />
       </div>
 
