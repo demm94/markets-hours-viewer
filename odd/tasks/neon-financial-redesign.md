@@ -1,7 +1,7 @@
 # Feature: Neon Financial Redesign
 
 **Workflow:** ODD (Organic Driven Development)
-**Status:** implemented, all phases green — pending user visual review and the review decision
+**Status:** implemented, all phases green, **committed as `5fefc36`** (unpushed) — unreviewed, see "Native review status" below
 **Created:** 2026-09-16
 
 ## Goal
@@ -116,7 +116,49 @@ Plus `src/core/timeline-visualizer.test.ts` (assertion upgrade, see Phase 2 find
 
 Every phase touches only presentation (plus one test assertion and PWA color metadata).
 `git checkout -- <files>` per phase reverts cleanly; no data, no migration, no dependency
-change. Nothing is staged or committed; the repo is at `3bbaf3a` with all work uncommitted.
+change.
+
+Committed as **`5fefc36` — `feat(ui): re-skin the app with a neon financial design system`**
+(17 files, +559/-183), on `main`, **not pushed**. Parent commit `3bbaf3a`.
+
+Deliberately excluded from that commit because they were already in the working tree before
+this work started and are a separate logical unit: the staged deletions of
+`.atl/.skill-registry.cache.json` and `.atl/skill-registry.md`, and the modified `.gitignore`
+(which adds `.atl/` and `.pi/`). `.codegraph/` is untracked tool state and is likewise not
+committed or ignored.
+
+## Native review status
+
+**This change is UNREVIEWED.** It is not a declined review and not a review that found nothing —
+the review tooling could not run.
+
+- `gentle_review` `inspect` initially returned `native-status-package-binary-missing`. The
+  package-local native binary was installed on explicit user authorization
+  (`installGentleAi()` from `scripts/gentle-ai-installer.mjs` -> `v3.0.1`,
+  `go-sumdb-source-build`, integrity verified on a second run).
+- The install script entrypoint was deliberately NOT used: it also calls
+  `installTuiModeSetting()`, which rewrites `~/.pi/settings.json` to `tuiMode: "fullscreen"`.
+  That is an unrelated global Pi preference the user never authorized. The user's settings were
+  left untouched.
+- After installation, `inspect` and `select-intended-untracked` both failed with
+  `error_code: "empty-output"`, `exit_code: 2`, and a Go runtime fatal error
+  (`unexpected return pc for runtime.gopark` -> `fatal error: unknown caller pc`, stack in
+  `runtime.scanstack` / `markroot` / `gcBgMarkWorker` / `tstart_stdcall`).
+- The **same binary invoked directly from a shell works**: `--version` -> `gentle-ai 3.0.1`,
+  and `review status` on this repo -> `complete: true, authoritative: true, status: "clean"`,
+  `entries: []`, `locks: []`. So the native side is healthy and the failure is in the spawn/stdio
+  path between the Pi extension and the Go runtime on Windows.
+- One retry after an integrity check produced the same crash. **No further retries** — the
+  failure is deterministic enough to be unusable and is not fixable from inside this repo.
+- Safety state across all failures: `lineage_created: false`, `mutation_performed: false`,
+  `mutation_outcome: "none"`, `reset_eligible: false`, clean inventory with 0 entries and 0 locks.
+  **No review authority was ever created and nothing was mutated**, so RESET, RECOVER, ABANDON and
+  QUARANTINE would all be the wrong route — there is no invalid lineage to repair.
+- One `inspect` did succeed and revealed the candidate scope: 19 paths, of which three were not
+  authored by this work (the `.atl/` deletions and the modified `.gitignore`). Worth knowing if the
+  review is ever re-run.
+
+Infrastructure finding recorded in Engram (obs 108) for future sessions.
 
 ## Verification log
 
