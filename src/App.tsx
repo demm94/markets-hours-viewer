@@ -90,7 +90,7 @@ export const App: React.FC = () => {
   const isScrubbing = isHovering || isDragging || Math.abs(scrubberMinutes - currentMinutes) > 2;
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-[#06080f] text-slate-100 safe-area-container px-3.5 py-3.5 sm:px-5 sm:py-4 md:px-8 md:py-5 lg:px-10 overflow-x-hidden ambient-grid">
+    <div className="min-h-screen min-h-[100dvh] bg-[#06080f] text-slate-100 safe-area-container px-2.5 py-2 sm:px-5 sm:py-4 md:px-8 md:py-5 lg:px-10 overflow-x-hidden ambient-grid">
       {/* Native-style Pull to Refresh indicator */}
       <div
         className="fixed top-3 left-0 right-0 flex justify-center items-center z-[1000] pointer-events-none transition-opacity duration-200"
@@ -118,7 +118,7 @@ export const App: React.FC = () => {
       </div>
 
       <div
-        className="max-w-[1480px] w-full mx-auto flex flex-col gap-4 sm:gap-5 md:gap-6 overflow-x-hidden"
+        className="max-w-[1480px] w-full mx-auto flex flex-col gap-2.5 sm:gap-4 md:gap-6 overflow-x-hidden"
         style={{
           transform: pullDistance > 0 ? `translateY(${pullDistance * 0.55}px)` : undefined,
           transition: pullDistance === 0 ? 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)' : 'none'
@@ -132,7 +132,7 @@ export const App: React.FC = () => {
           totalMarketsCount={MARKETS.length}
         />
 
-        <main className="flex flex-col gap-4 sm:gap-5 md:gap-6">
+        <main className="flex flex-col gap-2.5 sm:gap-4 md:gap-6">
           <MarketCards markets={MARKETS} evaluations={evaluationsNow} />
 
           <TimelineGrid
@@ -153,8 +153,8 @@ export const App: React.FC = () => {
           />
         </main>
 
-        <footer className="border-t border-white/10 pt-8 pb-8 mt-4">
-          <div className="flex justify-between items-center flex-wrap gap-4 md:gap-6 text-xs text-slate-400">
+        <footer className="border-t border-white/10 pt-3 pb-4 mt-2 md:pt-8 md:pb-8 md:mt-4">
+          <div className="flex justify-between items-center flex-wrap gap-2 md:gap-6 text-[11px] sm:text-xs text-slate-400">
             <div className="max-w-2xl leading-relaxed">
               <strong className="text-slate-200">Zonas Horarias Dinámicas IANA:</strong> Cálculos recalculados en vivo para evitar offsets estáticos. Chile se encuentra en horario de verano (UTC-3) hasta abril de 2027.
             </div>

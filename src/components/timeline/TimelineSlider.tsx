@@ -14,9 +14,9 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = React.memo(({
   onScrollToNow
 }) => {
   return (
-    <div className="timeline-slider-bar flex items-center gap-3 bg-slate-950/90 backdrop-blur-xl border border-sky-400/20 rounded-2xl px-4 sm:px-5 py-3 mt-4 md:mt-5 shadow-[inset_0_1px_3px_rgba(0,0,0,0.5),0_8px_24px_-6px_rgba(0,0,0,0.7)] min-h-[58px]">
-      <span className="font-mono text-xs font-bold text-slate-400 tabular-nums select-none">00:00</span>
-      <div className="flex-1 flex items-center relative min-h-[44px]">
+    <div className="timeline-slider-bar flex items-center gap-2 sm:gap-3 bg-slate-950/90 backdrop-blur-xl border border-sky-400/20 rounded-xl sm:rounded-2xl px-3 sm:px-5 py-1.5 sm:py-2.5 mt-2 sm:mt-3 md:mt-4 shadow-[inset_0_1px_3px_rgba(0,0,0,0.5),0_8px_24px_-6px_rgba(0,0,0,0.7)] min-h-[40px] sm:min-h-[52px]">
+      <span className="font-mono text-[10px] sm:text-xs font-bold text-slate-400 tabular-nums select-none">00:00</span>
+      <div className="flex-1 flex items-center relative min-h-[32px] sm:min-h-[44px]">
         <input
           type="range"
           min="0"
@@ -28,17 +28,17 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = React.memo(({
           aria-label="Deslizar horizontalmente por las 24 horas"
         />
       </div>
-      <span className="font-mono text-xs font-bold text-slate-400 tabular-nums select-none">24:00</span>
+      <span className="font-mono text-[10px] sm:text-xs font-bold text-slate-400 tabular-nums select-none">24:00</span>
 
       <Button
         type="button"
         variant="now"
         onClick={onScrollToNow}
-        className="gap-2 px-4 py-2 min-h-[42px] min-w-[42px] cursor-pointer text-xs font-semibold"
+        className="gap-1.5 px-2.5 sm:px-4 py-1 sm:py-2 min-h-[32px] sm:min-h-[40px] min-w-[32px] sm:min-w-[40px] cursor-pointer text-[11px] sm:text-xs font-semibold"
         title="Centrar vista en la hora actual"
         aria-label="Centrar en hora actual"
       >
-        <Target size={16} />
+        <Target size={14} className="sm:w-4 sm:h-4" />
         <span>Ahora</span>
       </Button>
     </div>

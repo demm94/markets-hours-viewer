@@ -63,7 +63,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
       onKeyDown={onKeyDown}
     >
       {/* Hour Labels at Top */}
-      <div className="h-11 relative border-b border-white/10 bg-[#060912]">
+      <div className="h-9 sm:h-11 relative border-b border-white/10 bg-[#060912]">
         {HOURS.map((h) => {
           const transform =
             h === 0
@@ -75,7 +75,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
           return (
             <div
               key={h}
-              className="absolute top-1/2 font-mono text-xs font-semibold text-slate-400 tabular-nums select-none"
+              className="absolute top-1/2 font-mono text-[10px] sm:text-xs font-semibold text-slate-400 tabular-nums select-none"
               style={{ left: `${(h / 24) * 100}%`, transform }}
             >
               {h.toString().padStart(2, '0')}:00
@@ -85,7 +85,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
       </div>
 
       {/* Background Vertical Grid Lines */}
-      <div className="absolute top-11 bottom-0 left-0 right-0 pointer-events-none z-[1]">
+      <div className="absolute top-9 sm:top-11 bottom-0 left-0 right-0 pointer-events-none z-[1]">
         {GRID_LINES.map((h) => (
           <div
             key={h}
@@ -104,11 +104,11 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
           return (
             <div
               key={market.id}
-              className={`h-[50px] px-2 flex items-center border-b border-white/5 transition-colors ${
+              className={`h-[38px] sm:h-[46px] md:h-[50px] px-1.5 sm:px-2 flex items-center border-b border-white/5 transition-colors ${
                 isChile ? 'bg-gradient-to-r from-sky-400/[0.08] to-sky-400/[0.02] border-b-sky-400/35' : 'hover:bg-white/[0.02]'
               }`}
             >
-              <div className="relative w-full h-[30px] bg-[#0c111e]/90 border border-white/10 rounded-lg overflow-hidden shadow-[inset_0_2px_6px_rgba(0,0,0,0.5)]">
+              <div className="relative w-full h-[22px] sm:h-[26px] md:h-[30px] bg-[#0c111e]/90 border border-white/10 rounded sm:rounded-lg overflow-hidden shadow-[inset_0_2px_6px_rgba(0,0,0,0.5)]">
                 {/* Chile reference track */}
                 {isChile && (
                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-sky-400/[0.06] via-sky-400/[0.16] to-sky-400/[0.06]">
@@ -157,7 +157,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
         style={{ left: `${nowPercent}%` }}
       >
         <div
-          className="absolute top-1.5 left-0 inline-flex items-center gap-1.5 bg-rose-600 text-white font-mono text-xs font-extrabold px-3 py-1 rounded-lg shadow-[0_4px_14px_rgba(225,29,72,0.65)] whitespace-nowrap tabular-nums"
+          className="absolute top-1 sm:top-1.5 left-0 inline-flex items-center gap-1 sm:gap-1.5 bg-rose-600 text-white font-mono text-[10px] sm:text-xs font-extrabold px-2 sm:px-3 py-0.5 sm:py-1 rounded sm:rounded-lg shadow-[0_4px_14px_rgba(225,29,72,0.65)] whitespace-nowrap tabular-nums"
           style={{
             transform:
               nowPercent < 4
@@ -189,7 +189,12 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                     localDateFormatted: ''
                   });
 
-              const topPx = 44 + idx * 50 + 25;
+              const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+              const isTablet = typeof window !== 'undefined' && window.innerWidth < 768;
+              const headerHeight = isMobile ? 36 : isTablet ? 40 : 44;
+              const rowHeight = isMobile ? 38 : isTablet ? 46 : 50;
+              const topPx = headerHeight + idx * rowHeight + rowHeight / 2;
+
               const edgeTransform =
                 nowPercent < 4
                   ? 'translate(6px, -50%)'
@@ -211,7 +216,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
               return (
                 <div
                   key={market.id}
-                  className={`absolute left-0 inline-flex items-center gap-2 bg-[#080c16]/95 backdrop-blur-md border rounded-lg px-3 py-1 font-mono text-xs font-bold whitespace-nowrap shadow-lg z-10 pointer-events-none tabular-nums ${statusClasses}`}
+                  className={`absolute left-0 inline-flex items-center gap-1.5 sm:gap-2 bg-[#080c16]/95 backdrop-blur-md border rounded-md sm:rounded-lg px-2 sm:px-3 py-0.5 sm:py-1 font-mono text-[10px] sm:text-xs font-bold whitespace-nowrap shadow-lg z-10 pointer-events-none tabular-nums ${statusClasses}`}
                   style={{
                     top: `${topPx}px`,
                     transform: edgeTransform
@@ -234,7 +239,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
           style={{ left: `${scrubberPercent}%` }}
         >
           <div
-            className="absolute top-1.5 left-0 bg-gradient-to-br from-sky-600 to-sky-700 text-white font-mono text-xs font-extrabold px-3 py-1 rounded-lg border border-white/25 shadow-[0_4px_16px_rgba(2,132,199,0.7)] whitespace-nowrap tabular-nums"
+            className="absolute top-1 sm:top-1.5 left-0 bg-gradient-to-br from-sky-600 to-sky-700 text-white font-mono text-[10px] sm:text-xs font-extrabold px-2 sm:px-3 py-0.5 sm:py-1 rounded sm:rounded-lg border border-white/25 shadow-[0_4px_16px_rgba(2,132,199,0.7)] whitespace-nowrap tabular-nums"
             style={{
               transform:
                 scrubberPercent < 4
@@ -261,7 +266,12 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                       localDateFormatted: ''
                     });
 
-                const topPx = 44 + idx * 50 + 25;
+                const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+                const isTablet = typeof window !== 'undefined' && window.innerWidth < 768;
+                const headerHeight = isMobile ? 36 : isTablet ? 40 : 44;
+                const rowHeight = isMobile ? 38 : isTablet ? 46 : 50;
+                const topPx = headerHeight + idx * rowHeight + rowHeight / 2;
+
                 const edgeTransform =
                   scrubberPercent < 4
                     ? 'translate(6px, -50%)'
@@ -283,7 +293,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                 return (
                   <div
                     key={market.id}
-                    className={`absolute left-0 inline-flex items-center gap-2 bg-[#080c16]/95 backdrop-blur-md border rounded-lg px-3 py-1 font-mono text-xs font-bold whitespace-nowrap shadow-lg z-10 pointer-events-none tabular-nums ${statusClasses}`}
+                    className={`absolute left-0 inline-flex items-center gap-1.5 sm:gap-2 bg-[#080c16]/95 backdrop-blur-md border rounded-md sm:rounded-lg px-2 sm:px-3 py-0.5 sm:py-1 font-mono text-[10px] sm:text-xs font-bold whitespace-nowrap shadow-lg z-10 pointer-events-none tabular-nums ${statusClasses}`}
                     style={{
                       top: `${topPx}px`,
                       transform: edgeTransform

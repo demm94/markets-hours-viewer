@@ -131,7 +131,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
   const allMarkets = useMemo(() => [CHILE_MARKET, ...markets], [markets]);
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-gradient-to-b from-slate-900/80 via-slate-900/60 to-slate-950/90 backdrop-blur-2xl p-3.5 sm:p-4 md:p-5 shadow-xl flex flex-col gap-3.5 relative overflow-hidden">
+    <section className="rounded-xl sm:rounded-2xl border border-white/10 bg-gradient-to-b from-slate-900/80 via-slate-900/60 to-slate-950/90 backdrop-blur-2xl p-2 sm:p-3.5 md:p-5 shadow-xl flex flex-col gap-2 sm:gap-3.5 relative overflow-hidden">
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-sky-400/30 to-transparent pointer-events-none" />
 
       {/* Top Controls Row */}
