@@ -5,7 +5,8 @@ import {
   projectMarketToTimeline,
   evaluateMarketAt,
   formatMinutes,
-  getSantiagoOffsetDescription
+  getSantiagoOffsetDescription,
+  isWeekend
 } from './timezone';
 import { MARKETS } from './markets';
 
@@ -99,5 +100,39 @@ describe('timezone engine', () => {
     const desc = getSantiagoOffsetDescription(sepDate);
     expect(desc).toContain('UTC-3');
     expect(desc).toContain('Horario de Verano');
+  });
+
+  it('marks markets closed on weekends and displays "Fin de semana"', () => {
+    // Saturday, September 19, 2026 at 11:00 AM EDT (regular trading hours on weekdays)
+    const saturdayNy = DateTime.fromObject(
+      { year: 2026, month: 9, day: 19, hour: 11, minute: 0 },
+      { zone: 'America/New_York' }
+    );
+
+    const evalWeekend = evaluateMarketAt(nyse, saturdayNy);
+    expect(evalWeekend.status).toBe('closed');
+    expect(evalWeekend.activeSegmentLabel).toBe('Fin de semana');
+
+    // With isSimulation: true (used by the scrubber to explore typical session hours)
+    const evalSimulated = evaluateMarketAt(nyse, saturdayNy, { isSimulation: true });
+    expect(evalSimulated.status).toBe('open');
+  });
+
+  it('identifies weekend days accurately via isWeekend', () => {
+    // Friday
+    const friday = DateTime.fromISO('2026-09-18T12:00:00');
+    expect(isWeekend(friday)).toBe(false);
+
+    // Saturday
+    const saturday = DateTime.fromISO('2026-09-19T12:00:00');
+    expect(isWeekend(saturday)).toBe(true);
+
+    // Sunday
+    const sunday = DateTime.fromISO('2026-09-20T12:00:00');
+    expect(isWeekend(sunday)).toBe(true);
+
+    // Monday
+    const monday = DateTime.fromISO('2026-09-21T12:00:00');
+    expect(isWeekend(monday)).toBe(false);
   });
 });

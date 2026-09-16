@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync, existsSync } from 'node:fs';
 import { DateTime } from 'luxon';
 import { CHILE_TZ, formatMinutes, getSantiagoOffsetDescription } from './timezone';
 import { MARKETS } from './markets';
+import { pwaManifest } from './pwa-manifest';
 
 describe('timeline-visualizer & pwa-shell compliance', () => {
   it('calculates scrubber percentage accurately across 0-1440 minutes', () => {
@@ -31,14 +31,11 @@ describe('timeline-visualizer & pwa-shell compliance', () => {
     expect(marketIds).toContain('nyse');
   });
 
-  it('validates PWA web app manifest requirements', () => {
-    const manifestPath = 'dist/manifest.webmanifest';
-    expect(existsSync(manifestPath)).toBe(true);
-
-    const manifestContent = JSON.parse(readFileSync(manifestPath, 'utf-8'));
-    expect(manifestContent.display).toBe('standalone');
-    expect(manifestContent.theme_color).toBe('#0f172a');
-    expect(manifestContent.background_color).toBe('#090d16');
-    expect(manifestContent.icons.length).toBeGreaterThanOrEqual(2);
+  it('validates PWA web app manifest requirements without depending on dist build', () => {
+    expect(pwaManifest.display).toBe('standalone');
+    expect(pwaManifest.theme_color).toBe('#0f172a');
+    expect(pwaManifest.background_color).toBe('#090d16');
+    expect(pwaManifest.icons?.length).toBeGreaterThanOrEqual(2);
+    expect(pwaManifest.name).toBe('Markets View');
   });
 });

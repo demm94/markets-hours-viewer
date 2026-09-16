@@ -91,13 +91,36 @@ export function projectMarketToTimeline(
 }
 
 /**
+ * Checks whether a given DateTime falls on a weekend (Saturday or Sunday).
+ */
+export function isWeekend(dateTime: DateTime): boolean {
+  return dateTime.weekday === 6 || dateTime.weekday === 7;
+}
+
+export interface EvaluateMarketOptions {
+  isSimulation?: boolean;
+}
+
+/**
  * Evaluates the status and local time of a market at a specific instant.
+ * Recognizes weekends (Saturday/Sunday) unless isSimulation is set to true.
  */
 export function evaluateMarketAt(
   market: MarketConfig,
-  instant: DateTime
+  instant: DateTime,
+  options: EvaluateMarketOptions = {}
 ): MarketEvaluation {
   const localTime = instant.setZone(market.timezone);
+
+  if (!options.isSimulation && isWeekend(localTime)) {
+    return {
+      marketId: market.id,
+      status: 'closed',
+      localTimeFormatted: localTime.toFormat('HH:mm'),
+      localDateFormatted: localTime.toFormat('ccc d MMM'),
+      activeSegmentLabel: 'Fin de semana'
+    };
+  }
 
   let status: MarketStatus = 'closed';
   let activeSegmentLabel: string | undefined;

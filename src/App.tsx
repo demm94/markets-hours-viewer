@@ -16,7 +16,7 @@ import { TimelineGrid } from './components/TimelineGrid';
 import { RotateCw } from 'lucide-react';
 
 export const App: React.FC = () => {
-  const { now, currentMinutes, timeFormatted, dateFormatted } = useCurrentTime();
+  const { now, currentMinutes, timeFormatted, dateFormatted, minuteKey } = useCurrentTime();
 
   const handleRefresh = React.useCallback(() => {
     window.location.reload();
@@ -38,6 +38,8 @@ export const App: React.FC = () => {
     handlePointerLeave
   } = useScrubber(currentMinutes);
 
+  const referenceDayKey = `${now.year}-${now.month}-${now.day}`;
+
   // Precompute 24h timeline segments for each market against Chile reference day
   const marketSegments = useMemo(() => {
     const map: Record<string, ReturnType<typeof projectMarketToTimeline>> = {};
@@ -45,26 +47,27 @@ export const App: React.FC = () => {
       map[m.id] = projectMarketToTimeline(m, now);
     }
     return map;
-  }, [now.day, now.month, now.year]);
+  }, [referenceDayKey]);
 
-  // Real-time evaluation at this exact second
+  // Real-time evaluation at minute resolution (stable reference within the same minute)
   const evaluationsNow = useMemo(() => {
     const map: Record<string, MarketEvaluation> = {};
     for (const m of MARKETS) {
       map[m.id] = evaluateMarketAt(m, now);
     }
     return map;
-  }, [now]);
+  }, [minuteKey]);
 
-  // Scrubber evaluation at selected minute offset
+  // Scrubber evaluation at selected minute offset (stable reference across seconds)
   const scrubberInstant = useMemo(() => {
     return minuteOffsetToDateTime(scrubberMinutes, now);
-  }, [scrubberMinutes, now]);
+  }, [scrubberMinutes, referenceDayKey]);
 
   const evaluationsScrubber = useMemo(() => {
     const map: Record<string, MarketEvaluation> = {};
     for (const m of MARKETS) {
-      map[m.id] = evaluateMarketAt(m, scrubberInstant);
+      // Use simulation mode during scrubbing so sessions can be visually inspected even on weekends
+      map[m.id] = evaluateMarketAt(m, scrubberInstant, { isSimulation: true });
     }
     return map;
   }, [scrubberInstant]);

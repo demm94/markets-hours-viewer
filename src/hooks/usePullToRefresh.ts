@@ -14,18 +14,33 @@ export function usePullToRefresh({
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const pullDistanceRef = useRef(0);
   const startYRef = useRef(0);
   const isPullingRef = useRef(false);
+  const isRefreshingRef = useRef(false);
+  const onRefreshRef = useRef(onRefresh);
+
+  useEffect(() => {
+    onRefreshRef.current = onRefresh;
+  }, [onRefresh]);
+
+  useEffect(() => {
+    isRefreshingRef.current = isRefreshing;
+  }, [isRefreshing]);
 
   useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
       // Only initiate pull-to-refresh if window is at the very top
       if (window.scrollY > 5) return;
-      if (isRefreshing) return;
+      if (isRefreshingRef.current) return;
 
-      // Do not intercept touches starting inside horizontal timeline scrubber
+      // Do not intercept touches starting inside horizontal timeline scrubber or slider
       const target = e.target as HTMLElement | null;
-      if (target?.closest('.timeline-bars-container') || target?.closest('.timeline-table-wrapper')) {
+      if (
+        target?.closest('.timeline-bars-container') ||
+        target?.closest('.timeline-table-wrapper') ||
+        target?.closest('.timeline-slider-bar')
+      ) {
         return;
       }
 
@@ -36,7 +51,7 @@ export function usePullToRefresh({
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (!isPullingRef.current || isRefreshing) return;
+      if (!isPullingRef.current || isRefreshingRef.current) return;
 
       const currentY = e.touches[0].clientY;
       const rawDelta = currentY - startYRef.current;
@@ -44,6 +59,7 @@ export function usePullToRefresh({
       if (rawDelta > 0 && window.scrollY <= 0) {
         // Natural resistance formula mimicking native iOS/Android spring physics
         const dampened = Math.min(Math.pow(rawDelta, 0.82) * 0.9, maxPull);
+        pullDistanceRef.current = dampened;
         setPullDistance(dampened);
 
         // Prevent native bounce while custom pull is active
@@ -51,6 +67,7 @@ export function usePullToRefresh({
           e.preventDefault();
         }
       } else {
+        pullDistanceRef.current = 0;
         setPullDistance(0);
       }
     };
@@ -59,19 +76,23 @@ export function usePullToRefresh({
       if (!isPullingRef.current) return;
       isPullingRef.current = false;
 
-      if (pullDistance >= threshold && !isRefreshing) {
+      const distance = pullDistanceRef.current;
+      if (distance >= threshold && !isRefreshingRef.current) {
         setIsRefreshing(true);
+        pullDistanceRef.current = threshold;
         setPullDistance(threshold);
 
         try {
-          await onRefresh();
+          await onRefreshRef.current();
         } finally {
           setTimeout(() => {
             setIsRefreshing(false);
+            pullDistanceRef.current = 0;
             setPullDistance(0);
           }, 450);
         }
       } else {
+        pullDistanceRef.current = 0;
         setPullDistance(0);
       }
     };
@@ -87,7 +108,7 @@ export function usePullToRefresh({
       window.removeEventListener('touchend', handleTouchEnd);
       window.removeEventListener('touchcancel', handleTouchEnd);
     };
-  }, [pullDistance, isRefreshing, threshold, maxPull, onRefresh]);
+  }, [threshold, maxPull]);
 
   return {
     pullDistance,
