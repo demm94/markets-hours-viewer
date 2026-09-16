@@ -117,7 +117,7 @@ export function evaluateMarketAt(
       marketId: market.id,
       status: 'closed',
       localTimeFormatted: localTime.toFormat('HH:mm'),
-      localDateFormatted: localTime.toFormat('ccc d MMM'),
+      localDateFormatted: localTime.toFormat('ccc d MMM', { locale: 'es' }),
       activeSegmentLabel: 'Fin de semana'
     };
   }
@@ -154,7 +154,7 @@ export function evaluateMarketAt(
     marketId: market.id,
     status,
     localTimeFormatted: localTime.toFormat('HH:mm'),
-    localDateFormatted: localTime.toFormat('ccc d MMM'),
+    localDateFormatted: localTime.toFormat('ccc d MMM', { locale: 'es' }),
     activeSegmentLabel
   };
 }

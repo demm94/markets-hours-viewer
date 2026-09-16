@@ -196,8 +196,8 @@ export function formatEventTimes(event: MarketEvent, chileNow: DateTime): Format
 
   return {
     ...event,
-    chileTimeFormatted: `${eventInChile.toFormat('HH:mm')} (${eventInChile.toFormat('d LLL')})`,
-    exchangeTimeFormatted: `${eventInMarket.toFormat('HH:mm')} (${eventInMarket.toFormat('d LLL')})`,
+    chileTimeFormatted: `${eventInChile.toFormat('HH:mm')} (${eventInChile.toFormat('d LLL', { locale: 'es' })})`,
+    exchangeTimeFormatted: `${eventInMarket.toFormat('HH:mm')} (${eventInMarket.toFormat('d LLL', { locale: 'es' })})`,
     relativeTimeDescriptor
   };
 }
