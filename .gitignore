@@ -12,3 +12,6 @@ dist-ssr
 *.sln
 *.sw?
 *.tsbuildinfo
+# Local Pi runtime state (auto-generated, machine-local paths)
+.atl/
+.pi/
