@@ -150,6 +150,114 @@ Both land on the manifest assertion rewritten in Phase 2, which is a fair hit �
 written in this work. **Carried forward as separate work** by explicit user decision: fix later,
 and never as a reason to re-run this candidate's review.
 
+### Debt closure — `R3-1` and `R3-2` (CLOSED)
+
+Closed as a separate work unit in `src/core/timeline-visualizer.test.ts` only.
+
+**This section spans two distinct review candidates on the same working tree. Do not read them as
+one** — they have opposite outcomes, and an independent reader who lacks the target identities will
+glue them into a contradiction (that happened, and it is why the table below exists):
+
+| # | Target identity | Paths at that moment | Outcome |
+| --- | --- | --- | --- |
+| **A** | `sha256:bb09a4f4…` | `src/core/timeline-visualizer.test.ts` only | **APPROVED** — lineage `review-e919170bbe1e7948`, acknowledged, authority burned (`gentle-ai.review-acknowledged/v1`) |
+| **B** | `sha256:17ae82d3…` | the test file **plus this record** | **Declined** — candidate-scoped, `lineage_created: false`, `mutation_performed: false`, `reset_eligible: false` |
+
+Target **A** is the reviewed deliverable of this work unit. Target **B** exists only because writing
+this record mutated the working tree again; review consent for it was declined. A decline is
+candidate-scoped and is not the kill switch, so it says nothing about target A. Lineage
+`review-e919170bbe1e7948` (tier `medium`, 1 changed file, 52 changed lines, correction budget 26,
+lens `review-reliability`) is **target A's**.
+
+| Finding | Root cause found | Fix |
+| --- | --- | --- |
+| `R3-1` (WARNING) | CWD-relative `readFileSync('src/index.css')` at line 42 | `REPO_ROOT` derived from `import.meta.url`, plus `readRepoFile()` / `repoFileExists()` helpers |
+| `R3-2` (SUGGESTION) | Regex could match a commented-out declaration; unanchored; no hex boundary | `readRootHexToken()` strips `/* */` comments, scopes the search to the `:root` block, and rejects hex values longer than 6 digits |
+
+**The reported blast radius was too narrow, and the fix is correspondingly wider.** `R3-1` named
+one call site, but *every* file access in that test was CWD-relative: `src/index.css`, `index.html`
+(twice) and three `existsSync('public/...')` checks — **six** call sites in total (`HEAD` lines 42,
+49, 76, 77, 78, 82). Fixing only line 42 would have left the same defect latent in **five** other
+places.
+
+**Evidence, both directions.** A test that passes proves nothing about its own strength, so both
+new properties were probed:
+
+1. *CWD independence* — the suite was run from a foreign CWD (`Desktop/Cosas`) against the repo
+   root. Vitest does **not** `chdir` (the inverted control failed 3 tests with `ENOENT`, the first
+   being `Cosas\src\index.css`), so the passing run is real proof rather than an artefact.
+2. *Comment immunity* — inserting `/* probe: --background: #ff00ff; */` before the real
+   declaration inside `:root` made the **old** regex extract `#ff00ff` (it would have failed), while
+   the new code still passed.
+3. *Teeth retained* — forcing the real token to `#ff00ff` still fails, naming the diverging value:
+   `expected '#05060a' to be '#ff00ff'`.
+
+Every probe was reverted byte-for-byte; `src/index.css` sha256 was verified back to
+`bf837a00214193e88b2e340f14502549a0b4c872b241c7fab8823980c5fa2383`. Final: tests 25/25, build green,
+CSS unchanged at 83.80 kB / 12.90 kB gzip, one file modified *by this work unit* (the test file;
+the working tree holds two modified paths only because this record is the second), no new
+dependencies.
+
+**Deliberately not changed:** the `index.html` `theme-color` meta regex
+(`/<meta\s+name="theme-color"\s+content="(#[0-9a-fA-F]{6})"/`). This is *not* an exemption on the
+grounds of a different failure mode — an independent check showed it is equally **comment-blind**:
+prepending a commented-out meta makes it extract the commented `#ffffff`. It is left alone because
+it is pre-existing (untouched by this work unit), and `index.html` contains no HTML comment at all
+today, so the defect is latent rather than live. The correct disposition is a separate follow-up,
+not churn inside this fix.
+
+**Independent verification pass (required because review consent was declined for target B).** The
+native review of target B was **declined** (candidate-scoped, `lineage_created: false`,
+`mutation_performed: false` — no lineage exists for it and nothing was mutated). Separately, the
+provider's **risk assessment** (`assess`) failed with
+`native-assess-unavailable: native response is schema incompatible`, so risk was reported as
+`unassessable`, which is verified exactly like `high`. The returned plan required
+`independentVerifier: true`, so a separate read-only verifier was run. Note that the failed
+`assess` is a different provider capability from the review verdict itself — the verdict for target
+A was returned normally; it was the risk *assessment* that could not be produced.
+
+The verifier returned PASS on path resolution, comment
+immunity, `:root` scoping, test teeth, zero production impact, and no side effects — and **FAIL on
+this record's factual accuracy**, catching three real errors in the prose above, all now corrected:
+
+1. the call-site count: it was written as five when the enumeration itself summed to six;
+2. the claim that the untouched `index.html` meta regex does not share `R3-2`'s failure mode — false,
+   it shares the comment-blindness sub-mode;
+3. the line pin for `R3-helper-coverage` below, which named only the comment-stripping branch.
+
+It also confirmed, with the helper extracted verbatim from the real file, that the `R3-root-scope`
+defect is genuine (`:root { content: "}"; … }` truncates the captured block) and latent only, and
+that the 8-digit / 3-digit / no-`:root` inputs all resolve to `null` and fail loudly.
+
+**Provenance limit on everything provider-side above.** The lineage id, tier, correction budget,
+lens, verdict, `burn_evidence`, and the three advisory findings are recorded from the tool envelopes
+observed while this work unit ran. **No local artifact stores them**, so they are not corroborable
+from the working tree and cannot be re-derived by a later reader; treat them as session-observed, not
+independently verified. A second verifier pass confirmed exactly this: it found no artifact
+supporting any of it, which is a limitation of the record, not a contradiction of the claims.
+
+**Disambiguation for the pre-existing history below.** The section *"History: why this took so
+long"* describes the **neon-redesign** candidate — an earlier, different target (its candidate scope
+was 19 paths, neither target A's 1 nor target B's 2) — and its sentence *"Not a declined review"*
+refers to that candidate's tooling outage, not to target B's decline. What that section actually
+documents as the outage is `native-status-package-binary-missing` followed by a Go runtime fatal
+error (`error_code: "empty-output"`, `exit_code: 2`) in the spawn/stdio path between the Pi
+extension and the native binary on Windows. The antivirus-instrumentation attribution for that
+outage was recorded in session memory, **not** in this repository, and is deliberately not asserted
+here as part of the record below.
+
+**Three new advisory findings from target A's review** (all informational, none blocking, no
+correction opened — and per the provider, never a reason to re-run this candidate):
+
+| ID | Severity | Location | Reading |
+| --- | --- | --- | --- |
+| `R3-root-scope` | WARNING | `timeline-visualizer.test.ts:29` (within the helper, 27-35) | The `:root` block is extracted with `[^}]*`, with no brace balancing — a `}` inside a value (e.g. `content: "}"`) truncates the block. Confirmed real by an independent check; latent only. |
+| `R3-token-escape` | SUGGESTION | `timeline-visualizer.test.ts:31-32` | The `--${token}` name is interpolated into `new RegExp` without escaping regex metacharacters. Latent: the only caller passes the literal `'background'`. |
+| `R3-helper-coverage` | SUGGESTION | `timeline-visualizer.test.ts:28,30` | The helper's own guard paths (the comment-stripping branch at 28, and `return null` when `:root` is unrecognisable at 30) are not asserted anywhere. |
+
+These are recorded, not actioned. Acting on them would create a new candidate and therefore a new
+review; that is a separate decision, not a continuation of this one.
+
 ### What finally made the review run
 
 The committed-range START cannot pass its `collect` step while any eligible untracked path
