@@ -72,7 +72,7 @@ export function getUpcomingEvents(
 
   // Filter out events older than 24h prior to chileNow
   const cutoffPast = chileNow.minus({ hours: 24 });
-  const maxDays = options.maxDaysAhead ?? 30;
+  const maxDays = options.maxDaysAhead ?? 120;
   const cutoffFuture = chileNow.plus({ days: maxDays });
 
   return filtered

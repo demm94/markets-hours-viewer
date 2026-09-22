@@ -59,16 +59,13 @@ async function syncEvents() {
     return;
   }
 
-  // Determine current month range in UTC
+  // Determine 4-month rolling window (yesterday to +120 days in UTC)
   const now = new Date();
-  const year = now.getUTCFullYear();
-  const month = now.getUTCMonth(); // 0-indexed
+  const startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000); // yesterday
+  const endDate = new Date(now.getTime() + 120 * 24 * 60 * 60 * 1000); // 120 days ahead (~4 months)
 
-  const startOfMonth = new Date(Date.UTC(year, month, 1));
-  const endOfMonth = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59));
-
-  const fromStr = startOfMonth.toISOString().slice(0, 10);
-  const toStr = endOfMonth.toISOString().slice(0, 10);
+  const fromStr = startDate.toISOString().slice(0, 10);
+  const toStr = endDate.toISOString().slice(0, 10);
 
   const url = `https://finnhub.io/api/v1/calendar/economic?from=${fromStr}&to=${toStr}&token=${apiKey}`;
 

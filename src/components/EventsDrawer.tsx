@@ -59,7 +59,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
     return getUpcomingEvents(chileNow, {
       marketId: selectedMarketId === 'all' ? undefined : selectedMarketId,
       minImportance: onlyHighImportance ? 'high' : undefined,
-      maxDaysAhead: 30
+      maxDaysAhead: 120
     });
   }, [chileNow, selectedMarketId, onlyHighImportance]);
 
