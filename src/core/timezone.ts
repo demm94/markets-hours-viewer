@@ -1,6 +1,7 @@
 import { DateTime } from 'luxon';
 import { MarketConfig, MarketEvaluation, MarketStatus, TimelineSegment, MarketTransition } from './types';
 import { CHILE_CONFIG } from './markets';
+import { getMarketHoliday, isMarketHoliday } from './holidays';
 
 export const CHILE_TZ = CHILE_CONFIG.timezone; // 'America/Santiago'
 
@@ -125,69 +126,80 @@ export function getNextTransition(
 ): MarketTransition | undefined {
   if (!market.sessions || market.sessions.length === 0) return undefined;
 
+  const localDateStr = localTime.toFormat('yyyy-MM-dd');
+  const isTodayHoliday = !options.isSimulation && isMarketHoliday(market.id, localDateStr);
+
   // Weekend handling
   if (!options.isSimulation && isWeekend(localTime)) {
-    const daysUntilMonday = ((8 - localTime.weekday) % 7) || 7;
-    const monday = localTime.plus({ days: daysUntilMonday }).startOf('day');
-    const firstSession = market.sessions[0];
-    const { hour, minute } = parseTime(firstSession.start);
-    const mondayOpen = monday.set({ hour, minute, second: 0, millisecond: 0 });
-    const diffMins = Math.round(mondayOpen.diff(localTime, 'minutes').minutes);
-    return {
-      type: 'open',
-      inMinutes: diffMins,
-      formattedCountdown: `Abre lun ${firstSession.start}`
-    };
-  }
+    for (let dayOffset = 1; dayOffset <= 10; dayOffset++) {
+      const day = localTime.plus({ days: dayOffset }).startOf('day');
+      if (isWeekend(day)) continue;
+      if (isMarketHoliday(market.id, day.toFormat('yyyy-MM-dd'))) continue;
 
-  // If currently active (open, lunch, pre_market), find end of that session
-  for (const session of market.sessions) {
-    const { hour: startH, minute: startM } = parseTime(session.start);
-    const { hour: endH, minute: endM } = parseTime(session.end);
-
-    const sessionStart = localTime.set({
-      hour: startH,
-      minute: startM,
-      second: 0,
-      millisecond: 0
-    });
-
-    const sessionEnd = localTime.set({
-      hour: endH,
-      minute: endM,
-      second: 0,
-      millisecond: 0
-    });
-
-    if (localTime >= sessionStart && localTime < sessionEnd) {
-      const diffMins = Math.round(sessionEnd.diff(localTime, 'minutes').minutes);
-      if (session.type === 'lunch') {
-        return {
-          type: 'resume',
-          inMinutes: diffMins,
-          formattedCountdown: `Reanuda en ${formatMinutesCountdown(diffMins)}`
-        };
-      }
-      const nextSession = market.sessions.find((s) => s.start === session.end);
-      if (nextSession?.type === 'lunch') {
-        return {
-          type: 'lunch',
-          inMinutes: diffMins,
-          formattedCountdown: `Almuerzo en ${formatMinutesCountdown(diffMins)}`
-        };
-      }
+      const firstSession = market.sessions[0];
+      const { hour, minute } = parseTime(firstSession.start);
+      const dayOpen = day.set({ hour, minute, second: 0, millisecond: 0 });
+      const diffMins = Math.round(dayOpen.diff(localTime, 'minutes').minutes);
+      const dayName = day.toFormat('ccc', { locale: 'es' });
       return {
-        type: 'close',
+        type: 'open',
         inMinutes: diffMins,
-        formattedCountdown: `Cierra en ${formatMinutesCountdown(diffMins)}`
+        formattedCountdown: `Abre ${dayName} ${firstSession.start}`
       };
     }
   }
 
-  // If currently closed, find next session start across upcoming days
-  for (let dayOffset = 0; dayOffset <= 4; dayOffset++) {
+  // If currently active (open, lunch, pre_market) and not a holiday
+  if (!isTodayHoliday) {
+    for (const session of market.sessions) {
+      const { hour: startH, minute: startM } = parseTime(session.start);
+      const { hour: endH, minute: endM } = parseTime(session.end);
+
+      const sessionStart = localTime.set({
+        hour: startH,
+        minute: startM,
+        second: 0,
+        millisecond: 0
+      });
+
+      const sessionEnd = localTime.set({
+        hour: endH,
+        minute: endM,
+        second: 0,
+        millisecond: 0
+      });
+
+      if (localTime >= sessionStart && localTime < sessionEnd) {
+        const diffMins = Math.round(sessionEnd.diff(localTime, 'minutes').minutes);
+        if (session.type === 'lunch') {
+          return {
+            type: 'resume',
+            inMinutes: diffMins,
+            formattedCountdown: `Reanuda en ${formatMinutesCountdown(diffMins)}`
+          };
+        }
+        const nextSession = market.sessions.find((s) => s.start === session.end);
+        if (nextSession?.type === 'lunch') {
+          return {
+            type: 'lunch',
+            inMinutes: diffMins,
+            formattedCountdown: `Almuerzo en ${formatMinutesCountdown(diffMins)}`
+          };
+        }
+        return {
+          type: 'close',
+          inMinutes: diffMins,
+          formattedCountdown: `Cierra en ${formatMinutesCountdown(diffMins)}`
+        };
+      }
+    }
+  }
+
+  // If currently closed (or today is a holiday), find next session start across upcoming days
+  for (let dayOffset = 0; dayOffset <= 10; dayOffset++) {
     const day = localTime.plus({ days: dayOffset }).startOf('day');
     if (!options.isSimulation && isWeekend(day)) continue;
+    if (!options.isSimulation && isMarketHoliday(market.id, day.toFormat('yyyy-MM-dd'))) continue;
 
     for (const session of market.sessions) {
       const { hour: startH, minute: startM } = parseTime(session.start);
@@ -201,10 +213,19 @@ export function getNextTransition(
       if (sessionStart > localTime) {
         const diffMins = Math.round(sessionStart.diff(localTime, 'minutes').minutes);
         const prefix = session.type === 'pre_market' ? 'Pre en' : 'Abre en';
+
+        let formattedCountdown: string;
+        if (isTodayHoliday && dayOffset >= 1) {
+          const dayName = day.toFormat('ccc', { locale: 'es' });
+          formattedCountdown = `Abre ${dayName} ${session.start}`;
+        } else {
+          formattedCountdown = `${prefix} ${formatMinutesCountdown(diffMins)}`;
+        }
+
         return {
           type: 'open',
           inMinutes: diffMins,
-          formattedCountdown: `${prefix} ${formatMinutesCountdown(diffMins)}`
+          formattedCountdown
         };
       }
     }
@@ -215,7 +236,7 @@ export function getNextTransition(
 
 /**
  * Evaluates the status and local time of a market at a specific instant.
- * Recognizes weekends (Saturday/Sunday) unless isSimulation is set to true.
+ * Recognizes weekends (Saturday/Sunday) and official exchange holidays unless isSimulation is set to true.
  */
 export function evaluateMarketAt(
   market: MarketConfig,
@@ -232,6 +253,21 @@ export function evaluateMarketAt(
       localTimeFormatted: localTime.toFormat('HH:mm'),
       localDateFormatted: localTime.toFormat('ccc d MMM', { locale: 'es' }),
       activeSegmentLabel: 'Fin de semana',
+      nextTransition
+    };
+  }
+
+  const localDateStr = localTime.toFormat('yyyy-MM-dd');
+  const holiday = getMarketHoliday(market.id, localDateStr);
+  if (!options.isSimulation && holiday) {
+    const nextTransition = getNextTransition(market, localTime, 'closed', options);
+    return {
+      marketId: market.id,
+      status: 'closed',
+      localTimeFormatted: localTime.toFormat('HH:mm'),
+      localDateFormatted: localTime.toFormat('ccc d MMM', { locale: 'es' }),
+      activeSegmentLabel: `Feriado: ${holiday.name}`,
+      holiday,
       nextTransition
     };
   }

@@ -127,6 +127,8 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
           const segments = isChile ? [] : (marketSegments[market.id] ?? []);
           const marketEvents = dailyEvents[market.id] ?? [];
           const isRowElevated = marketEvents.some((e) => e.id === currentActiveEventId);
+          const ev = isChile ? chileScrubberEvaluation : scrubberEvaluations[market.id];
+          const holiday = ev?.holiday;
 
           return (
             <div
@@ -145,6 +147,16 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-sky-400/[0.06] via-sky-400/[0.16] to-sky-400/[0.06]">
                       <span className="font-mono text-xs font-bold text-sky-400 tracking-wider uppercase">
                         Eje 24h Santiago de Chile
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Holiday track overlay */}
+                  {holiday && !isChile && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-purple-950/40 backdrop-blur-[0.5px] border border-purple-500/25 rounded sm:rounded-lg z-[3]">
+                      <span className="font-mono text-[9px] sm:text-[11px] font-semibold text-purple-200 tracking-wider flex items-center gap-1.5 px-2 py-0.5 rounded bg-purple-900/70 border border-purple-400/30 shadow-[0_0_10px_rgba(168,85,247,0.3)]">
+                        <span>🎉</span>
+                        <span className="truncate max-w-[180px] sm:max-w-none">Feriado: {holiday.name}</span>
                       </span>
                     </div>
                   )}
@@ -271,7 +283,9 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                   : 'translate(-50%, -50%)';
 
               let statusClasses = 'border-border text-foreground/80';
-              if (isChile) {
+              if (ev.holiday) {
+                statusClasses = 'border-purple-500/70 text-purple-300 shadow-[0_4px_14px_rgba(0,0,0,0.75),0_0_10px_rgba(168,85,247,0.3)]';
+              } else if (isChile) {
                 statusClasses = 'border-sky-400/70 text-sky-300 shadow-[0_4px_14px_rgba(0,0,0,0.75),0_0_12px_rgba(56,189,248,0.25)]';
               } else if (ev.status === 'open') {
                 statusClasses = 'border-emerald-500/70 text-emerald-300 shadow-[0_4px_14px_rgba(0,0,0,0.75),0_0_12px_rgba(16,185,129,0.3)]';
@@ -289,7 +303,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                     top: `${topPx}px`,
                     transform: edgeTransform
                   }}
-                  title={`${market.name}: ${ev.localTimeFormatted}`}
+                  title={`${market.name}: ${ev.localTimeFormatted}${ev.holiday ? ` (Feriado: ${ev.holiday.name})` : ''}`}
                 >
                   <span className="text-xs leading-none">{market.flag}</span>
                   <span>{ev.localTimeFormatted}</span>
@@ -349,7 +363,9 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                     : 'translate(-50%, -50%)';
 
                 let statusClasses = 'border-border text-foreground/80';
-                if (isChile) {
+                if (ev.holiday) {
+                  statusClasses = 'border-purple-500/70 text-purple-300 shadow-[0_4px_14px_rgba(0,0,0,0.75),0_0_10px_rgba(168,85,247,0.3)]';
+                } else if (isChile) {
                   statusClasses = 'border-sky-400/70 text-sky-300 shadow-[0_4px_14px_rgba(0,0,0,0.75),0_0_12px_rgba(56,189,248,0.25)]';
                 } else if (ev.status === 'open') {
                   statusClasses = 'border-emerald-500/70 text-emerald-300 shadow-[0_4px_14px_rgba(0,0,0,0.75),0_0_12px_rgba(16,185,129,0.3)]';

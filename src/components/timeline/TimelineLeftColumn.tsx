@@ -20,6 +20,18 @@ export const TimelineLeftColumn: React.FC<TimelineLeftColumnProps> = React.memo(
   chileScrubberEvaluation
 }) => {
   const getStatusBadge = (marketId: string, evaluation: MarketEvaluation) => {
+    if (evaluation.holiday) {
+      return (
+        <Badge
+          variant="holiday"
+          showDot={false}
+          className="text-[9px] md:text-[10px] px-1.5 py-0.5 font-mono font-bold leading-none"
+          title={`Feriado bursátil: ${evaluation.holiday.name}`}
+        >
+          Feriado
+        </Badge>
+      );
+    }
     if (marketId === 'chile') {
       return (
         <Badge variant="outline" className="text-[9px] md:text-[10px] px-1.5 py-0.5 border-sky-400/40 text-sky-300 font-mono font-bold leading-none">

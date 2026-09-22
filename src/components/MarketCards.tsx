@@ -50,13 +50,18 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
         {markets.map((market) => {
           const ev = evaluations[market.id];
           const status = ev?.status ?? 'closed';
+          const isHoliday = Boolean(ev?.holiday);
           const hasCatalyst = catalystsMap?.[market.id];
 
           let borderClass = 'border-slate-600/45 bg-slate-900/55 text-slate-400';
           let dotColor = 'bg-slate-500';
           let statusLabel = 'Cerrado';
 
-          if (status === 'open') {
+          if (isHoliday) {
+            borderClass = 'border-purple-400/50 bg-purple-500/[0.12] text-purple-300 shadow-[0_0_0_1px_rgba(168,85,247,0.16),0_0_18px_-6px_rgba(168,85,247,0.55)]';
+            dotColor = 'bg-purple-400';
+            statusLabel = 'Feriado';
+          } else if (status === 'open') {
             borderClass = 'border-emerald-400/50 bg-emerald-500/[0.12] text-emerald-300 shadow-[0_0_0_1px_rgba(16,185,129,0.16),0_0_18px_-6px_rgba(16,185,129,0.60)]';
             dotColor = 'bg-emerald-400 animate-pulse';
             statusLabel = 'Abierto';
@@ -78,7 +83,7 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
                 "relative flex flex-col items-center justify-between p-1 sm:p-1.5 rounded-lg border transition-[border-color,background-color,box-shadow,transform,scale] duration-200 min-h-[50px] cursor-pointer hover:border-border-strong active:scale-95",
                 borderClass
               )}
-              title={`${market.name} (${market.code}) - ${statusLabel} - ${ev?.localTimeFormatted ?? '--:--'}${hasCatalyst ? ' (Evento hoy)' : ''}`}
+              title={`${market.name} (${market.code}) - ${isHoliday ? `Feriado: ${ev?.holiday?.name}` : statusLabel} - ${ev?.localTimeFormatted ?? '--:--'}${hasCatalyst ? ' (Evento hoy)' : ''}`}
             >
               {hasCatalyst && (
                 <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_8px_#f43f5e]" />
@@ -113,29 +118,35 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
         {markets.map((market) => {
           const ev = evaluations[market.id];
           const status = ev?.status ?? 'closed';
+          const isHoliday = Boolean(ev?.holiday);
 
-          const badgeVariant =
-            status === 'open'
-              ? 'open'
-              : status === 'lunch'
-              ? 'lunch'
-              : status === 'pre_market'
-              ? 'pre'
-              : 'closed';
+          const badgeVariant = isHoliday
+            ? 'holiday'
+            : status === 'open'
+            ? 'open'
+            : status === 'lunch'
+            ? 'lunch'
+            : status === 'pre_market'
+            ? 'pre'
+            : 'closed';
 
-          const statusText =
-            status === 'open'
-              ? 'Abierto'
-              : status === 'lunch'
-              ? 'Almuerzo'
-              : status === 'pre_market'
-              ? 'Pre-apertura'
-              : 'Cerrado';
+          const statusText = isHoliday
+            ? 'Feriado'
+            : status === 'open'
+            ? 'Abierto'
+            : status === 'lunch'
+            ? 'Almuerzo'
+            : status === 'pre_market'
+            ? 'Pre-apertura'
+            : 'Cerrado';
 
           let cardBorderClass = 'border-l-slate-500/60';
           let cardBgClass = '';
 
-          if (status === 'open') {
+          if (isHoliday) {
+            cardBorderClass = 'border-l-purple-400 shadow-[0_0_0_1px_rgba(168,85,247,0.22),0_0_28px_-8px_rgba(168,85,247,0.58),0_14px_40px_-18px_rgba(2,6,23,0.95)]';
+            cardBgClass = 'bg-gradient-to-br from-purple-500/[0.12] via-transparent to-violet-500/[0.07]';
+          } else if (status === 'open') {
             cardBorderClass = 'border-l-emerald-400 shadow-[0_0_0_1px_rgba(16,185,129,0.22),0_0_28px_-8px_rgba(16,185,129,0.65),0_14px_40px_-18px_rgba(2,6,23,0.95)]';
             cardBgClass = 'bg-gradient-to-br from-emerald-500/[0.12] via-transparent to-violet-500/[0.07]';
           } else if (status === 'lunch') {
@@ -198,6 +209,17 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
                     </Badge>
                   </div>
                 </div>
+
+                {/* Holiday Banner if closed for holiday */}
+                {ev?.holiday && (
+                  <div
+                    className="flex items-center gap-1.5 px-2 py-1 rounded bg-purple-500/15 border border-purple-400/30 text-[11px] text-purple-200 font-medium truncate shadow-[0_0_12px_-4px_rgba(168,85,247,0.4)]"
+                    title={`Feriado bursátil: ${ev.holiday.name}`}
+                  >
+                    <span className="shrink-0 text-xs">🎉</span>
+                    <span className="truncate font-semibold">{ev.holiday.name}</span>
+                  </div>
+                )}
 
                 {/* Row 2: Local Time (prominent) on left, Date & Timezone on right */}
                 <div className="flex items-end justify-between gap-2 pt-2 border-t border-border">

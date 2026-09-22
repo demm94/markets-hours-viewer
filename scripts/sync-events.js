@@ -1,6 +1,6 @@
 /**
  * scripts/sync-events.js
- * Automated sync script for macroeconomic events using Finnhub.io.
+ * Automated sync script for macroeconomic events and market holidays using Finnhub.io.
  * Run automatically by GitHub Actions on a schedule or triggered manually via workflow_dispatch.
  */
 
@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const EVENTS_FILE = path.resolve(__dirname, '../src/data/events.json');
+const HOLIDAYS_FILE = path.resolve(__dirname, '../src/data/holidays.json');
 
 const COUNTRY_TO_MARKET = {
   US: 'nyse',
@@ -49,13 +50,64 @@ function slugify(text) {
     .slice(0, 30);
 }
 
+async function syncHolidays(apiKey) {
+  let existingHolidays = [];
+  if (fs.existsSync(HOLIDAYS_FILE)) {
+    try {
+      existingHolidays = JSON.parse(fs.readFileSync(HOLIDAYS_FILE, 'utf-8'));
+    } catch {
+      existingHolidays = [];
+    }
+  }
+
+  const holidayMap = new Map(existingHolidays.map((h) => [`${h.marketId}:${h.date}`, h]));
+
+  const exchanges = [
+    { code: 'US', marketId: 'nyse' },
+    { code: 'SS', marketId: 'sse' },
+    { code: 'TW', marketId: 'twse' },
+    { code: 'KS', marketId: 'krx' },
+    { code: 'IN', marketId: 'nse' }
+  ];
+
+  console.log(`📡 Fetching official market holidays from Finnhub...`);
+
+  for (const ex of exchanges) {
+    try {
+      const url = `https://finnhub.io/api/v1/stock/market-holiday?exchange=${ex.code}&token=${apiKey}`;
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const data = await res.json();
+      const items = data.data || [];
+      for (const item of items) {
+        if (!item.atDate) continue;
+        const key = `${ex.marketId}:${item.atDate}`;
+        holidayMap.set(key, {
+          marketId: ex.marketId,
+          date: item.atDate,
+          name: item.eventName || 'Feriado bursátil'
+        });
+      }
+    } catch (err) {
+      console.warn(`⚠️ Could not fetch holidays for exchange ${ex.code}:`, err.message);
+    }
+  }
+
+  const mergedHolidays = Array.from(holidayMap.values()).sort((a, b) =>
+    a.date.localeCompare(b.date) || a.marketId.localeCompare(b.marketId)
+  );
+
+  fs.writeFileSync(HOLIDAYS_FILE, JSON.stringify(mergedHolidays, null, 2) + '\n', 'utf-8');
+  console.log(`✅ Successfully updated ${HOLIDAYS_FILE} (${mergedHolidays.length} total holidays).`);
+}
+
 async function syncEvents() {
   const apiKey = process.env.FINNHUB_API_KEY;
 
   if (!apiKey) {
     console.warn('⚠️  FINNHUB_API_KEY not found in environment variables.');
     console.warn('ℹ️  Add FINNHUB_API_KEY to your GitHub Repository Secrets to enable automatic updates.');
-    console.warn('ℹ️  Preserving existing src/data/events.json without modification.');
+    console.warn('ℹ️  Preserving existing data files without modification.');
     return;
   }
 
@@ -131,6 +183,9 @@ async function syncEvents() {
 
   fs.writeFileSync(EVENTS_FILE, JSON.stringify(merged, null, 2) + '\n', 'utf-8');
   console.log(`✅ Successfully updated ${EVENTS_FILE} (${merged.length} total events).`);
+
+  // Sync market holidays
+  await syncHolidays(apiKey);
 }
 
 syncEvents().catch((err) => {

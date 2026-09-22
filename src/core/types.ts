@@ -32,6 +32,12 @@ export interface MarketTransition {
   formattedCountdown: string;
 }
 
+export interface MarketHoliday {
+  marketId: string;
+  date: string; // YYYY-MM-DD
+  name: string;
+}
+
 export interface MarketEvaluation {
   marketId: string;
   status: MarketStatus;
@@ -39,6 +45,7 @@ export interface MarketEvaluation {
   localDateFormatted: string;
   activeSegmentLabel?: string;
   nextTransition?: MarketTransition;
+  holiday?: MarketHoliday;
 }
 
 export type EventImportance = 'medium' | 'high';

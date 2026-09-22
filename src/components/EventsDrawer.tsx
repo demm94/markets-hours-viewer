@@ -5,6 +5,7 @@ import { X, Calendar, Flame, AlertCircle, Building2, TrendingUp, DollarSign } fr
 import { EventCategory } from '../core/types';
 import { MARKETS, CHILE_CONFIG } from '../core/markets';
 import { getUpcomingEvents } from '../core/events';
+import { getUpcomingHolidays } from '../core/holidays';
 import { cn } from '../lib/utils';
 
 interface EventsDrawerProps {
@@ -30,6 +31,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
   onSelectMarketId,
   chileNow
 }) => {
+  const [viewMode, setViewMode] = useState<'events' | 'holidays'>('events');
   const [onlyHighImportance, setOnlyHighImportance] = useState(false);
 
   // Close on Escape key press
@@ -62,6 +64,13 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
       maxDaysAhead: 120
     });
   }, [chileNow, selectedMarketId, onlyHighImportance]);
+
+  const upcomingHolidays = useMemo(() => {
+    return getUpcomingHolidays(chileNow, {
+      marketId: selectedMarketId === 'all' ? undefined : selectedMarketId,
+      maxDaysAhead: 120
+    });
+  }, [chileNow, selectedMarketId]);
 
   const marketTabs = useMemo(() => {
     return [
@@ -121,6 +130,34 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
 
             {/* Filter Bar */}
             <div className="p-3 bg-popover/90 border-b border-border space-y-2.5">
+              {/* Mode Segmented Control: Eventos Macro vs Feriados Bursátiles */}
+              <div className="grid grid-cols-2 p-1 bg-white/[0.04] rounded-lg border border-border text-xs font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setViewMode('events')}
+                  className={cn(
+                    'py-1.5 px-2 rounded-md text-center transition-all duration-200 select-none cursor-pointer',
+                    viewMode === 'events'
+                      ? 'bg-emerald-500/[0.18] text-emerald-300 border border-emerald-400/45 shadow-[0_0_0_1px_rgba(16,185,129,0.18),0_0_12px_-4px_rgba(16,185,129,0.5)]'
+                      : 'text-muted-foreground hover:text-white'
+                  )}
+                >
+                  Eventos Macro ({upcomingEvents.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('holidays')}
+                  className={cn(
+                    'py-1.5 px-2 rounded-md text-center transition-all duration-200 select-none cursor-pointer',
+                    viewMode === 'holidays'
+                      ? 'bg-purple-500/[0.18] text-purple-300 border border-purple-400/45 shadow-[0_0_0_1px_rgba(168,85,247,0.18),0_0_12px_-4px_rgba(168,85,247,0.5)]'
+                      : 'text-muted-foreground hover:text-white'
+                  )}
+                >
+                  Feriados ({upcomingHolidays.length})
+                </button>
+              </div>
+
               {/* Market Filter Chips */}
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
                 {marketTabs.map((tab) => {
@@ -131,7 +168,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                       type="button"
                       onClick={() => onSelectMarketId(tab.id)}
                       className={cn(
-                        'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md font-medium whitespace-nowrap transition-[color,background-color,border-color,box-shadow] duration-200 select-none',
+                        'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md font-medium whitespace-nowrap transition-[color,background-color,border-color,box-shadow] duration-200 select-none cursor-pointer',
                         isActive
                           ? 'bg-emerald-500/[0.15] text-emerald-300 border border-emerald-400/45 shadow-[0_0_0_1px_rgba(16,185,129,0.18),0_0_18px_-6px_rgba(16,185,129,0.55)]'
                           : 'bg-white/[0.05] text-muted-foreground border border-border hover:bg-white/[0.08] hover:text-foreground/80'
@@ -144,43 +181,111 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                 })}
               </div>
 
-              {/* Toggle High Importance */}
-              <div className="flex items-center justify-between pt-0.5">
-                <span className="text-[11px] text-muted-foreground">
-                  {upcomingEvents.length}{' '}
-                  {upcomingEvents.length === 1 ? 'evento encontrado' : 'eventos encontrados'}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setOnlyHighImportance((prev) => !prev)}
-                  className={cn(
-                    'flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border transition-[color,background-color,border-color,box-shadow] duration-200',
-                    onlyHighImportance
-                      ? 'bg-rose-500/[0.15] border-rose-400/45 text-rose-300 shadow-[0_0_0_1px_rgba(244,63,94,0.18),0_0_18px_-6px_rgba(244,63,94,0.55)]'
-                      : 'bg-white/[0.05] border-border text-muted-foreground hover:text-foreground/80'
-                  )}
-                >
-                  <Flame className="w-3.5 h-3.5" />
-                  <span>Solo Alta Importancia</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Events List */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-2.5 divide-y divide-border">
-              {upcomingEvents.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-secondary text-muted-foreground/70 mb-3">
-                    <Calendar className="w-6 h-6" />
-                  </div>
-                  <p className="text-sm font-medium text-foreground/80">
-                    No hay eventos programados
-                  </p>
-                  <p className="text-xs text-muted-foreground/70 mt-1 max-w-xs">
-                    No encontramos eventos con los filtros actuales en la ventana de los próximos 30 días.
-                  </p>
+              {/* Secondary filter info */}
+              {viewMode === 'events' ? (
+                <div className="flex items-center justify-between pt-0.5">
+                  <span className="text-[11px] text-muted-foreground">
+                    {upcomingEvents.length}{' '}
+                    {upcomingEvents.length === 1 ? 'evento encontrado' : 'eventos encontrados'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setOnlyHighImportance((prev) => !prev)}
+                    className={cn(
+                      'flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border transition-[color,background-color,border-color,box-shadow] duration-200 cursor-pointer',
+                      onlyHighImportance
+                        ? 'bg-rose-500/[0.15] border-rose-400/45 text-rose-300 shadow-[0_0_0_1px_rgba(244,63,94,0.18),0_0_18px_-6px_rgba(244,63,94,0.55)]'
+                        : 'bg-white/[0.05] border-border text-muted-foreground hover:text-foreground/80'
+                    )}
+                  >
+                    <Flame className="w-3.5 h-3.5" />
+                    <span>Solo Alta Importancia</span>
+                  </button>
                 </div>
               ) : (
+                <div className="flex items-center justify-between pt-0.5">
+                  <span className="text-[11px] text-muted-foreground">
+                    {upcomingHolidays.length}{' '}
+                    {upcomingHolidays.length === 1 ? 'feriado próximo' : 'feriados próximos'}
+                  </span>
+                  <span className="text-[11px] font-mono text-purple-300/80 font-medium">
+                    Ventana 120 días
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Content List: Holidays or Macro Events */}
+            {viewMode === 'holidays' ? (
+              <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
+                {upcomingHolidays.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-secondary text-muted-foreground/70 mb-3">
+                      <Calendar className="w-6 h-6" />
+                    </div>
+                    <p className="text-sm font-medium text-foreground/80">
+                      No hay feriados bursátiles programados
+                    </p>
+                    <p className="text-xs text-muted-foreground/70 mt-1 max-w-xs">
+                      No registramos feriados para el mercado seleccionado en la ventana de los próximos 120 días.
+                    </p>
+                  </div>
+                ) : (
+                  upcomingHolidays.map((holiday, idx) => (
+                    <div
+                      key={`${holiday.marketId}-${holiday.date}-${idx}`}
+                      className="p-3 rounded-xl bg-white/[0.03] border border-purple-500/25 hover:border-purple-400/40 hover:bg-purple-950/20 transition-[background-color,border-color] duration-200 flex flex-col gap-2 shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold bg-white/[0.05] text-foreground/90 border border-border">
+                          <span>{holiday.marketFlag}</span>
+                          <span>{holiday.marketName}</span>
+                        </span>
+                        <span
+                          className={cn(
+                            'px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider',
+                            holiday.relativeDays === 0
+                              ? 'bg-emerald-500/[0.15] text-emerald-300 border border-emerald-400/45 shadow-[0_0_0_1px_rgba(16,185,129,0.18),0_0_12px_-4px_rgba(16,185,129,0.5)] animate-pulse'
+                              : holiday.relativeDays === 1
+                              ? 'bg-amber-500/[0.15] text-amber-300 border border-amber-400/45'
+                              : 'bg-white/[0.05] text-muted-foreground border border-border'
+                          )}
+                        >
+                          {holiday.relativeDescriptor}
+                        </span>
+                      </div>
+
+                      <div>
+                        <h3 className="text-xs font-bold text-purple-200 leading-snug">
+                          {holiday.name}
+                        </h3>
+                      </div>
+
+                      <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1.5 border-t border-purple-500/15">
+                        <span className="font-mono text-foreground/80">{holiday.dateFormatted} ({holiday.date})</span>
+                        <span className="text-[10px] font-semibold text-purple-300/90 uppercase tracking-wider">
+                          Mercado cerrado
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            ) : (
+              <div className="flex-1 overflow-y-auto p-3 space-y-2.5 divide-y divide-border">
+                {upcomingEvents.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-secondary text-muted-foreground/70 mb-3">
+                      <Calendar className="w-6 h-6" />
+                    </div>
+                    <p className="text-sm font-medium text-foreground/80">
+                      No hay eventos programados
+                    </p>
+                    <p className="text-xs text-muted-foreground/70 mt-1 max-w-xs">
+                      No encontramos eventos con los filtros actuales en la ventana de los próximos 30 días.
+                    </p>
+                  </div>
+                ) : (
                 upcomingEvents.map((ev) => {
                   const catInfo = CATEGORY_LABELS[ev.category] ?? {
                     label: ev.category,
@@ -282,6 +387,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                 })
               )}
             </div>
+          )}
 
             {/* Footer */}
             <div className="px-4 py-2.5 border-t border-border bg-popover/90 text-[10px] text-muted-foreground flex items-center justify-between">

@@ -17,6 +17,7 @@ const badgeVariants = cva(
         open: "border border-emerald-400/45 bg-emerald-500/15 text-emerald-300 font-sans font-semibold tracking-normal text-xs shadow-[0_0_0_1px_rgba(16,185,129,0.18),0_0_18px_-4px_rgba(16,185,129,0.55)]",
         lunch: "border border-amber-400/45 bg-amber-500/15 text-amber-300 font-sans font-semibold tracking-normal text-xs shadow-[0_0_0_1px_rgba(245,158,11,0.18),0_0_18px_-4px_rgba(245,158,11,0.50)]",
         pre: "border border-cyan-400/45 bg-cyan-500/15 text-cyan-300 font-sans font-semibold tracking-normal text-xs shadow-[0_0_0_1px_rgba(34,211,238,0.18),0_0_18px_-4px_rgba(34,211,238,0.50)]",
+        holiday: "border border-purple-400/45 bg-purple-500/15 text-purple-300 font-sans font-semibold tracking-normal text-xs shadow-[0_0_0_1px_rgba(168,85,247,0.18),0_0_18px_-4px_rgba(168,85,247,0.50)]",
         closed: "border border-slate-600/50 bg-slate-800/50 text-slate-300 font-sans font-medium tracking-normal text-xs"
       }
     },
@@ -33,7 +34,7 @@ export interface BadgeProps
 }
 
 function Badge({ className, variant, showDot, children, ...props }: BadgeProps) {
-  const isStatus = variant === "open" || variant === "lunch" || variant === "pre" || variant === "closed";
+  const isStatus = variant === "open" || variant === "lunch" || variant === "pre" || variant === "closed" || variant === "holiday";
   const shouldShowDot = showDot ?? isStatus;
 
   return (
