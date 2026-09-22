@@ -6,7 +6,7 @@ import {
   minuteOffsetToDateTime,
   formatMinutes
 } from './core/timezone';
-import { MarketEvaluation } from './core/types';
+import { MarketEvaluation, TimelineEventMarkerData } from './core/types';
 import { useCurrentTime } from './hooks/useCurrentTime';
 import { useScrubber } from './hooks/useScrubber';
 import { usePullToRefresh } from './hooks/usePullToRefresh';
@@ -14,7 +14,8 @@ import { Header } from './components/Header';
 import { MarketCards } from './components/MarketCards';
 import { TimelineGrid } from './components/TimelineGrid';
 import { EventsDrawer } from './components/EventsDrawer';
-import { hasHighImpactEventsToday } from './core/events';
+import { EventDetailModal } from './components/timeline/EventDetailModal';
+import { hasHighImpactEventsToday, getEventsForChileDay } from './core/events';
 import { RotateCw } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -22,6 +23,7 @@ export const App: React.FC = () => {
 
   const [isEventsDrawerOpen, setIsEventsDrawerOpen] = React.useState(false);
   const [selectedEventMarket, setSelectedEventMarket] = React.useState('all');
+  const [selectedEventForModal, setSelectedEventForModal] = React.useState<TimelineEventMarkerData | null>(null);
 
   const handleOpenEvents = React.useCallback((marketId: string = 'all') => {
     setSelectedEventMarket(marketId);
@@ -30,6 +32,10 @@ export const App: React.FC = () => {
 
   const handleCloseEvents = React.useCallback(() => {
     setIsEventsDrawerOpen(false);
+  }, []);
+
+  const handleCloseEventModal = React.useCallback(() => {
+    setSelectedEventForModal(null);
   }, []);
 
   const handleRefresh = React.useCallback(() => {
@@ -111,6 +117,10 @@ export const App: React.FC = () => {
     return map;
   }, [referenceDayKey, now]);
 
+  const dailyEvents = useMemo(() => {
+    return getEventsForChileDay(now);
+  }, [referenceDayKey, now]);
+
   const hasUpcomingCatalysts = useMemo(() => {
     return Object.values(catalystsMap).some(Boolean);
   }, [catalystsMap]);
@@ -177,6 +187,9 @@ export const App: React.FC = () => {
             currentMinutes={currentMinutes}
             isHovering={isScrubbing}
             containerRef={containerRef}
+            dailyEvents={dailyEvents}
+            onSelectEvent={handleOpenEvents}
+            onEventClick={setSelectedEventForModal}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
@@ -204,6 +217,12 @@ export const App: React.FC = () => {
         selectedMarketId={selectedEventMarket}
         onSelectMarketId={setSelectedEventMarket}
         chileNow={now}
+      />
+
+      <EventDetailModal
+        event={selectedEventForModal}
+        onClose={handleCloseEventModal}
+        onOpenMarketDrawer={handleOpenEvents}
       />
     </div>
   );

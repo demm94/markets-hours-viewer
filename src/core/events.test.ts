@@ -5,7 +5,8 @@ import {
   formatEventTimes,
   filterEvents,
   getUpcomingEvents,
-  hasHighImpactEventsToday
+  hasHighImpactEventsToday,
+  getEventsForChileDay
 } from './events';
 import { MarketEvent } from './types';
 
@@ -76,5 +77,37 @@ describe('events engine', () => {
     // Korea doesn't have an event on 2026-09-16
     const hasKrxToday = hasHighImpactEventsToday('krx', referenceChileNow);
     expect(hasKrxToday).toBe(false);
+  });
+
+  it('should project events for a specific Chile day with correct minutes and percentages', () => {
+    // 2026-09-16: FOMC at 18:00 UTC = 15:00 Chile (UTC-3)
+    const dailyMap = getEventsForChileDay(referenceChileNow);
+    expect(dailyMap['nyse']).toBeDefined();
+    expect(dailyMap['nyse'].length).toBe(1);
+
+    const fomc = dailyMap['nyse'][0];
+    expect(fomc.id).toBe('us-fomc-sep-2026');
+    expect(fomc.importance).toBe('high');
+    expect(fomc.minuteInChile).toBe(15 * 60); // 900 minutes
+    expect(fomc.leftPercent).toBeCloseTo((900 / 1440) * 100, 2);
+    expect(fomc.chileTimeFormatted).toContain('15:00');
+
+    // Korea and Taiwan have no events on Sep 16 in Chile
+    expect(dailyMap['krx']).toBeUndefined();
+    expect(dailyMap['twse']).toBeUndefined();
+  });
+
+  it('should correctly handle UTC-to-Chile midnight transitions for daily projection', () => {
+    // PBoC LPR is 2026-09-20T01:15:00Z.
+    // In Chile (UTC-3), this is 2026-09-19 22:15:00 (minute 1335).
+    const sep19Chile = DateTime.fromISO('2026-09-19T10:00:00', { zone: 'America/Santiago' });
+    const sep19Map = getEventsForChileDay(sep19Chile);
+    expect(sep19Map['sse']).toBeDefined();
+    expect(sep19Map['sse'][0].id).toBe('cn-pboc-lpr-sep-2026');
+    expect(sep19Map['sse'][0].minuteInChile).toBe(22 * 60 + 15); // 1335 min
+
+    const sep20Chile = DateTime.fromISO('2026-09-20T10:00:00', { zone: 'America/Santiago' });
+    const sep20Map = getEventsForChileDay(sep20Chile);
+    expect(sep20Map['sse']).toBeUndefined();
   });
 });

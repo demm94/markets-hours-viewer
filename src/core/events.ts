@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon';
-import { MarketEvent, FormattedMarketEvent, EventImportance } from './types';
+import { MarketEvent, FormattedMarketEvent, EventImportance, TimelineEventMarkerData } from './types';
 import { MARKETS, CHILE_CONFIG } from './markets';
 
 export const MARKET_TIMEZONE_MAP: Record<string, string> = {
@@ -245,4 +245,43 @@ export function hasHighImpactEventsToday(marketId: string, chileNow: DateTime): 
     const eventInChile = DateTime.fromISO(e.timestampUtc, { zone: 'utc' }).setZone('America/Santiago');
     return eventInChile.toFormat('yyyy-MM-dd') === todayChileStr;
   });
+}
+
+export function getEventsForChileDay(
+  referenceDate: DateTime = DateTime.now().setZone(CHILE_CONFIG.timezone),
+  events: MarketEvent[] = MARKET_EVENTS
+): Record<string, TimelineEventMarkerData[]> {
+  const chileDate = referenceDate.setZone(CHILE_CONFIG.timezone);
+  const chileStartToday = chileDate.startOf('day');
+  const chileEndToday = chileStartToday.plus({ days: 1 });
+
+  const result: Record<string, TimelineEventMarkerData[]> = {};
+
+  for (const event of events) {
+    const eventUtc = DateTime.fromISO(event.timestampUtc, { zone: 'utc' });
+    const eventInChile = eventUtc.setZone(CHILE_CONFIG.timezone);
+
+    if (eventInChile >= chileStartToday && eventInChile < chileEndToday) {
+      const minuteInChile = eventInChile.hour * 60 + eventInChile.minute;
+      const leftPercent = (minuteInChile / 1440) * 100;
+      const formatted = formatEventTimes(event, chileDate);
+
+      const markerData: TimelineEventMarkerData = {
+        ...formatted,
+        minuteInChile,
+        leftPercent
+      };
+
+      if (!result[event.marketId]) {
+        result[event.marketId] = [];
+      }
+      result[event.marketId].push(markerData);
+    }
+  }
+
+  for (const mId in result) {
+    result[mId].sort((a, b) => a.minuteInChile - b.minuteInChile);
+  }
+
+  return result;
 }

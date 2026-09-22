@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import { MarketConfig, MarketEvaluation, TimelineSegment } from '../core/types';
+import { MarketConfig, MarketEvaluation, TimelineSegment, TimelineEventMarkerData } from '../core/types';
 import { CHILE_CONFIG } from '../core/markets';
 import { TimelineHeader } from './timeline/TimelineHeader';
 import { TimelineLeftColumn } from './timeline/TimelineLeftColumn';
@@ -21,6 +21,9 @@ interface TimelineGridProps {
   currentMinutes: number;
   isHovering: boolean;
   containerRef: React.RefObject<HTMLDivElement | null>;
+  dailyEvents?: Record<string, TimelineEventMarkerData[]>;
+  onSelectEvent?: (marketId: string) => void;
+  onEventClick?: (event: TimelineEventMarkerData) => void;
   onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => void;
   onPointerMove: (e: React.PointerEvent<HTMLDivElement>) => void;
   onPointerUp: (e: React.PointerEvent<HTMLDivElement>) => void;
@@ -38,6 +41,9 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
   currentMinutes,
   isHovering,
   containerRef,
+  dailyEvents,
+  onSelectEvent,
+  onEventClick,
   onPointerDown,
   onPointerMove,
   onPointerUp,
@@ -162,6 +168,9 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
           isHovering={isHovering}
           isColumnCollapsed={isColumnCollapsed}
           containerRef={containerRef}
+          dailyEvents={dailyEvents}
+          onSelectEvent={onSelectEvent}
+          onEventClick={onEventClick}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}

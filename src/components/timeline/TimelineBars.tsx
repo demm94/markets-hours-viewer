@@ -1,6 +1,7 @@
 import React from 'react';
-import { MarketConfig, MarketEvaluation, TimelineSegment } from '../../core/types';
+import { MarketConfig, MarketEvaluation, TimelineSegment, TimelineEventMarkerData } from '../../core/types';
 import { formatMinutes } from '../../core/timezone';
+import { TimelineEventMarker } from './TimelineEventMarker';
 
 const HOURS = [0, 3, 6, 9, 12, 15, 18, 21, 24];
 const GRID_LINES = Array.from({ length: 25 }, (_, i) => i);
@@ -15,6 +16,9 @@ interface TimelineBarsProps {
   isHovering: boolean;
   isColumnCollapsed: boolean;
   containerRef: React.RefObject<HTMLDivElement | null>;
+  dailyEvents?: Record<string, TimelineEventMarkerData[]>;
+  onSelectEvent?: (marketId: string) => void;
+  onEventClick?: (event: TimelineEventMarkerData) => void;
   onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => void;
   onPointerMove: (e: React.PointerEvent<HTMLDivElement>) => void;
   onPointerUp: (e: React.PointerEvent<HTMLDivElement>) => void;
@@ -38,8 +42,28 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
   onPointerUp,
   onPointerCancel,
   onPointerLeave,
-  onKeyDown
+  onKeyDown,
+  dailyEvents = {},
+  onSelectEvent,
+  onEventClick
 }) => {
+  const [activeEventId, setActiveEventId] = React.useState<string | null>(null);
+  const [hoveredEventId, setHoveredEventId] = React.useState<string | null>(null);
+
+  const currentActiveEventId = activeEventId || hoveredEventId;
+
+  React.useEffect(() => {
+    if (!activeEventId) return;
+    const handleGlobalPointerDown = (e: PointerEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target?.closest('[data-timeline-marker]')) {
+        setActiveEventId(null);
+      }
+    };
+    document.addEventListener('pointerdown', handleGlobalPointerDown);
+    return () => document.removeEventListener('pointerdown', handleGlobalPointerDown);
+  }, [activeEventId]);
+
   const scrubberPercent = (scrubberMinutes / 1440) * 100;
   const nowPercent = (currentMinutes / 1440) * 100;
   const isActivelyScrubbing = isHovering && Math.abs(scrubberMinutes - currentMinutes) > 2;
@@ -96,61 +120,91 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
       </div>
 
       {/* Market Bar Rows */}
-      <div className="relative z-[2] flex flex-col">
-        {allMarkets.map((market) => {
+      <div className="relative flex flex-col">
+        {allMarkets.map((market, marketIdx) => {
           const isChile = market.id === 'chile';
           const segments = isChile ? [] : (marketSegments[market.id] ?? []);
+          const marketEvents = dailyEvents[market.id] ?? [];
+          const isRowElevated = marketEvents.some((e) => e.id === currentActiveEventId);
 
           return (
             <div
               key={market.id}
-              className={`h-[38px] sm:h-[46px] md:h-[50px] px-1.5 sm:px-2 flex items-center border-b border-border transition-colors ${
+              className={`relative h-[38px] sm:h-[46px] md:h-[50px] px-1.5 sm:px-2 flex items-center border-b border-border transition-colors ${
+                isRowElevated ? 'z-40' : 'hover:z-30 focus-within:z-40'
+              } ${
                 isChile ? 'bg-gradient-to-r from-sky-400/[0.08] to-sky-400/[0.02] border-b-sky-400/35' : 'hover:bg-white/[0.02]'
               }`}
             >
-              <div className="relative w-full h-[22px] sm:h-[26px] md:h-[30px] bg-white/[0.02] border border-border rounded sm:rounded-lg overflow-hidden shadow-[inset_0_2px_6px_rgba(0,0,0,0.5)]">
-                {/* Chile reference track */}
-                {isChile && (
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-sky-400/[0.06] via-sky-400/[0.16] to-sky-400/[0.06]">
-                    <span className="font-mono text-xs font-bold text-sky-400 tracking-wider uppercase">
-                      Eje 24h Santiago de Chile
-                    </span>
+              <div className="relative w-full h-[22px] sm:h-[26px] md:h-[30px] bg-white/[0.02] border border-border rounded sm:rounded-lg shadow-[inset_0_2px_6px_rgba(0,0,0,0.5)]">
+                {/* Session blocks container (clipped to rounded track) */}
+                <div className="absolute inset-0 rounded sm:rounded-lg overflow-hidden pointer-events-none z-[2]">
+                  {/* Chile reference track */}
+                  {isChile && (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-sky-400/[0.06] via-sky-400/[0.16] to-sky-400/[0.06]">
+                      <span className="font-mono text-xs font-bold text-sky-400 tracking-wider uppercase">
+                        Eje 24h Santiago de Chile
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Session blocks */}
+                  {segments.map((seg, idx) => {
+                    const leftPercent = (seg.startMinute / 1440) * 100;
+                    const widthPercent = ((seg.endMinute - seg.startMinute) / 1440) * 100;
+                    const isActive = scrubberMinutes >= seg.startMinute && scrubberMinutes < seg.endMinute;
+
+                    let blockStyle = 'bg-gradient-to-b from-emerald-500 to-emerald-600';
+                    let shadowStyle = 'shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5),0_0_16px_rgba(16,185,129,0.30)]';
+                    let activeShadowStyle = 'shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5),0_0_28px_rgba(16,185,129,0.80)]';
+                    if (seg.type === 'lunch') {
+                      blockStyle = 'bg-gradient-to-b from-amber-500 to-amber-600';
+                      shadowStyle = 'shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5),0_0_16px_rgba(245,158,11,0.30)]';
+                      activeShadowStyle = 'shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5),0_0_28px_rgba(245,158,11,0.80)]';
+                    } else if (seg.type === 'pre_market') {
+                      blockStyle = 'bg-gradient-to-b from-cyan-500 to-sky-600';
+                      shadowStyle = 'shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5),0_0_16px_rgba(34,211,238,0.30)]';
+                      activeShadowStyle = 'shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5),0_0_28px_rgba(34,211,238,0.80)]';
+                    }
+
+                    return (
+                      <div
+                        key={idx}
+                        className={`absolute top-0 bottom-0 flex items-center justify-center text-[11px] font-bold rounded-md overflow-hidden whitespace-nowrap transition-[box-shadow] ${blockStyle} ${
+                          isActive ? `ring-2 ring-white ${activeShadowStyle}` : shadowStyle
+                        }`}
+                        style={{
+                          left: `${leftPercent}%`,
+                          width: `${widthPercent}%`
+                        }}
+                        title={`${market.name} - ${seg.label ?? seg.type}: ${(seg.startMinute / 60).toFixed(1)}h - ${(seg.endMinute / 60).toFixed(1)}h (Chile)`}
+                      />
+                    );
+                  })}
+                </div>
+
+                {/* Event markers layer (unclipped for popover/tooltip) */}
+                {marketEvents.length > 0 && (
+                  <div className="absolute inset-0 pointer-events-none z-[4]">
+                    {marketEvents.map((evt) => (
+                      <TimelineEventMarker
+                        key={evt.id}
+                        event={evt}
+                        marketFlag={market.flag}
+                        isTopRow={marketIdx <= 1}
+                        isOpen={currentActiveEventId === evt.id}
+                        onOpenToggle={() =>
+                          setActiveEventId((prev) => (prev === evt.id ? null : evt.id))
+                        }
+                        onHoverChange={(isHovered) =>
+                          setHoveredEventId(isHovered ? evt.id : null)
+                        }
+                        onSelectEvent={onSelectEvent}
+                        onEventClick={onEventClick}
+                      />
+                    ))}
                   </div>
                 )}
-
-                {/* Session blocks */}
-                {segments.map((seg, idx) => {
-                  const leftPercent = (seg.startMinute / 1440) * 100;
-                  const widthPercent = ((seg.endMinute - seg.startMinute) / 1440) * 100;
-                  const isActive = scrubberMinutes >= seg.startMinute && scrubberMinutes < seg.endMinute;
-
-                  let blockStyle = 'bg-gradient-to-b from-emerald-500 to-emerald-600';
-                  let shadowStyle = 'shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5),0_0_16px_rgba(16,185,129,0.30)]';
-                  let activeShadowStyle = 'shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5),0_0_28px_rgba(16,185,129,0.80)]';
-                  if (seg.type === 'lunch') {
-                    blockStyle = 'bg-gradient-to-b from-amber-500 to-amber-600';
-                    shadowStyle = 'shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5),0_0_16px_rgba(245,158,11,0.30)]';
-                    activeShadowStyle = 'shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5),0_0_28px_rgba(245,158,11,0.80)]';
-                  } else if (seg.type === 'pre_market') {
-                    blockStyle = 'bg-gradient-to-b from-cyan-500 to-sky-600';
-                    shadowStyle = 'shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5),0_0_16px_rgba(34,211,238,0.30)]';
-                    activeShadowStyle = 'shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5),0_0_28px_rgba(34,211,238,0.80)]';
-                  }
-
-                  return (
-                    <div
-                      key={idx}
-                      className={`absolute top-0 bottom-0 flex items-center justify-center text-[11px] font-bold rounded-md overflow-hidden whitespace-nowrap transition-[box-shadow] ${blockStyle} ${
-                        isActive ? `ring-2 ring-white ${activeShadowStyle}` : shadowStyle
-                      }`}
-                      style={{
-                        left: `${leftPercent}%`,
-                        width: `${widthPercent}%`
-                      }}
-                      title={`${market.name} - ${seg.label ?? seg.type}: ${(seg.startMinute / 60).toFixed(1)}h - ${(seg.endMinute / 60).toFixed(1)}h (Chile)`}
-                    />
-                  );
-                })}
               </div>
             </div>
           );

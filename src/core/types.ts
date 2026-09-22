@@ -60,3 +60,8 @@ export interface FormattedMarketEvent extends MarketEvent {
   exchangeTimeFormatted: string;
   relativeTimeDescriptor: string;
 }
+
+export interface TimelineEventMarkerData extends FormattedMarketEvent {
+  minuteInChile: number; // 0-1440
+  leftPercent: number;   // (minuteInChile / 1440) * 100
+}
