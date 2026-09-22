@@ -26,12 +26,19 @@ export interface TimelineSegment {
   label?: string;
 }
 
+export interface MarketTransition {
+  type: 'open' | 'close' | 'lunch' | 'resume';
+  inMinutes: number;
+  formattedCountdown: string;
+}
+
 export interface MarketEvaluation {
   marketId: string;
   status: MarketStatus;
   localTimeFormatted: string;
   localDateFormatted: string;
   activeSegmentLabel?: string;
+  nextTransition?: MarketTransition;
 }
 
 export type EventImportance = 'medium' | 'high';

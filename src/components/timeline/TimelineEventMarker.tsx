@@ -59,18 +59,18 @@ export const TimelineEventMarker: React.FC<TimelineEventMarkerProps> = React.mem
           onOpenToggle();
           onEventClick?.(event);
         }}
-        className={`group relative flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold font-mono tracking-tight transition-all duration-150 shadow-md hover:scale-110 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${
+        className={`group relative flex items-center gap-0.5 sm:gap-1 rounded-full px-1 sm:px-1.5 py-[1px] sm:py-0.5 text-[9px] font-bold font-mono tracking-tight transition-all duration-150 shadow-sm hover:scale-110 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${
           isHigh
-            ? 'bg-rose-600/95 text-white border border-rose-300 shadow-[0_0_12px_rgba(225,29,72,0.85)] hover:bg-rose-500'
-            : 'bg-amber-500/95 text-zinc-950 border border-amber-200 shadow-[0_0_10px_rgba(245,158,11,0.8)] hover:bg-amber-400'
+            ? 'bg-rose-600/95 text-white border border-rose-300/80 shadow-[0_0_8px_rgba(225,29,72,0.7)] hover:bg-rose-500'
+            : 'bg-amber-500/95 text-zinc-950 border border-amber-200/80 shadow-[0_0_6px_rgba(245,158,11,0.7)] hover:bg-amber-400'
         }`}
       >
         {isHigh ? (
-          <Flame className="w-2.5 h-2.5 text-white fill-current animate-pulse flex-shrink-0" />
+          <Flame className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-white fill-current animate-pulse flex-shrink-0" />
         ) : (
-          <AlertCircle className="w-2.5 h-2.5 text-zinc-950 flex-shrink-0" />
+          <AlertCircle className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-zinc-950 flex-shrink-0" />
         )}
-        <span className="leading-none text-[9px] font-mono font-bold tabular-nums">
+        <span className="leading-none text-[8px] sm:text-[9px] font-mono font-bold tabular-nums">
           {timeOnly}
         </span>
       </button>

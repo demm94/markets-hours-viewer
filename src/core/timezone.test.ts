@@ -8,7 +8,8 @@ import {
   getSantiagoOffsetDescription,
   isWeekend,
   minuteOffsetToDateTime,
-  dateTimeToWallClockMinutes
+  dateTimeToWallClockMinutes,
+  formatMinutesCountdown
 } from './timezone';
 import { MARKETS } from './markets';
 
@@ -161,5 +162,28 @@ describe('timezone engine', () => {
     const dtFallNoon = minuteOffsetToDateTime(720, fallTransitionDate);
     expect(dtFallNoon.hour).toBe(12);
     expect(dtFallNoon.minute).toBe(0);
+  });
+
+  it('correctly calculates transition countdowns and next status transitions', () => {
+    expect(formatMinutesCountdown(45)).toBe('45m');
+    expect(formatMinutesCountdown(90)).toBe('1h 30m');
+    expect(formatMinutesCountdown(120)).toBe('2h');
+
+    // Tuesday 14:30 New York time (regular session ends at 16:00 -> 90m remaining)
+    const dtOpen = DateTime.fromISO('2026-09-15T14:30:00', { zone: 'America/New_York' });
+    const evalOpen = evaluateMarketAt(nyse, dtOpen);
+    expect(evalOpen.status).toBe('open');
+    expect(evalOpen.nextTransition).toBeDefined();
+    expect(evalOpen.nextTransition?.type).toBe('close');
+    expect(evalOpen.nextTransition?.inMinutes).toBe(90);
+    expect(evalOpen.nextTransition?.formattedCountdown).toBe('Cierra en 1h 30m');
+
+    // Tuesday 08:30 New York time (market opens at 09:30 -> 60m remaining)
+    const dtBefore = DateTime.fromISO('2026-09-15T08:30:00', { zone: 'America/New_York' });
+    const evalBefore = evaluateMarketAt(nyse, dtBefore);
+    expect(evalBefore.status).toBe('closed');
+    expect(evalBefore.nextTransition?.type).toBe('open');
+    expect(evalBefore.nextTransition?.inMinutes).toBe(60);
+    expect(evalBefore.nextTransition?.formattedCountdown).toBe('Abre en 1h');
   });
 });

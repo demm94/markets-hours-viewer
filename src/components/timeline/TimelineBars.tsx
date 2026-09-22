@@ -70,7 +70,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
 
   return (
     <div
-      className="timeline-bars-container flex-1 min-w-[800px] relative flex flex-col cursor-crosshair touch-none select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/50"
+      className="timeline-bars-container flex-1 w-full min-w-0 relative flex flex-col cursor-crosshair touch-none select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/50"
       ref={containerRef}
       tabIndex={0}
       role="slider"
@@ -91,18 +91,19 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
         {HOURS.map((h) => {
           const transform =
             h === 0
-              ? 'translate(6px, -50%)'
+              ? 'translate(4px, -50%)'
               : h === 24
-              ? 'translate(calc(-100% - 6px), -50%)'
+              ? 'translate(calc(-100% - 4px), -50%)'
               : 'translate(-50%, -50%)';
 
           return (
             <div
               key={h}
-              className="absolute top-1/2 font-mono text-[10px] sm:text-xs font-semibold text-muted-foreground tabular-nums select-none"
+              className="absolute top-1/2 font-mono text-[9px] sm:text-xs font-semibold text-muted-foreground tabular-nums select-none"
               style={{ left: `${(h / 24) * 100}%`, transform }}
             >
-              {h.toString().padStart(2, '0')}:00
+              <span className="hidden sm:inline">{h.toString().padStart(2, '0')}:00</span>
+              <span className="sm:hidden">{h.toString().padStart(2, '0')}h</span>
             </div>
           );
         })}
@@ -229,9 +230,16 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
         >
           <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
           <span>
-            {isActivelyScrubbing
-              ? 'AHORA'
-              : `AHORA 🇨🇱 ${formatMinutes(currentMinutes)}`}
+            <span className="hidden sm:inline">
+              {isActivelyScrubbing
+                ? 'AHORA'
+                : `AHORA 🇨🇱 ${formatMinutes(currentMinutes)}`}
+            </span>
+            <span className="sm:hidden text-[9px] font-bold">
+              {isActivelyScrubbing
+                ? 'AHORA'
+                : `${formatMinutes(currentMinutes)}`}
+            </span>
           </span>
         </div>
 
@@ -309,7 +317,8 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                   : 'translateX(-50%)'
             }}
           >
-            <span>🇨🇱 {formatMinutes(scrubberMinutes)}</span>
+            <span className="hidden sm:inline">🇨🇱 </span>
+            <span>{formatMinutes(scrubberMinutes)}</span>
           </div>
 
           {/* When left column is collapsed and scrubbing, show projected country times on scrubber line */}
