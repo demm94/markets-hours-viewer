@@ -1,0 +1,39 @@
+name: Sync Macroeconomic Events
+
+on:
+  schedule:
+    # Runs on the 1st of every month at 04:00 UTC (01:00 AM Chile time)
+    - cron: '0 4 1 * *'
+  workflow_dispatch: # Allows running manually from GitHub Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Run events sync script
+        env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+        run: node scripts/sync-events.js
+
+      - name: Commit and push changes
+        run: |
+          if git diff --quiet src/data/events.json; then
+            echo "No changes in events calendar. Working tree is clean."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add src/data/events.json
+            git commit -m "chore(data): sync monthly macroeconomic events"
+            git push origin main
+          fi
