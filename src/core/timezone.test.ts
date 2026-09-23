@@ -168,6 +168,9 @@ describe('timezone engine', () => {
     expect(formatMinutesCountdown(45)).toBe('45m');
     expect(formatMinutesCountdown(90)).toBe('1h 30m');
     expect(formatMinutesCountdown(120)).toBe('2h');
+    expect(formatMinutesCountdown(1440)).toBe('1d');
+    expect(formatMinutesCountdown(1500)).toBe('1d 1h');
+    expect(formatMinutesCountdown(6418)).toBe('4d 10h 58m');
 
     // Tuesday 14:30 New York time (regular session ends at 16:00 -> 90m remaining)
     const dtOpen = DateTime.fromISO('2026-09-15T14:30:00', { zone: 'America/New_York' });

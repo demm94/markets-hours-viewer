@@ -11,6 +11,7 @@ interface TimelineBarsProps {
   marketSegments: Record<string, TimelineSegment[]>;
   scrubberEvaluations: Record<string, MarketEvaluation>;
   chileScrubberEvaluation: MarketEvaluation;
+  evaluationsNow?: Record<string, MarketEvaluation>;
   scrubberMinutes: number;
   currentMinutes: number;
   isHovering: boolean;
@@ -32,6 +33,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
   marketSegments,
   scrubberEvaluations,
   chileScrubberEvaluation,
+  evaluationsNow,
   scrubberMinutes,
   currentMinutes,
   isHovering,
@@ -128,7 +130,8 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
           const marketEvents = dailyEvents[market.id] ?? [];
           const isRowElevated = marketEvents.some((e) => e.id === currentActiveEventId);
           const ev = isChile ? chileScrubberEvaluation : scrubberEvaluations[market.id];
-          const holiday = ev?.holiday;
+          const holiday = ev?.holiday || evaluationsNow?.[market.id]?.holiday;
+          const isHoliday = Boolean(holiday && !isChile);
 
           return (
             <div
@@ -137,9 +140,13 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                 isRowElevated ? 'z-40' : 'hover:z-30 focus-within:z-40'
               } ${
                 isChile ? 'bg-gradient-to-r from-sky-400/[0.08] to-sky-400/[0.02] border-b-sky-400/35' : 'hover:bg-white/[0.02]'
-              }`}
+              } ${isHoliday ? 'opacity-40 hover:opacity-75 transition-opacity' : ''}`}
             >
-              <div className="relative w-full h-[22px] sm:h-[26px] md:h-[30px] bg-white/[0.02] border border-border rounded sm:rounded-lg shadow-[inset_0_2px_6px_rgba(0,0,0,0.5)]">
+              <div
+                className={`relative w-full h-[22px] sm:h-[26px] md:h-[30px] border rounded sm:rounded-lg shadow-[inset_0_2px_6px_rgba(0,0,0,0.5)] transition-colors ${
+                  isHoliday ? 'border-purple-500/30 bg-purple-950/20' : 'border-border bg-white/[0.02]'
+                }`}
+              >
                 {/* Session blocks container (clipped to rounded track) */}
                 <div className="absolute inset-0 rounded sm:rounded-lg overflow-hidden pointer-events-none z-[2]">
                   {/* Chile reference track */}
@@ -152,11 +159,11 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                   )}
 
                   {/* Holiday track overlay */}
-                  {holiday && !isChile && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-purple-950/40 backdrop-blur-[0.5px] border border-purple-500/25 rounded sm:rounded-lg z-[3]">
-                      <span className="font-mono text-[9px] sm:text-[11px] font-semibold text-purple-200 tracking-wider flex items-center gap-1.5 px-2 py-0.5 rounded bg-purple-900/70 border border-purple-400/30 shadow-[0_0_10px_rgba(168,85,247,0.3)]">
+                  {isHoliday && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-purple-950/65 backdrop-blur-[1px] border border-purple-500/35 rounded sm:rounded-lg z-[3]">
+                      <span className="font-mono text-[9px] sm:text-[11px] font-semibold text-purple-200 tracking-wider flex items-center gap-1.5 px-2 py-0.5 rounded bg-purple-900/80 border border-purple-400/40 shadow-[0_0_10px_rgba(168,85,247,0.35)]">
                         <span>🎉</span>
-                        <span className="truncate max-w-[180px] sm:max-w-none">Feriado: {holiday.name}</span>
+                        <span className="truncate max-w-[180px] sm:max-w-none">Feriado: {holiday?.name}</span>
                       </span>
                     </div>
                   )}
@@ -165,19 +172,28 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                   {segments.map((seg, idx) => {
                     const leftPercent = (seg.startMinute / 1440) * 100;
                     const widthPercent = ((seg.endMinute - seg.startMinute) / 1440) * 100;
-                    const isActive = scrubberMinutes >= seg.startMinute && scrubberMinutes < seg.endMinute;
+                    const isActive = !isHoliday && scrubberMinutes >= seg.startMinute && scrubberMinutes < seg.endMinute;
 
-                    let blockStyle = 'bg-gradient-to-b from-emerald-500 to-emerald-600';
-                    let shadowStyle = 'shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5),0_0_16px_rgba(16,185,129,0.30)]';
-                    let activeShadowStyle = 'shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5),0_0_28px_rgba(16,185,129,0.80)]';
-                    if (seg.type === 'lunch') {
-                      blockStyle = 'bg-gradient-to-b from-amber-500 to-amber-600';
-                      shadowStyle = 'shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5),0_0_16px_rgba(245,158,11,0.30)]';
-                      activeShadowStyle = 'shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5),0_0_28px_rgba(245,158,11,0.80)]';
-                    } else if (seg.type === 'pre_market') {
-                      blockStyle = 'bg-gradient-to-b from-cyan-500 to-sky-600';
-                      shadowStyle = 'shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5),0_0_16px_rgba(34,211,238,0.30)]';
-                      activeShadowStyle = 'shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5),0_0_28px_rgba(34,211,238,0.80)]';
+                    let blockStyle = isHoliday
+                      ? 'bg-slate-700/35 grayscale'
+                      : 'bg-gradient-to-b from-emerald-500 to-emerald-600';
+                    let shadowStyle = isHoliday
+                      ? 'shadow-none'
+                      : 'shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5),0_0_16px_rgba(16,185,129,0.30)]';
+                    let activeShadowStyle = isHoliday
+                      ? 'shadow-none'
+                      : 'shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5),0_0_28px_rgba(16,185,129,0.80)]';
+
+                    if (!isHoliday) {
+                      if (seg.type === 'lunch') {
+                        blockStyle = 'bg-gradient-to-b from-amber-500 to-amber-600';
+                        shadowStyle = 'shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5),0_0_16px_rgba(245,158,11,0.30)]';
+                        activeShadowStyle = 'shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5),0_0_28px_rgba(245,158,11,0.80)]';
+                      } else if (seg.type === 'pre_market') {
+                        blockStyle = 'bg-gradient-to-b from-cyan-500 to-sky-600';
+                        shadowStyle = 'shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5),0_0_16px_rgba(34,211,238,0.30)]';
+                        activeShadowStyle = 'shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.5),0_0_28px_rgba(34,211,238,0.80)]';
+                      }
                     }
 
                     return (

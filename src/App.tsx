@@ -4,7 +4,8 @@ import {
   projectMarketToTimeline,
   evaluateMarketAt,
   minuteOffsetToDateTime,
-  formatMinutes
+  formatMinutes,
+  isWeekend
 } from './core/timezone';
 import { MarketEvaluation, TimelineEventMarkerData } from './core/types';
 import { useCurrentTime } from './hooks/useCurrentTime';
@@ -87,8 +88,10 @@ export const App: React.FC = () => {
   const evaluationsScrubber = useMemo(() => {
     const map: Record<string, MarketEvaluation> = {};
     for (const m of MARKETS) {
-      // Use simulation mode during scrubbing so sessions can be visually inspected even on weekends
-      map[m.id] = evaluateMarketAt(m, scrubberInstant, { isSimulation: true });
+      const localTime = scrubberInstant.setZone(m.timezone);
+      const isWeekendDay = isWeekend(localTime);
+      // Only simulate scheduled sessions on weekends; preserve holiday detection on weekdays
+      map[m.id] = evaluateMarketAt(m, scrubberInstant, { isSimulation: isWeekendDay });
     }
     return map;
   }, [scrubberInstant]);
@@ -181,7 +184,8 @@ export const App: React.FC = () => {
           <TimelineGrid
             markets={MARKETS}
             marketSegments={marketSegments}
-            scrubberEvaluations={evaluationsScrubber}
+            scrubberEvaluations={isScrubbing ? evaluationsScrubber : evaluationsNow}
+            evaluationsNow={evaluationsNow}
             chileScrubberEvaluation={chileScrubberEvaluation}
             scrubberMinutes={scrubberMinutes}
             currentMinutes={currentMinutes}

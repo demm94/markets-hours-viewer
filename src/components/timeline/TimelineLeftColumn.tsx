@@ -10,6 +10,7 @@ interface TimelineLeftColumnProps {
   onToggleColumn: () => void;
   scrubberEvaluations: Record<string, MarketEvaluation>;
   chileScrubberEvaluation: MarketEvaluation;
+  evaluationsNow?: Record<string, MarketEvaluation>;
 }
 
 export const TimelineLeftColumn: React.FC<TimelineLeftColumnProps> = React.memo(({
@@ -17,16 +18,18 @@ export const TimelineLeftColumn: React.FC<TimelineLeftColumnProps> = React.memo(
   isColumnCollapsed,
   onToggleColumn,
   scrubberEvaluations,
-  chileScrubberEvaluation
+  chileScrubberEvaluation,
+  evaluationsNow
 }) => {
   const getStatusBadge = (marketId: string, evaluation: MarketEvaluation) => {
-    if (evaluation.holiday) {
+    const holiday = evaluation.holiday || evaluationsNow?.[marketId]?.holiday;
+    if (holiday) {
       return (
         <Badge
           variant="holiday"
           showDot={false}
           className="text-[9px] md:text-[10px] px-1.5 py-0.5 font-mono font-bold leading-none"
-          title={`Feriado bursátil: ${evaluation.holiday.name}`}
+          title={`Feriado bursátil: ${holiday.name}`}
         >
           Feriado
         </Badge>
@@ -104,6 +107,8 @@ export const TimelineLeftColumn: React.FC<TimelineLeftColumnProps> = React.memo(
               localTimeFormatted: '--:--',
               localDateFormatted: ''
             });
+        const holiday = ev.holiday || evaluationsNow?.[market.id]?.holiday;
+        const isHoliday = Boolean(holiday && !isChile);
 
         return (
           <motion.div
@@ -113,7 +118,7 @@ export const TimelineLeftColumn: React.FC<TimelineLeftColumnProps> = React.memo(
               isChile
                 ? 'bg-gradient-to-r from-sky-400/[0.12] to-sky-400/[0.04] border-b-sky-400/35'
                 : 'hover:bg-white/[0.02]'
-            } ${isColumnCollapsed ? 'justify-center px-0' : 'justify-between px-2 sm:px-3'}`}
+            } ${isHoliday ? 'opacity-60' : ''} ${isColumnCollapsed ? 'justify-center px-0' : 'justify-between px-2 sm:px-3'}`}
             title={
               isColumnCollapsed
                 ? `${market.name} (${market.code}) - ${ev.localTimeFormatted} ${
@@ -145,6 +150,8 @@ export const TimelineLeftColumn: React.FC<TimelineLeftColumnProps> = React.memo(
                       className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
                         isChile
                           ? 'bg-sky-400'
+                          : isHoliday
+                          ? 'bg-purple-400 shadow-[0_0_6px_rgba(168,85,247,0.8)]'
                           : ev.status === 'open'
                           ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]'
                           : ev.status === 'lunch'

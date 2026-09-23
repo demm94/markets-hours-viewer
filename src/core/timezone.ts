@@ -103,15 +103,25 @@ export interface EvaluateMarketOptions {
 }
 
 /**
- * Formats a duration in minutes into a human readable countdown string (e.g. "45m", "1h 20m").
+ * Formats a duration in minutes into a human readable countdown string (e.g. "45m", "1h 20m", "4d 10h 58m").
  */
 export function formatMinutesCountdown(minutesRemaining: number): string {
   const m = Math.max(0, Math.round(minutesRemaining));
   if (m < 60) {
     return `${m}m`;
   }
-  const hours = Math.floor(m / 60);
+
+  const days = Math.floor(m / 1440);
+  const hours = Math.floor((m % 1440) / 60);
   const mins = m % 60;
+
+  if (days > 0) {
+    const parts = [`${days}d`];
+    if (hours > 0) parts.push(`${hours}h`);
+    if (mins > 0) parts.push(`${mins}m`);
+    return parts.join(' ');
+  }
+
   return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
 }
 
