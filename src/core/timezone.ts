@@ -254,6 +254,7 @@ export function evaluateMarketAt(
   options: EvaluateMarketOptions = {}
 ): MarketEvaluation {
   const localTime = instant.setZone(market.timezone);
+  const timezoneOffset = `UTC${localTime.toFormat('Z')}`;
 
   if (!options.isSimulation && isWeekend(localTime)) {
     const nextTransition = getNextTransition(market, localTime, 'closed', options);
@@ -262,6 +263,7 @@ export function evaluateMarketAt(
       status: 'closed',
       localTimeFormatted: localTime.toFormat('HH:mm'),
       localDateFormatted: localTime.toFormat('ccc d MMM', { locale: 'es' }),
+      timezoneOffset,
       activeSegmentLabel: 'Fin de semana',
       nextTransition
     };
@@ -276,6 +278,7 @@ export function evaluateMarketAt(
       status: 'closed',
       localTimeFormatted: localTime.toFormat('HH:mm'),
       localDateFormatted: localTime.toFormat('ccc d MMM', { locale: 'es' }),
+      timezoneOffset,
       activeSegmentLabel: `Feriado: ${holiday.name}`,
       holiday,
       nextTransition
@@ -317,6 +320,7 @@ export function evaluateMarketAt(
     status,
     localTimeFormatted: localTime.toFormat('HH:mm'),
     localDateFormatted: localTime.toFormat('ccc d MMM', { locale: 'es' }),
+    timezoneOffset,
     activeSegmentLabel,
     nextTransition
   };

@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TimelineEventMarkerData } from '../../core/types';
 import { MARKETS, CHILE_CONFIG } from '../../core/markets';
 import { Flame, AlertCircle, X, ExternalLink, Calendar, Clock } from 'lucide-react';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 interface EventDetailModalProps {
   event: TimelineEventMarkerData | null;
@@ -15,24 +16,23 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = React.memo(({
   onClose,
   onOpenMarketDrawer
 }) => {
-  // Lock body scroll and handle Escape key while modal is open
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  const modalRef = useFocusTrap<HTMLDivElement>({
+    isOpen: Boolean(event),
+    onClose,
+    initialFocusRef: closeButtonRef
+  });
+
+  // Lock body scroll while modal is open
   useEffect(() => {
     if (!event) return;
 
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-
     document.body.style.overflow = 'hidden';
-    window.addEventListener('keydown', handleKeyDown);
-
     return () => {
       document.body.style.overflow = '';
-      window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [event, onClose]);
+  }, [event]);
 
   if (!event) return null;
 
@@ -61,6 +61,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = React.memo(({
 
         {/* Modal Card / Bottom Sheet on Mobile */}
         <motion.div
+          ref={modalRef}
           initial={{ opacity: 0, y: 40, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 40, scale: 0.96 }}
@@ -68,6 +69,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = React.memo(({
           role="dialog"
           aria-modal="true"
           aria-labelledby="event-modal-title"
+          aria-describedby={event.description ? 'event-modal-desc' : undefined}
           className="relative z-10 w-full max-w-lg rounded-t-2xl sm:rounded-2xl border border-border-strong bg-card/95 backdrop-blur-2xl p-4 sm:p-6 shadow-neon-lg flex flex-col gap-4 text-left max-h-[90dvh] overflow-y-auto"
         >
           {/* Mobile Drag Indicator */}
@@ -94,18 +96,19 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = React.memo(({
               </span>
 
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted border border-border text-xs font-semibold text-foreground">
-                <span>{marketFlag}</span>
+                <span aria-hidden="true">{marketFlag}</span>
                 <span>{marketName}</span>
               </span>
             </div>
 
             <button
+              ref={closeButtonRef}
               type="button"
               onClick={onClose}
               className="flex items-center justify-center w-9 h-9 rounded-xl text-muted-foreground hover:text-white hover:bg-white/10 active:bg-white/15 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
               aria-label="Cerrar modal de evento"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5" aria-hidden="true" />
             </button>
           </div>
 
@@ -115,7 +118,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = React.memo(({
               {event.title}
             </h3>
             {event.description && (
-              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              <p id="event-modal-desc" className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                 {event.description}
               </p>
             )}

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DateTime } from 'luxon';
 import { X, Calendar, Flame, AlertCircle, Building2, TrendingUp, DollarSign } from 'lucide-react';
@@ -6,6 +6,7 @@ import { EventCategory } from '../core/types';
 import { MARKETS, CHILE_CONFIG } from '../core/markets';
 import { getUpcomingEvents } from '../core/events';
 import { getUpcomingHolidays } from '../core/holidays';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import { cn } from '../lib/utils';
 
 interface EventsDrawerProps {
@@ -33,17 +34,13 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
 }) => {
   const [viewMode, setViewMode] = useState<'events' | 'holidays'>('events');
   const [onlyHighImportance, setOnlyHighImportance] = useState(false);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
 
-  // Close on Escape key press
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  const drawerRef = useFocusTrap<HTMLDivElement>({
+    isOpen,
+    onClose,
+    initialFocusRef: closeButtonRef
+  });
 
   // Lock body scroll when drawer is open
   useEffect(() => {
@@ -97,34 +94,40 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
 
           {/* Drawer Container */}
           <motion.div
+            ref={drawerRef}
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="events-drawer-title"
+            aria-describedby="events-drawer-desc"
             className="relative z-10 flex flex-col w-full max-w-md h-full bg-popover border-l border-border shadow-neon-lg overflow-hidden"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3.5 border-b border-border bg-popover/90 backdrop-blur-md">
               <div className="flex items-center gap-2.5">
                 <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/[0.15] border border-emerald-400/45 text-emerald-300 shadow-[0_0_0_1px_rgba(16,185,129,0.18),0_0_18px_-6px_rgba(16,185,129,0.55)]">
-                  <Calendar className="w-4 h-4" />
+                  <Calendar className="w-4 h-4" aria-hidden="true" />
                 </div>
                 <div>
-                  <h2 className="text-sm font-semibold text-white tracking-wide">
+                  <h2 id="events-drawer-title" className="text-sm font-semibold text-white tracking-wide">
                     Próximos Eventos
                   </h2>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p id="events-drawer-desc" className="text-[11px] text-muted-foreground">
                     Catalizadores macro y eventos clave
                   </p>
                 </div>
               </div>
               <button
+                ref={closeButtonRef}
                 type="button"
                 onClick={onClose}
-                className="flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:text-white hover:bg-white/5 active:bg-white/10 transition-[color,background-color,border-color,box-shadow] duration-200"
+                className="flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:text-white hover:bg-white/5 active:bg-white/10 transition-[color,background-color,border-color,box-shadow] duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
                 aria-label="Cerrar panel de eventos"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
 
@@ -136,7 +139,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                   type="button"
                   onClick={() => setViewMode('events')}
                   className={cn(
-                    'py-1.5 px-2 rounded-md text-center transition-all duration-200 select-none cursor-pointer',
+                    'py-1.5 px-2 rounded-md text-center transition-all duration-200 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
                     viewMode === 'events'
                       ? 'bg-emerald-500/[0.18] text-emerald-300 border border-emerald-400/45 shadow-[0_0_0_1px_rgba(16,185,129,0.18),0_0_12px_-4px_rgba(16,185,129,0.5)]'
                       : 'text-muted-foreground hover:text-white'
@@ -148,7 +151,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                   type="button"
                   onClick={() => setViewMode('holidays')}
                   className={cn(
-                    'py-1.5 px-2 rounded-md text-center transition-all duration-200 select-none cursor-pointer',
+                    'py-1.5 px-2 rounded-md text-center transition-all duration-200 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
                     viewMode === 'holidays'
                       ? 'bg-purple-500/[0.18] text-purple-300 border border-purple-400/45 shadow-[0_0_0_1px_rgba(168,85,247,0.18),0_0_12px_-4px_rgba(168,85,247,0.5)]'
                       : 'text-muted-foreground hover:text-white'
@@ -168,13 +171,13 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                       type="button"
                       onClick={() => onSelectMarketId(tab.id)}
                       className={cn(
-                        'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md font-medium whitespace-nowrap transition-[color,background-color,border-color,box-shadow] duration-200 select-none cursor-pointer',
+                        'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md font-medium whitespace-nowrap transition-[color,background-color,border-color,box-shadow] duration-200 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
                         isActive
                           ? 'bg-emerald-500/[0.15] text-emerald-300 border border-emerald-400/45 shadow-[0_0_0_1px_rgba(16,185,129,0.18),0_0_18px_-6px_rgba(16,185,129,0.55)]'
                           : 'bg-white/[0.05] text-muted-foreground border border-border hover:bg-white/[0.08] hover:text-foreground/80'
                       )}
                     >
-                      <span>{tab.flag}</span>
+                      <span aria-hidden="true">{tab.flag}</span>
                       <span>{tab.name}</span>
                     </button>
                   );
@@ -192,7 +195,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                     type="button"
                     onClick={() => setOnlyHighImportance((prev) => !prev)}
                     className={cn(
-                      'flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border transition-[color,background-color,border-color,box-shadow] duration-200 cursor-pointer',
+                      'flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border transition-[color,background-color,border-color,box-shadow] duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
                       onlyHighImportance
                         ? 'bg-rose-500/[0.15] border-rose-400/45 text-rose-300 shadow-[0_0_0_1px_rgba(244,63,94,0.18),0_0_18px_-6px_rgba(244,63,94,0.55)]'
                         : 'bg-white/[0.05] border-border text-muted-foreground hover:text-foreground/80'

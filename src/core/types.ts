@@ -43,6 +43,7 @@ export interface MarketEvaluation {
   status: MarketStatus;
   localTimeFormatted: string;
   localDateFormatted: string;
+  timezoneOffset?: string;
   activeSegmentLabel?: string;
   nextTransition?: MarketTransition;
   holiday?: MarketHoliday;

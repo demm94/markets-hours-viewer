@@ -76,34 +76,43 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
           }
 
           return (
-            <div
+            <button
+              type="button"
               key={market.id}
               onClick={() => onSelectMarketEvents?.(market.id)}
               className={cn(
-                "relative flex flex-col items-center justify-between p-1 sm:p-1.5 rounded-lg border transition-[border-color,background-color,box-shadow,transform,scale] duration-200 min-h-[50px] cursor-pointer hover:border-border-strong active:scale-95",
+                "relative flex flex-col items-center justify-between p-1 sm:p-1.5 rounded-lg border transition-[border-color,background-color,box-shadow,transform,scale] duration-200 min-h-[58px] w-full text-center cursor-pointer hover:border-border-strong active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 borderClass
               )}
-              title={`${market.name} (${market.code}) - ${isHoliday ? `Feriado: ${ev?.holiday?.name}` : statusLabel} - ${ev?.localTimeFormatted ?? '--:--'}${hasCatalyst ? ' (Evento hoy)' : ''}`}
+              title={`${market.name} (${market.code}) - ${isHoliday ? `Feriado: ${ev?.holiday?.name}` : statusLabel} - ${ev?.localTimeFormatted ?? '--:--'} (${ev?.timezoneOffset ?? ''})${hasCatalyst ? ' (Evento hoy)' : ''}`}
+              aria-label={`${market.name} (${market.code}), ${isHoliday ? `Feriado: ${ev?.holiday?.name}` : statusLabel}, hora local ${ev?.localTimeFormatted ?? '--:--'} ${ev?.timezoneOffset ?? ''}${hasCatalyst ? ', tiene evento hoy' : ''}`}
             >
               {hasCatalyst && (
-                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_8px_#f43f5e]" />
+                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_8px_#f43f5e]" aria-hidden="true" />
               )}
               <div className="flex items-center gap-1 leading-none">
-                <span className="text-xs select-none">{market.flag}</span>
-                <span className="text-[9px] font-mono font-bold tracking-tight text-foreground/70">
+                <span className="text-xs select-none" aria-hidden="true">{market.flag}</span>
+                <span className="text-[10px] font-mono font-bold tracking-tight text-foreground/80">
                   {market.code.split(' ')[0]}
                 </span>
               </div>
-              <span className="font-mono text-xs font-black text-white tabular-nums tracking-tight leading-none my-0.5">
-                {ev?.localTimeFormatted ?? '--:--'}
-              </span>
+              <div className="flex flex-col items-center leading-none my-0.5 gap-0.5">
+                <span className="font-mono text-xs font-black text-white tabular-nums tracking-tight">
+                  {ev?.localTimeFormatted ?? '--:--'}
+                </span>
+                {ev?.timezoneOffset && (
+                  <span className="font-mono text-[9px] font-medium text-muted-foreground/80 leading-none">
+                    {ev.timezoneOffset}
+                  </span>
+                )}
+              </div>
               <div className="flex items-center gap-1 leading-none">
-                <span className={cn("w-1.5 h-1.5 rounded-full shadow-[0_0_8px_currentColor]", dotColor)} />
-                <span className="text-[9px] font-semibold leading-none truncate max-w-[45px]">
+                <span className={cn("w-1.5 h-1.5 rounded-full shadow-[0_0_8px_currentColor]", dotColor)} aria-hidden="true" />
+                <span className="text-[10px] font-semibold leading-none truncate max-w-[48px]">
                   {statusLabel}
                 </span>
               </div>
-            </div>
+            </button>
           );
         })}
       </div>
@@ -194,13 +203,14 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
                           e.stopPropagation();
                           onSelectMarketEvents(market.id);
                         }}
-                        className="relative flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold text-muted-foreground hover:text-sky-300 hover:bg-white/[0.06] hover:shadow-[0_0_14px_-4px_rgba(56,189,248,0.55)] transition-[color,background-color,box-shadow] duration-200 cursor-pointer"
+                        className="relative flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold text-muted-foreground hover:text-sky-300 hover:bg-white/[0.06] hover:shadow-[0_0_14px_-4px_rgba(56,189,248,0.55)] transition-[color,background-color,box-shadow] duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
                         title="Ver eventos de este mercado"
+                        aria-label={`Ver eventos y catalizadores de ${market.name}`}
                       >
-                        <Calendar className="w-3 h-3" />
+                        <Calendar className="w-3 h-3" aria-hidden="true" />
                         <span className="hidden xl:inline">Eventos</span>
                         {catalystsMap?.[market.id] && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_8px_#f43f5e]" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_8px_#f43f5e]" aria-hidden="true" />
                         )}
                       </button>
                     )}
@@ -235,8 +245,8 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
                     <span className="font-mono text-xs font-semibold text-foreground/80 leading-none">
                       {ev?.localDateFormatted}
                     </span>
-                    <span className="font-mono text-[10px] text-muted-foreground/70 truncate max-w-[110px] mt-1 leading-none" title={market.timezone}>
-                      {market.timezone.replace('_', ' ')}
+                    <span className="font-mono text-[10px] text-muted-foreground/70 truncate max-w-[130px] mt-1 leading-none" title={`${market.timezone} (${ev?.timezoneOffset ?? ''})`}>
+                      {market.timezone.replace('_', ' ')} · {ev?.timezoneOffset ?? ''}
                     </span>
                   </div>
                 </div>

@@ -189,4 +189,21 @@ describe('timezone engine', () => {
     expect(evalBefore.nextTransition?.inMinutes).toBe(60);
     expect(evalBefore.nextTransition?.formattedCountdown).toBe('Abre en 1h');
   });
+
+  it('provides accurate timezoneOffset across regular sessions, weekends, and holidays', () => {
+    // NYSE during September 2026 (EDT = UTC-4)
+    const dtNy = DateTime.fromISO('2026-09-15T10:00:00', { zone: 'America/New_York' });
+    const evalNy = evaluateMarketAt(nyse, dtNy);
+    expect(evalNy.timezoneOffset).toBe('UTC-4');
+
+    // TWSE during September 2026 (Taipei = UTC+8)
+    const dtTw = DateTime.fromISO('2026-09-15T10:00:00', { zone: 'Asia/Taipei' });
+    const evalTw = evaluateMarketAt(twse, dtTw);
+    expect(evalTw.timezoneOffset).toBe('UTC+8');
+
+    // Weekend evaluation
+    const dtWeekend = DateTime.fromISO('2026-09-19T10:00:00', { zone: 'America/New_York' });
+    const evalWeekend = evaluateMarketAt(nyse, dtWeekend);
+    expect(evalWeekend.timezoneOffset).toBe('UTC-4');
+  });
 });

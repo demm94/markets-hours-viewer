@@ -5,7 +5,8 @@ import {
   evaluateMarketAt,
   minuteOffsetToDateTime,
   formatMinutes,
-  isWeekend
+  isWeekend,
+  getSantiagoOffsetDescription
 } from './core/timezone';
 import { MarketEvaluation, TimelineEventMarkerData } from './core/types';
 import { useCurrentTime } from './hooks/useCurrentTime';
@@ -206,7 +207,7 @@ export const App: React.FC = () => {
         <footer className="border-t border-border neon-edge pt-3 pb-4 mt-2 md:pt-8 md:pb-8 md:mt-4">
           <div className="flex justify-between items-center flex-wrap gap-2 md:gap-6 text-[11px] sm:text-xs text-muted-foreground">
             <div className="max-w-2xl leading-relaxed">
-              <strong className="text-foreground">Zonas Horarias Dinámicas IANA:</strong> Cálculos recalculados en vivo para evitar offsets estáticos. Chile se encuentra en horario de verano (UTC-3) hasta abril de 2027.
+              <strong className="text-foreground">Zonas Horarias Dinámicas IANA:</strong> Cálculos recalculados en vivo para evitar offsets estáticos. Huso horario de referencia: Chile en {getSantiagoOffsetDescription(now)}.
             </div>
             <div className="font-mono font-semibold text-foreground/80">
               PWA instalable · Base de datos IANA v2026 · {CHILE_CONFIG.country}
