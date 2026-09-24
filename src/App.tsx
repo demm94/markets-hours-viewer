@@ -210,7 +210,7 @@ export const App: React.FC = () => {
               <strong className="text-foreground">Zonas Horarias Dinámicas IANA:</strong> Cálculos recalculados en vivo para evitar offsets estáticos. Huso horario de referencia: Chile en {getSantiagoOffsetDescription(now)}.
             </div>
             <div className="font-mono font-semibold text-foreground/80">
-              PWA instalable · Base de datos IANA v2026 · {CHILE_CONFIG.country}
+              PWA instalable · Motor IANA en tiempo real · {CHILE_CONFIG.country}
             </div>
           </div>
         </footer>

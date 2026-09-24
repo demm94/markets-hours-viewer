@@ -134,10 +134,11 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
             {/* Filter Bar */}
             <div className="p-3 bg-popover/90 border-b border-border space-y-2.5">
               {/* Mode Segmented Control: Eventos Macro vs Feriados Bursátiles */}
-              <div className="grid grid-cols-2 p-1 bg-white/[0.04] rounded-lg border border-border text-xs font-semibold">
+              <div className="grid grid-cols-2 p-1 bg-white/[0.04] rounded-lg border border-border text-xs font-semibold" role="group" aria-label="Modo de visualización de eventos">
                 <button
                   type="button"
                   onClick={() => setViewMode('events')}
+                  aria-pressed={viewMode === 'events'}
                   className={cn(
                     'py-1.5 px-2 rounded-md text-center transition-all duration-200 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
                     viewMode === 'events'
@@ -150,6 +151,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                 <button
                   type="button"
                   onClick={() => setViewMode('holidays')}
+                  aria-pressed={viewMode === 'holidays'}
                   className={cn(
                     'py-1.5 px-2 rounded-md text-center transition-all duration-200 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
                     viewMode === 'holidays'
@@ -161,27 +163,35 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                 </button>
               </div>
 
-              {/* Market Filter Chips */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
-                {marketTabs.map((tab) => {
-                  const isActive = selectedMarketId === tab.id;
-                  return (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      onClick={() => onSelectMarketId(tab.id)}
-                      className={cn(
-                        'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md font-medium whitespace-nowrap transition-[color,background-color,border-color,box-shadow] duration-200 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
-                        isActive
-                          ? 'bg-emerald-500/[0.15] text-emerald-300 border border-emerald-400/45 shadow-[0_0_0_1px_rgba(16,185,129,0.18),0_0_18px_-6px_rgba(16,185,129,0.55)]'
-                          : 'bg-white/[0.05] text-muted-foreground border border-border hover:bg-white/[0.08] hover:text-foreground/80'
-                      )}
-                    >
-                      <span aria-hidden="true">{tab.flag}</span>
-                      <span>{tab.name}</span>
-                    </button>
-                  );
-                })}
+              {/* Market Filter Chips with horizontal scroll fade cue */}
+              <div className="relative" role="group" aria-label="Filtrar eventos por mercado">
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pr-8 scrollbar-none text-xs">
+                  {marketTabs.map((tab) => {
+                    const isActive = selectedMarketId === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => onSelectMarketId(tab.id)}
+                        aria-pressed={isActive}
+                        className={cn(
+                          'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md font-medium whitespace-nowrap transition-[color,background-color,border-color,box-shadow] duration-200 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 shrink-0',
+                          isActive
+                            ? 'bg-emerald-500/[0.15] text-emerald-300 border border-emerald-400/45 shadow-[0_0_0_1px_rgba(16,185,129,0.18),0_0_18px_-6px_rgba(16,185,129,0.55)]'
+                            : 'bg-white/[0.05] text-muted-foreground border border-border hover:bg-white/[0.08] hover:text-foreground/80'
+                        )}
+                      >
+                        <span aria-hidden="true">{tab.flag}</span>
+                        <span>{tab.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {/* Visual fade cue signaling horizontal scrollability */}
+                <div
+                  className="pointer-events-none absolute right-0 top-0 bottom-1 w-8 bg-gradient-to-l from-popover to-transparent"
+                  aria-hidden="true"
+                />
               </div>
 
               {/* Secondary filter info */}
@@ -194,6 +204,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                   <button
                     type="button"
                     onClick={() => setOnlyHighImportance((prev) => !prev)}
+                    aria-pressed={onlyHighImportance}
                     className={cn(
                       'flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border transition-[color,background-color,border-color,box-shadow] duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
                       onlyHighImportance
@@ -201,7 +212,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                         : 'bg-white/[0.05] border-border text-muted-foreground hover:text-foreground/80'
                     )}
                   >
-                    <Flame className="w-3.5 h-3.5" />
+                    <Flame className="w-3.5 h-3.5" aria-hidden="true" />
                     <span>Solo Alta Importancia</span>
                   </button>
                 </div>
@@ -285,7 +296,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                       No hay eventos programados
                     </p>
                     <p className="text-xs text-muted-foreground/70 mt-1 max-w-xs">
-                      No encontramos eventos con los filtros actuales en la ventana de los próximos 30 días.
+                      No encontramos eventos con los filtros actuales en la ventana de los próximos 120 días.
                     </p>
                   </div>
                 ) : (
