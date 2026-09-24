@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DateTime } from 'luxon';
 import { X, Calendar, Flame, AlertCircle, Building2, TrendingUp, DollarSign } from 'lucide-react';
@@ -35,6 +35,73 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
   const [viewMode, setViewMode] = useState<'events' | 'holidays'>('events');
   const [onlyHighImportance, setOnlyHighImportance] = useState(false);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  // Horizontal chips navigation & drag-to-scroll support for laptop / desktop
+  const chipsContainerRef = useRef<HTMLDivElement | null>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const isDraggingRef = useRef(false);
+  const startXRef = useRef(0);
+  const scrollLeftRef = useRef(0);
+  const hasDraggedRef = useRef(false);
+
+  const checkScrollability = useCallback(() => {
+    const el = chipsContainerRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setCanScrollLeft(scrollLeft > 4);
+    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 4);
+  }, []);
+
+  const handleChipsWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (chipsContainerRef.current && Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      chipsContainerRef.current.scrollLeft += e.deltaY;
+    }
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!chipsContainerRef.current) return;
+    isDraggingRef.current = true;
+    hasDraggedRef.current = false;
+    startXRef.current = e.pageX - chipsContainerRef.current.offsetLeft;
+    scrollLeftRef.current = chipsContainerRef.current.scrollLeft;
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDraggingRef.current || !chipsContainerRef.current) return;
+    const x = e.pageX - chipsContainerRef.current.offsetLeft;
+    const walk = (x - startXRef.current) * 1.5;
+    if (Math.abs(walk) > 4) {
+      hasDraggedRef.current = true;
+    }
+    chipsContainerRef.current.scrollLeft = scrollLeftRef.current - walk;
+  };
+
+  const handleMouseUpOrLeave = () => {
+    isDraggingRef.current = false;
+  };
+
+  // Check scrollability on mount, drawer open, and resize
+  useEffect(() => {
+    if (!isOpen) return;
+    const timer = setTimeout(checkScrollability, 100);
+    window.addEventListener('resize', checkScrollability);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', checkScrollability);
+    };
+  }, [isOpen, checkScrollability]);
+
+  // Auto-scroll selected market into view when drawer opens or market changes
+  useEffect(() => {
+    if (!isOpen || !chipsContainerRef.current) return;
+    const activeChip = chipsContainerRef.current.querySelector<HTMLElement>('[data-active="true"]');
+    if (activeChip) {
+      activeChip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      const timer = setTimeout(checkScrollability, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, selectedMarketId, checkScrollability]);
 
   const drawerRef = useFocusTrap<HTMLDivElement>({
     isOpen,
@@ -163,16 +230,29 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                 </button>
               </div>
 
-              {/* Market Filter Chips with horizontal scroll fade cue */}
+              {/* Market Filter Chips with horizontal wheel scroll, drag-to-scroll, and edge fade cues */}
               <div className="relative" role="group" aria-label="Filtrar eventos por mercado">
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pr-8 scrollbar-none text-xs">
+                <div
+                  ref={chipsContainerRef}
+                  onWheel={handleChipsWheel}
+                  onMouseDown={handleMouseDown}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUpOrLeave}
+                  onMouseLeave={handleMouseUpOrLeave}
+                  onScroll={checkScrollability}
+                  className="flex items-center gap-1.5 overflow-x-auto pb-1 pr-6 scrollbar-none text-xs cursor-grab active:cursor-grabbing select-none"
+                >
                   {marketTabs.map((tab) => {
                     const isActive = selectedMarketId === tab.id;
                     return (
                       <button
                         key={tab.id}
                         type="button"
-                        onClick={() => onSelectMarketId(tab.id)}
+                        data-active={isActive ? 'true' : undefined}
+                        onClick={() => {
+                          if (hasDraggedRef.current) return;
+                          onSelectMarketId(tab.id);
+                        }}
                         aria-pressed={isActive}
                         className={cn(
                           'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md font-medium whitespace-nowrap transition-[color,background-color,border-color,box-shadow] duration-200 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 shrink-0',
@@ -187,11 +267,22 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                     );
                   })}
                 </div>
-                {/* Visual fade cue signaling horizontal scrollability */}
-                <div
-                  className="pointer-events-none absolute right-0 top-0 bottom-1 w-8 bg-gradient-to-l from-popover to-transparent"
-                  aria-hidden="true"
-                />
+
+                {/* Left edge fade overlay when scrolled right */}
+                {canScrollLeft && (
+                  <div
+                    className="pointer-events-none absolute left-0 top-0 bottom-1 w-8 bg-gradient-to-r from-popover to-transparent"
+                    aria-hidden="true"
+                  />
+                )}
+
+                {/* Right edge fade overlay when more items are to the right */}
+                {canScrollRight && (
+                  <div
+                    className="pointer-events-none absolute right-0 top-0 bottom-1 w-8 bg-gradient-to-l from-popover to-transparent"
+                    aria-hidden="true"
+                  />
+                )}
               </div>
 
               {/* Secondary filter info */}
