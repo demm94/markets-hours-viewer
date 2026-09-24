@@ -377,7 +377,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                 )}
               </div>
             ) : (
-              <div className="flex-1 overflow-y-auto p-3 space-y-2.5 divide-y divide-border">
+              <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
                 {upcomingEvents.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
                     <div className="flex items-center justify-center w-12 h-12 rounded-full bg-secondary text-muted-foreground/70 mb-3">
@@ -407,7 +407,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                   return (
                     <div
                       key={ev.id}
-                      className="pt-2.5 first:pt-0 group flex flex-col gap-2 p-3 rounded-xl bg-white/[0.03] border border-border hover:border-border-strong hover:bg-white/[0.06] transition-[background-color,border-color] duration-200"
+                      className="group flex flex-col gap-2 p-3 rounded-xl bg-white/[0.03] border border-border hover:border-border-strong hover:bg-white/[0.06] transition-[background-color,border-color] duration-200 shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
                     >
                       {/* Top row: tags & badges */}
                       <div className="flex items-center justify-between gap-2">
