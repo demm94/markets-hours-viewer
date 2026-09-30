@@ -181,35 +181,35 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                     let statusDescriptor = 'Cerrado';
 
                     if (isHoliday) {
-                      blockClasses = 'bg-slate-700/35 grayscale border border-white/5 opacity-25 shadow-none';
+                      blockClasses = 'bg-slate-700/30 grayscale border border-white/10 opacity-30 shadow-none';
                       statusDescriptor = 'Feriado';
                     } else if (isActive) {
                       statusDescriptor = 'Abierto ahora';
                       if (seg.type === 'lunch') {
-                        blockClasses = 'bg-gradient-to-b from-amber-500 to-amber-600 ring-2 ring-white shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_2px_8px_rgba(0,0,0,0.5),0_0_24px_rgba(245,158,11,0.85)] opacity-100 z-10';
+                        blockClasses = 'bg-gradient-to-b from-amber-500 to-amber-600 ring-2 ring-white shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_2px_8px_rgba(0,0,0,0.5),0_0_24px_rgba(245,158,11,0.85)] z-10 text-white';
                       } else if (seg.type === 'pre_market') {
-                        blockClasses = 'bg-gradient-to-b from-cyan-500 to-sky-600 ring-2 ring-white shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_2px_8px_rgba(0,0,0,0.5),0_0_24px_rgba(34,211,238,0.85)] opacity-100 z-10';
+                        blockClasses = 'bg-gradient-to-b from-cyan-500 to-sky-600 ring-2 ring-white shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_2px_8px_rgba(0,0,0,0.5),0_0_24px_rgba(34,211,238,0.85)] z-10 text-white';
                       } else {
-                        blockClasses = 'bg-gradient-to-b from-emerald-500 to-emerald-600 ring-2 ring-white shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_2px_8px_rgba(0,0,0,0.5),0_0_24px_rgba(16,185,129,0.85)] opacity-100 z-10';
+                        blockClasses = 'bg-gradient-to-b from-emerald-500 to-emerald-600 ring-2 ring-white shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_2px_8px_rgba(0,0,0,0.5),0_0_24px_rgba(16,185,129,0.85)] z-10 text-white';
                       }
                     } else if (isUpcoming) {
                       statusDescriptor = 'Aún no abre';
                       if (seg.type === 'lunch') {
-                        blockClasses = 'bg-amber-950/45 border border-amber-500/40 text-amber-400/50 opacity-45 hover:opacity-75 shadow-none';
+                        blockClasses = 'bg-amber-500/25 border-2 border-amber-400/60 shadow-[inset_0_0_12px_rgba(245,158,11,0.15)] text-amber-300';
                       } else if (seg.type === 'pre_market') {
-                        blockClasses = 'bg-cyan-950/45 border border-cyan-500/40 text-cyan-400/50 opacity-45 hover:opacity-75 shadow-none';
+                        blockClasses = 'bg-cyan-500/25 border-2 border-cyan-400/60 shadow-[inset_0_0_12px_rgba(6,182,212,0.15)] text-cyan-300';
                       } else {
-                        blockClasses = 'bg-emerald-950/45 border border-emerald-500/40 text-emerald-400/50 opacity-45 hover:opacity-75 shadow-none';
+                        blockClasses = 'bg-emerald-500/25 border-2 border-emerald-400/60 shadow-[inset_0_0_12px_rgba(16,185,129,0.15)] text-emerald-300';
                       }
                     } else {
                       // isPast
                       statusDescriptor = 'Ya cerró';
                       if (seg.type === 'lunch') {
-                        blockClasses = 'bg-amber-950/25 border border-amber-500/20 text-amber-500/30 opacity-30 hover:opacity-60 shadow-none';
+                        blockClasses = 'bg-amber-500/10 border border-amber-500/30 text-amber-500/40 shadow-none';
                       } else if (seg.type === 'pre_market') {
-                        blockClasses = 'bg-cyan-950/25 border border-cyan-500/20 text-cyan-500/30 opacity-30 hover:opacity-60 shadow-none';
+                        blockClasses = 'bg-cyan-500/10 border border-cyan-500/30 text-cyan-500/40 shadow-none';
                       } else {
-                        blockClasses = 'bg-emerald-950/25 border border-emerald-500/20 text-emerald-500/30 opacity-30 hover:opacity-60 shadow-none';
+                        blockClasses = 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-500/40 shadow-none';
                       }
                     }
 
