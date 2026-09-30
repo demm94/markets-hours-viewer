@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon';
-import { MarketEvent, FormattedMarketEvent, EventImportance, TimelineEventMarkerData } from './types';
+import { MarketEvent, FormattedMarketEvent, EventImportance, TimelineEventMarkerData, RollingDayInfo } from './types';
 import { MARKETS, CHILE_CONFIG } from './markets';
 
 export const MARKET_TIMEZONE_MAP: Record<string, string> = {
@@ -128,6 +128,57 @@ export function getEventsForChileDay(
 
   for (const mId in result) {
     result[mId].sort((a, b) => a.minuteInChile - b.minuteInChile);
+  }
+
+  return result;
+}
+
+export function getRollingDaysWindow(
+  referenceDate: DateTime = DateTime.now().setZone(CHILE_CONFIG.timezone),
+  daysCount: number = 7,
+  events: MarketEvent[] = MARKET_EVENTS
+): RollingDayInfo[] {
+  const chileNow = referenceDate.setZone(CHILE_CONFIG.timezone);
+  const startOfChileToday = chileNow.startOf('day');
+  const result: RollingDayInfo[] = [];
+
+  for (let i = 0; i < daysCount; i++) {
+    const targetDay = startOfChileToday.plus({ days: i });
+    const nextDay = targetDay.plus({ days: 1 });
+    const isoDate = targetDay.toFormat('yyyy-MM-dd');
+
+    const rawDay = targetDay.toFormat('ccc', { locale: 'es' });
+    const dayOfWeekShort = rawDay.charAt(0).toUpperCase() + rawDay.slice(1).replace('.', '');
+    const dayOfMonth = targetDay.day;
+    const isToday = i === 0;
+
+    let label = `${dayOfWeekShort} ${dayOfMonth}`;
+    if (isToday) {
+      label = 'Hoy';
+    } else if (i === 1) {
+      label = 'Mañana';
+    }
+
+    const dayEvents = events.filter((e) => {
+      const eventInChile = DateTime.fromISO(e.timestampUtc, { zone: 'utc' }).setZone(CHILE_CONFIG.timezone);
+      return eventInChile >= targetDay && eventInChile < nextDay;
+    });
+
+    const eventCount = dayEvents.length;
+    const hasEvents = eventCount > 0;
+    const hasHighImpact = dayEvents.some((e) => e.importance === 'high');
+
+    result.push({
+      date: targetDay,
+      isoDate,
+      label,
+      dayOfWeekShort,
+      dayOfMonth,
+      isToday,
+      hasEvents,
+      eventCount,
+      hasHighImpact
+    });
   }
 
   return result;

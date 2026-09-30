@@ -6,7 +6,8 @@ import {
   filterEvents,
   getUpcomingEvents,
   hasHighImpactEventsToday,
-  getEventsForChileDay
+  getEventsForChileDay,
+  getRollingDaysWindow
 } from './events';
 import { MarketEvent } from './types';
 
@@ -109,5 +110,35 @@ describe('events engine', () => {
     const sep20Chile = DateTime.fromISO('2026-09-20T10:00:00', { zone: 'America/Santiago' });
     const sep20Map = getEventsForChileDay(sep20Chile);
     expect(sep20Map['sse']).toBeUndefined();
+  });
+
+  describe('getRollingDaysWindow', () => {
+    it('should generate 7 days by default starting from reference date', () => {
+      const days = getRollingDaysWindow(referenceChileNow);
+      expect(days).toHaveLength(7);
+      expect(days[0].isoDate).toBe('2026-09-16');
+      expect(days[0].isToday).toBe(true);
+      expect(days[0].label).toBe('Hoy');
+      expect(days[1].isoDate).toBe('2026-09-17');
+      expect(days[1].isToday).toBe(false);
+      expect(days[1].label).toBe('Mañana');
+      expect(days[6].isoDate).toBe('2026-09-22');
+      expect(days[6].isToday).toBe(false);
+      expect(days[6].dayOfMonth).toBe(22);
+    });
+
+    it('should identify days with events and high impact events', () => {
+      const days = getRollingDaysWindow(referenceChileNow);
+      // Sep 16 has FOMC (high impact)
+      expect(days[0].hasEvents).toBe(true);
+      expect(days[0].hasHighImpact).toBe(true);
+      expect(days[0].eventCount).toBeGreaterThan(0);
+    });
+
+    it('should support custom daysCount parameter', () => {
+      const days = getRollingDaysWindow(referenceChileNow, 3);
+      expect(days).toHaveLength(3);
+      expect(days.map((d) => d.isoDate)).toEqual(['2026-09-16', '2026-09-17', '2026-09-18']);
+    });
   });
 });

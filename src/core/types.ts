@@ -1,3 +1,5 @@
+import { DateTime } from 'luxon';
+
 export type SessionType = 'regular' | 'lunch' | 'pre_market';
 export type MarketStatus = 'open' | 'lunch' | 'pre_market' | 'closed';
 
@@ -79,4 +81,16 @@ export interface FormattedMarketEvent extends MarketEvent {
 export interface TimelineEventMarkerData extends FormattedMarketEvent {
   minuteInChile: number; // 0-1440
   leftPercent: number;   // (minuteInChile / 1440) * 100
+}
+
+export interface RollingDayInfo {
+  date: DateTime;
+  isoDate: string; // 'yyyy-MM-dd' in Chile timezone
+  label: string; // 'Hoy', 'Mañana', or e.g. 'Mié 30'
+  dayOfWeekShort: string; // 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'
+  dayOfMonth: number;
+  isToday: boolean;
+  hasEvents: boolean;
+  eventCount: number;
+  hasHighImpact: boolean;
 }
