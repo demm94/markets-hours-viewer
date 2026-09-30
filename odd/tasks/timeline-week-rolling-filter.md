@@ -21,10 +21,11 @@ Provide an interactive 7-day rolling window day selector in the timeline header 
 ## Tasks
 
 - [x] Task 1: Domain helper & unit tests (`getRollingDaysWindow` in `src/core/events.ts` and tests in `src/core/events.test.ts`).
-- [ ] Task 2: Build `TimelineWeekSelector.tsx` component with accessible chip buttons, neon accents, and event dots.
+- [x] Task 2: Build `TimelineWeekSelector.tsx` component with accessible chip buttons, neon accents, and event dots.
 - [ ] Task 3: Integrate state and projection in `App.tsx`, `TimelineHeader.tsx`, `TimelineGrid.tsx`, and `TimelineBars.tsx`.
 - [ ] Task 4: Functional verification, full test suite (`npm test`), and production build (`npm run build`).
 
 ## Evidence & Verification
 
-- Task 1: Implemented `RollingDayInfo` interface in `src/core/types.ts` and `getRollingDaysWindow` in `src/core/events.ts`. Added 3 unit tests in `src/core/events.test.ts`. All 38 tests pass, build passes clean. (Route: subagent delegation attempted, fell back inline due to runtime environment write-gate).
+- Task 1: Implemented `RollingDayInfo` interface in `src/core/types.ts` and `getRollingDaysWindow` in `src/core/events.ts`. Added 3 unit tests in `src/core/events.test.ts`. All 38 tests pass, build passes clean. (Route: subagent delegation attempted, fell back inline due to runtime environment write-gate). Commit: `7742d0f`.
+- Task 2: Built `TimelineWeekSelector.tsx` with horizontal wheel translation, auto scroll-into-view, semantic tablist/tabs, high-contrast neon accents, and event indicator dots (crimson pulsing for high impact, amber for medium). Integrated into `TimelineHeader.tsx`. Clean build and tests passing.
