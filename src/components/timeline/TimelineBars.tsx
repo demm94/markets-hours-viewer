@@ -26,6 +26,7 @@ interface TimelineBarsProps {
   onPointerCancel?: (e: React.PointerEvent<HTMLDivElement>) => void;
   onPointerLeave: () => void;
   onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
+  isToday?: boolean;
 }
 
 export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
@@ -47,7 +48,8 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
   onKeyDown,
   dailyEvents = {},
   onSelectEvent,
-  onEventClick
+  onEventClick,
+  isToday = true
 }) => {
   const [activeEventId, setActiveEventId] = React.useState<string | null>(null);
   const [hoveredEventId, setHoveredEventId] = React.useState<string | null>(null);
@@ -240,11 +242,12 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
         })}
       </div>
 
-      {/* Persistent "Now" Line */}
-      <div
-        className="absolute top-0 bottom-0 -translate-x-1/2 w-[2px] bg-rose-600 shadow-[0_0_14px_rgba(225,29,72,0.65)] z-[5] pointer-events-none"
-        style={{ left: `${nowPercent}%` }}
-      >
+      {/* Persistent "Now" Line (only active when viewing current day) */}
+      {isToday && (
+        <div
+          className="absolute top-0 bottom-0 -translate-x-1/2 w-[2px] bg-rose-600 shadow-[0_0_14px_rgba(225,29,72,0.65)] z-[5] pointer-events-none"
+          style={{ left: `${nowPercent}%` }}
+        >
         <div
           className="absolute top-1 sm:top-1.5 left-0 inline-flex items-center gap-1 sm:gap-1.5 bg-rose-600 text-white font-mono text-[10px] sm:text-xs font-extrabold px-2 sm:px-3 py-0.5 sm:py-1 rounded sm:rounded-lg shadow-[0_4px_14px_rgba(225,29,72,0.65)] whitespace-nowrap tabular-nums"
           style={{
@@ -328,10 +331,11 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
             })}
           </div>
         )}
-      </div>
+        </div>
+      )}
 
       {/* Interactive Scrubber Line */}
-      {isActivelyScrubbing && (
+      {(isActivelyScrubbing || !isToday || isHovering) && (
         <div
           className="absolute top-0 bottom-0 -translate-x-1/2 w-[2.5px] bg-sky-400 shadow-[0_0_16px_rgba(56,189,248,0.75)] z-[6] pointer-events-none"
           style={{ left: `${scrubberPercent}%` }}
@@ -349,6 +353,11 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
           >
             <span className="hidden sm:inline">🇨🇱 </span>
             <span>{formatMinutes(scrubberMinutes)}</span>
+            {!isToday && (
+              <span className="ml-1 text-[9px] font-normal text-sky-200">
+                proyección
+              </span>
+            )}
           </div>
 
           {/* When left column is collapsed and scrubbing, show projected country times on scrubber line */}

@@ -8,7 +8,7 @@ import {
   isWeekend,
   getSantiagoOffsetDescription
 } from './core/timezone';
-import { MarketEvaluation, TimelineEventMarkerData } from './core/types';
+import { MarketEvaluation, TimelineEventMarkerData, RollingDayInfo } from './core/types';
 import { useCurrentTime } from './hooks/useCurrentTime';
 import { useScrubber } from './hooks/useScrubber';
 import { usePullToRefresh } from './hooks/usePullToRefresh';
@@ -17,7 +17,7 @@ import { MarketCards } from './components/MarketCards';
 import { TimelineGrid } from './components/TimelineGrid';
 import { EventsDrawer } from './components/EventsDrawer';
 import { EventDetailModal } from './components/timeline/EventDetailModal';
-import { hasHighImpactEventsToday, getEventsForChileDay } from './core/events';
+import { hasHighImpactEventsToday, getEventsForChileDay, getRollingDaysWindow } from './core/events';
 import { RotateCw } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -63,14 +63,34 @@ export const App: React.FC = () => {
 
   const referenceDayKey = `${now.year}-${now.month}-${now.day}`;
 
-  // Precompute 24h timeline segments for each market against Chile reference day
+  const rollingDays = useMemo(() => {
+    return getRollingDaysWindow(now, 7);
+  }, [referenceDayKey, now]);
+
+  const [selectedDayIso, setSelectedDayIso] = React.useState<string>(() => {
+    return now.toFormat('yyyy-MM-dd');
+  });
+
+  const activeDay = useMemo(() => {
+    return rollingDays.find((d) => d.isoDate === selectedDayIso) ?? rollingDays[0];
+  }, [rollingDays, selectedDayIso]);
+
+  const handleSelectDay = React.useCallback((day: RollingDayInfo) => {
+    setSelectedDayIso(day.isoDate);
+  }, []);
+
+  const isViewingToday = activeDay.isToday;
+  const activeDate = activeDay.date;
+  const activeDayKey = activeDay.isoDate;
+
+  // Precompute 24h timeline segments for each market against selected activeDate
   const marketSegments = useMemo(() => {
     const map: Record<string, ReturnType<typeof projectMarketToTimeline>> = {};
     for (const m of MARKETS) {
-      map[m.id] = projectMarketToTimeline(m, now);
+      map[m.id] = projectMarketToTimeline(m, activeDate);
     }
     return map;
-  }, [referenceDayKey]);
+  }, [activeDayKey]);
 
   // Real-time evaluation at minute resolution (stable reference within the same minute)
   const evaluationsNow = useMemo(() => {
@@ -81,10 +101,10 @@ export const App: React.FC = () => {
     return map;
   }, [minuteKey]);
 
-  // Scrubber evaluation at selected minute offset (stable reference across seconds)
+  // Scrubber evaluation at selected minute offset against activeDate
   const scrubberInstant = useMemo(() => {
-    return minuteOffsetToDateTime(scrubberMinutes, now);
-  }, [scrubberMinutes, referenceDayKey]);
+    return minuteOffsetToDateTime(scrubberMinutes, activeDate);
+  }, [scrubberMinutes, activeDayKey]);
 
   const evaluationsScrubber = useMemo(() => {
     const map: Record<string, MarketEvaluation> = {};
@@ -122,8 +142,8 @@ export const App: React.FC = () => {
   }, [referenceDayKey, now]);
 
   const dailyEvents = useMemo(() => {
-    return getEventsForChileDay(now);
-  }, [referenceDayKey, now]);
+    return getEventsForChileDay(activeDate);
+  }, [activeDayKey]);
 
   const hasUpcomingCatalysts = useMemo(() => {
     return Object.values(catalystsMap).some(Boolean);
@@ -185,7 +205,7 @@ export const App: React.FC = () => {
           <TimelineGrid
             markets={MARKETS}
             marketSegments={marketSegments}
-            scrubberEvaluations={isScrubbing ? evaluationsScrubber : evaluationsNow}
+            scrubberEvaluations={!isViewingToday || isScrubbing ? evaluationsScrubber : evaluationsNow}
             evaluationsNow={evaluationsNow}
             chileScrubberEvaluation={chileScrubberEvaluation}
             scrubberMinutes={scrubberMinutes}
@@ -201,6 +221,10 @@ export const App: React.FC = () => {
             onPointerCancel={handlePointerCancel}
             onPointerLeave={handlePointerLeave}
             onKeyDown={handleKeyDown}
+            rollingDays={rollingDays}
+            selectedIsoDate={activeDay.isoDate}
+            onSelectDay={handleSelectDay}
+            isToday={isViewingToday}
           />
         </main>
 

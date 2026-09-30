@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { MarketConfig, MarketEvaluation, TimelineSegment, TimelineEventMarkerData } from '../core/types';
+import { MarketConfig, MarketEvaluation, TimelineSegment, TimelineEventMarkerData, RollingDayInfo } from '../core/types';
 import { CHILE_CONFIG } from '../core/markets';
 import { TimelineHeader } from './timeline/TimelineHeader';
 import { TimelineLeftColumn } from './timeline/TimelineLeftColumn';
@@ -30,6 +30,10 @@ interface TimelineGridProps {
   onPointerCancel?: (e: React.PointerEvent<HTMLDivElement>) => void;
   onPointerLeave: () => void;
   onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
+  rollingDays?: RollingDayInfo[];
+  selectedIsoDate?: string;
+  onSelectDay?: (day: RollingDayInfo) => void;
+  isToday?: boolean;
 }
 
 export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
@@ -50,7 +54,11 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
   onPointerUp,
   onPointerCancel,
   onPointerLeave,
-  onKeyDown
+  onKeyDown,
+  rollingDays,
+  selectedIsoDate,
+  onSelectDay,
+  isToday = true
 }) => {
   // Default to collapsed on mobile viewports (<= 768px) to maximize timeline space
   const [isColumnCollapsed, setIsColumnCollapsed] = useState<boolean>(() => {
@@ -70,6 +78,9 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
       <TimelineHeader
         isColumnCollapsed={isColumnCollapsed}
         onToggleColumn={toggleColumn}
+        days={rollingDays}
+        selectedIsoDate={selectedIsoDate}
+        onSelectDay={onSelectDay}
       />
 
       {/* Horizontal Table with Left Frozen Column + 24h Bars */}
@@ -105,6 +116,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
           onPointerCancel={onPointerCancel}
           onPointerLeave={onPointerLeave}
           onKeyDown={onKeyDown}
+          isToday={isToday}
         />
       </div>
 
