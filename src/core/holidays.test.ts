@@ -8,6 +8,7 @@ import { MarketConfig } from './types';
 describe('market holidays engine', () => {
   const nyse = MARKETS.find((m) => m.id === 'nyse')!;
   const sse = MARKETS.find((m) => m.id === 'sse')!;
+  const krx = MARKETS.find((m) => m.id === 'krx')!;
   const chile = CHILE_CONFIG;
   const chileMarket: MarketConfig = {
     ...chile,
@@ -113,5 +114,34 @@ describe('market holidays engine', () => {
     const chileOnly = getUpcomingHolidays(refDate, { marketId: 'chile', maxDaysAhead: 60 });
     expect(chileOnly.every((h) => h.marketId === 'chile')).toBe(true);
     expect(chileOnly.some((h) => h.name === 'Fiestas Patrias')).toBe(true);
+  });
+
+  it('evaluates Asian market holiday lifecycle accurately across Chile reference time without false persistence on subsequent days', () => {
+    // Sunday 20:00 Chile (UTC-3) -> Monday 08:00 Seoul (UTC+9). Korea is on holiday (2026-10-05)
+    const sundayNightChile = DateTime.fromISO('2026-10-04T20:00:00', { zone: 'America/Santiago' });
+    const evalSundayNight = evaluateMarketAt(krx, sundayNightChile);
+    expect(evalSundayNight.holiday).toBeDefined();
+    expect(evalSundayNight.holiday?.name).toBe('Fundación Nacional (observado)');
+
+    // Monday 08:00 Chile -> Monday 20:00 Seoul. Korea is still in holiday
+    const mondayMorningChile = DateTime.fromISO('2026-10-05T08:00:00', { zone: 'America/Santiago' });
+    const evalMondayMorning = evaluateMarketAt(krx, mondayMorningChile);
+    expect(evalMondayMorning.holiday).toBeDefined();
+
+    // Monday 20:00 Chile -> Tuesday 08:00 Seoul. Korea holiday has concluded (now regular trading day)
+    const mondayNightChile = DateTime.fromISO('2026-10-05T20:00:00', { zone: 'America/Santiago' });
+    const evalMondayNight = evaluateMarketAt(krx, mondayNightChile);
+    expect(evalMondayNight.holiday).toBeUndefined();
+
+    // Tuesday 14:00 Chile -> Wednesday 02:00 Seoul. Korea has no holiday on Tuesday or Wednesday
+    const tuesdayAfternoonChile = DateTime.fromISO('2026-10-06T14:00:00', { zone: 'America/Santiago' });
+    const evalTuesday = evaluateMarketAt(krx, tuesdayAfternoonChile);
+    expect(evalTuesday.holiday).toBeUndefined();
+
+    // Friday 02:00 Chile -> Friday 14:00 Seoul. Korea has Hangeul Day holiday (2026-10-09)
+    const fridayEarlyChile = DateTime.fromISO('2026-10-09T02:00:00', { zone: 'America/Santiago' });
+    const evalFriday = evaluateMarketAt(krx, fridayEarlyChile);
+    expect(evalFriday.holiday).toBeDefined();
+    expect(evalFriday.holiday?.name).toBe('Día del Hangeul');
   });
 });

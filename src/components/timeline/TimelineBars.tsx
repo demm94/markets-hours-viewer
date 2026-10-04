@@ -11,7 +11,6 @@ interface TimelineBarsProps {
   marketSegments: Record<string, TimelineSegment[]>;
   scrubberEvaluations: Record<string, MarketEvaluation>;
   chileScrubberEvaluation: MarketEvaluation;
-  evaluationsNow?: Record<string, MarketEvaluation>;
   scrubberMinutes: number;
   currentMinutes: number;
   isHovering: boolean;
@@ -34,7 +33,6 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
   marketSegments,
   scrubberEvaluations,
   chileScrubberEvaluation,
-  evaluationsNow,
   scrubberMinutes,
   currentMinutes,
   isHovering,
@@ -132,7 +130,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
           const marketEvents = dailyEvents[market.id] ?? [];
           const isRowElevated = marketEvents.some((e) => e.id === currentActiveEventId);
           const ev = isChile ? chileScrubberEvaluation : scrubberEvaluations[market.id];
-          const holiday = ev?.holiday || evaluationsNow?.[market.id]?.holiday;
+          const holiday = ev?.holiday;
           const isHoliday = Boolean(holiday && !isChile);
 
           return (

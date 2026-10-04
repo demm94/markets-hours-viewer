@@ -16,7 +16,6 @@ interface TimelineGridProps {
   marketSegments: Record<string, TimelineSegment[]>;
   scrubberEvaluations: Record<string, MarketEvaluation>;
   chileScrubberEvaluation: MarketEvaluation;
-  evaluationsNow?: Record<string, MarketEvaluation>;
   scrubberMinutes: number;
   currentMinutes: number;
   isHovering: boolean;
@@ -41,7 +40,6 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
   marketSegments,
   scrubberEvaluations,
   chileScrubberEvaluation,
-  evaluationsNow,
   scrubberMinutes,
   currentMinutes,
   isHovering,
@@ -93,7 +91,6 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
           onToggleColumn={toggleColumn}
           scrubberEvaluations={scrubberEvaluations}
           chileScrubberEvaluation={chileScrubberEvaluation}
-          evaluationsNow={evaluationsNow}
         />
 
         <TimelineBars
@@ -101,7 +98,6 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
           marketSegments={marketSegments}
           scrubberEvaluations={scrubberEvaluations}
           chileScrubberEvaluation={chileScrubberEvaluation}
-          evaluationsNow={evaluationsNow}
           scrubberMinutes={scrubberMinutes}
           currentMinutes={currentMinutes}
           isHovering={isHovering}

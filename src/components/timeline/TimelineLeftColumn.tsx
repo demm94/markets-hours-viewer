@@ -10,7 +10,6 @@ interface TimelineLeftColumnProps {
   onToggleColumn: () => void;
   scrubberEvaluations: Record<string, MarketEvaluation>;
   chileScrubberEvaluation: MarketEvaluation;
-  evaluationsNow?: Record<string, MarketEvaluation>;
 }
 
 export const TimelineLeftColumn: React.FC<TimelineLeftColumnProps> = React.memo(({
@@ -18,11 +17,10 @@ export const TimelineLeftColumn: React.FC<TimelineLeftColumnProps> = React.memo(
   isColumnCollapsed,
   onToggleColumn,
   scrubberEvaluations,
-  chileScrubberEvaluation,
-  evaluationsNow
+  chileScrubberEvaluation
 }) => {
   const getStatusBadge = (marketId: string, evaluation: MarketEvaluation) => {
-    const holiday = evaluation.holiday || evaluationsNow?.[marketId]?.holiday;
+    const holiday = evaluation.holiday;
     if (holiday) {
       return (
         <Badge
@@ -107,7 +105,7 @@ export const TimelineLeftColumn: React.FC<TimelineLeftColumnProps> = React.memo(
               localTimeFormatted: '--:--',
               localDateFormatted: ''
             });
-        const holiday = ev.holiday || evaluationsNow?.[market.id]?.holiday;
+        const holiday = ev.holiday;
         const isHoliday = Boolean(holiday && !isChile);
 
         return (

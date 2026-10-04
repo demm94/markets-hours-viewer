@@ -206,7 +206,6 @@ export const App: React.FC = () => {
             markets={MARKETS}
             marketSegments={marketSegments}
             scrubberEvaluations={!isViewingToday || isScrubbing ? evaluationsScrubber : evaluationsNow}
-            evaluationsNow={evaluationsNow}
             chileScrubberEvaluation={chileScrubberEvaluation}
             scrubberMinutes={scrubberMinutes}
             currentMinutes={currentMinutes}
