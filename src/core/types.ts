@@ -94,3 +94,28 @@ export interface RollingDayInfo {
   eventCount: number;
   hasHighImpact: boolean;
 }
+
+export type LiquidityLevel = 'high' | 'moderate' | 'quiet';
+
+export interface TradingWindow {
+  id: string;
+  name: string;
+  subtitle: string;
+  icon: string;
+  startMinute: number;
+  endMinute: number;
+  startTimeFormatted: string;
+  endTimeFormatted: string;
+  durationFormatted: string;
+  marketIds: string[];
+  activeMarkets: MarketConfig[];
+  concurrencyCount: number;
+  liquidityLevel: LiquidityLevel;
+  description: string;
+  isCurrent: boolean;
+  progressPercent?: number;
+  minutesRemaining?: number;
+  events: TimelineEventMarkerData[];
+  holidayNames?: string[];
+}
+
