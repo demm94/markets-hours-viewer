@@ -32,20 +32,14 @@ export function getTradingWindows(
   currentMinuteInChile?: number
 ): TradingWindow[] {
   const chileDate = referenceDate.setZone(CHILE_TZ);
-  const isoDate = chileDate.toISODate()!;
   const dailyEventsMap = getEventsForChileDay(chileDate);
   const allDailyEvents = Object.values(dailyEventsMap).flat();
 
   // Dynamic discovery of key boundary minutes from actual market projections
   const marketSegmentsMap: Record<string, TimelineSegment[]> = {};
-  const holidaysMap: Record<string, string> = {};
 
   for (const m of markets) {
     marketSegmentsMap[m.id] = projectMarketToTimeline(m, chileDate);
-    const hol = getMarketHoliday(m.id, isoDate);
-    if (hol) {
-      holidaysMap[m.id] = hol.name;
-    }
   }
 
   const nyseSegments = marketSegmentsMap['nyse'] ?? [];
@@ -124,6 +118,8 @@ export function getTradingWindows(
 
   return templates.map((tmpl) => {
     const duration = tmpl.endMinute - tmpl.startMinute;
+    const windowMidpoint = Math.floor((tmpl.startMinute + tmpl.endMinute) / 2);
+    const windowInstantInChile = chileDate.startOf('day').plus({ minutes: windowMidpoint });
 
     // Determine active markets in this window
     const activeMarkets = markets.filter((m) => {
@@ -133,8 +129,12 @@ export function getTradingWindows(
       const hasOverlap = segments.some(
         (seg) => seg.startMinute < tmpl.endMinute && seg.endMinute > tmpl.startMinute
       );
-      // Exclude if market is on holiday
-      return hasOverlap && !holidaysMap[m.id];
+      if (!hasOverlap) return false;
+
+      // Evaluate holiday in market's local date during this specific window
+      const marketLocalDate = windowInstantInChile.setZone(m.timezone).toISODate()!;
+      const isHoliday = Boolean(getMarketHoliday(m.id, marketLocalDate));
+      return !isHoliday;
     });
 
     const concurrencyCount = activeMarkets.length;
@@ -152,9 +152,13 @@ export function getTradingWindows(
 
     const holidayNames: string[] = [];
     for (const mId of tmpl.targetMarketIds) {
-      if (holidaysMap[mId]) {
-        const m = markets.find((x) => x.id === mId);
-        holidayNames.push(`${m?.name ?? mId}: ${holidaysMap[mId]}`);
+      const m = markets.find((x) => x.id === mId);
+      if (m) {
+        const marketLocalDate = windowInstantInChile.setZone(m.timezone).toISODate()!;
+        const hol = getMarketHoliday(m.id, marketLocalDate);
+        if (hol) {
+          holidayNames.push(`${m.name}: ${hol.name}`);
+        }
       }
     }
 

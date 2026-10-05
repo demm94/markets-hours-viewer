@@ -52,8 +52,18 @@ describe('trading-windows engine', () => {
 
     const asiaNight = windows.find((w) => w.id === 'asia_night');
     expect(asiaNight).toBeDefined();
-    // KRX should NOT be in activeMarkets because it's a holiday
+    // KRX should NOT be in activeMarkets because it's a holiday in Seoul on Monday Oct 5
     expect(asiaNight?.activeMarkets.some((m) => m.id === 'krx')).toBe(false);
     expect(asiaNight?.holidayNames?.some((h) => h.includes('Corea del Sur'))).toBe(true);
+
+    // However, in asia_reopen (22:00 - 24:00 Monday Chile time), it is already Tuesday Oct 6 in Seoul!
+    // Korea holiday is over, so KRX MUST be active and NOT marked as holiday.
+    const asiaReopen = windows.find((w) => w.id === 'asia_reopen');
+    expect(asiaReopen).toBeDefined();
+    expect(asiaReopen?.activeMarkets.some((m) => m.id === 'krx')).toBe(true);
+    expect(asiaReopen?.holidayNames?.some((h) => h.includes('Corea del Sur'))).toBe(false);
+
+    // China is still in Golden Week on Tuesday Oct 6
+    expect(asiaReopen?.holidayNames?.some((h) => h.includes('China'))).toBe(true);
   });
 });
