@@ -116,20 +116,29 @@ describe('market holidays engine', () => {
     expect(chileOnly.some((h) => h.name === 'Fiestas Patrias')).toBe(true);
   });
 
-  it('evaluates sanitized market holidays accurately without false observed closures', () => {
+  it('evaluates sanitized market holidays accurately including Korean substitute holidays', () => {
     // Memorial Day (June 6) and India Independence (Aug 15) fall on Saturday and must NOT close Friday
     expect(isMarketHoliday('krx', '2026-06-05')).toBe(false);
     expect(isMarketHoliday('nse', '2026-08-14')).toBe(false);
 
-    // Korea on Monday Oct 5 is regular trading day (not a market holiday)
+    // Korea Labor Day (May 1) is an official exchange closure
+    expect(isMarketHoliday('krx', '2026-05-01')).toBe(true);
+
+    // National Foundation Day (Oct 3 Sat) yields Monday Oct 5 substitute holiday for KRX
+    expect(isMarketHoliday('krx', '2026-10-05')).toBe(true);
     const sundayNightChile = DateTime.fromISO('2026-10-04T20:00:00', { zone: 'America/Santiago' });
     const evalSundayNight = evaluateMarketAt(krx, sundayNightChile);
-    expect(evalSundayNight.holiday).toBeUndefined();
+    expect(evalSundayNight.holiday).toBeDefined();
+    expect(evalSundayNight.holiday?.name).toBe('Fundación Nacional (observado)');
 
     // China on Monday Oct 5 is closed for National Day Golden Week
     const evalChinaMonday = evaluateMarketAt(sse, sundayNightChile);
     expect(evalChinaMonday.holiday).toBeDefined();
     expect(evalChinaMonday.holiday?.name).toContain('Día Nacional');
+
+    // Tuesday afternoon in Chile -> Wednesday in Seoul. Holiday is concluded
+    const evalTuesday = evaluateMarketAt(krx, DateTime.fromISO('2026-10-06T14:00:00', { zone: 'America/Santiago' }));
+    expect(evalTuesday.holiday).toBeUndefined();
 
     // Korea on Friday 02:00 Chile -> Friday 14:00 Seoul. Korea has Hangeul Day holiday (2026-10-09)
     const fridayEarlyChile = DateTime.fromISO('2026-10-09T02:00:00', { zone: 'America/Santiago' });
