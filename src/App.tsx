@@ -14,7 +14,7 @@ import { useScrubber } from './hooks/useScrubber';
 import { usePullToRefresh } from './hooks/usePullToRefresh';
 import { Header } from './components/Header';
 import { MarketCards } from './components/MarketCards';
-import { TimelineGrid } from './components/TimelineGrid';
+import { TradingWindowsRadar } from './components/trading-windows/TradingWindowsRadar';
 import { EventsDrawer } from './components/EventsDrawer';
 import { EventDetailModal } from './components/timeline/EventDetailModal';
 import { hasHighImpactEventsToday, getEventsForChileDay, getRollingDaysWindow } from './core/events';
@@ -205,7 +205,7 @@ export const App: React.FC = () => {
             catalystsMap={catalystsMap}
           />
 
-          <TimelineGrid
+          <TradingWindowsRadar
             markets={MARKETS}
             marketSegments={marketSegments}
             scrubberEvaluations={!isViewingToday || isScrubbing ? evaluationsScrubber : evaluationsNow}
