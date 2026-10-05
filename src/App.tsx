@@ -18,6 +18,7 @@ import { TimelineGrid } from './components/TimelineGrid';
 import { EventsDrawer } from './components/EventsDrawer';
 import { EventDetailModal } from './components/timeline/EventDetailModal';
 import { hasHighImpactEventsToday, getEventsForChileDay, getRollingDaysWindow } from './core/events';
+import { getMarketHoliday } from './core/holidays';
 import { RotateCw } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -118,11 +119,13 @@ export const App: React.FC = () => {
   }, [scrubberInstant]);
 
   const chileScrubberEvaluation: MarketEvaluation = useMemo(() => {
+    const holiday = getMarketHoliday('chile', scrubberInstant.toISODate()!);
     return {
       marketId: 'chile',
       status: 'closed',
       localTimeFormatted: formatMinutes(scrubberMinutes),
-      localDateFormatted: scrubberInstant.toFormat("ccc d MMM", { locale: 'es' })
+      localDateFormatted: scrubberInstant.toFormat("ccc d MMM", { locale: 'es' }),
+      ...(holiday ? { holiday, activeSegmentLabel: `Feriado: ${holiday.name}` } : {})
     };
   }, [scrubberMinutes, scrubberInstant]);
 

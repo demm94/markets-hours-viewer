@@ -139,23 +139,38 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
               className={`relative h-[38px] sm:h-[46px] md:h-[50px] px-1.5 sm:px-2 flex items-center border-b border-border transition-colors ${
                 isRowElevated ? 'z-40' : 'hover:z-30 focus-within:z-40'
               } ${
-                isChile ? 'bg-gradient-to-r from-sky-400/[0.08] to-sky-400/[0.02] border-b-sky-400/35' : 'hover:bg-white/[0.02]'
+                isChile
+                  ? holiday
+                    ? 'border-b-purple-400/35 bg-gradient-to-r from-purple-500/[0.08] to-purple-500/[0.02]'
+                    : 'bg-gradient-to-r from-sky-400/[0.08] to-sky-400/[0.02] border-b-sky-400/35'
+                  : 'hover:bg-white/[0.02]'
               } ${isHoliday ? 'opacity-40 hover:opacity-75 transition-opacity' : ''}`}
             >
               <div
                 className={`relative w-full h-[22px] sm:h-[26px] md:h-[30px] border rounded sm:rounded-lg shadow-[inset_0_2px_6px_rgba(0,0,0,0.5)] transition-colors ${
-                  isHoliday ? 'border-purple-500/30 bg-purple-950/20' : 'border-border bg-white/[0.02]'
+                  (isHoliday || (isChile && holiday))
+                    ? 'border-purple-500/30 bg-purple-950/20'
+                    : 'border-border bg-white/[0.02]'
                 }`}
               >
                 {/* Session blocks container (clipped to rounded track) */}
                 <div className="absolute inset-0 rounded sm:rounded-lg overflow-hidden pointer-events-none z-[2]">
                   {/* Chile reference track */}
                   {isChile && (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-sky-400/[0.06] via-sky-400/[0.16] to-sky-400/[0.06]">
-                      <span className="font-mono text-xs font-bold text-sky-400 tracking-wider uppercase">
-                        Eje 24h Santiago de Chile
-                      </span>
-                    </div>
+                    holiday ? (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-purple-500/[0.12] via-purple-500/[0.22] to-purple-500/[0.12] border border-purple-500/30 rounded sm:rounded-lg">
+                        <span className="font-mono text-[10px] sm:text-xs font-bold text-purple-200 tracking-wider flex items-center gap-1.5 uppercase px-2 truncate">
+                          <span>🎉</span>
+                          <span className="truncate">Eje 24h Santiago · Feriado: {holiday.name}</span>
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-sky-400/[0.06] via-sky-400/[0.16] to-sky-400/[0.06]">
+                        <span className="font-mono text-xs font-bold text-sky-400 tracking-wider uppercase">
+                          Eje 24h Santiago de Chile
+                        </span>
+                      </div>
+                    )
                   )}
 
                   {/* Holiday track overlay */}

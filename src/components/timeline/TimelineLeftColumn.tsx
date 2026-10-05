@@ -21,6 +21,25 @@ export const TimelineLeftColumn: React.FC<TimelineLeftColumnProps> = React.memo(
 }) => {
   const getStatusBadge = (marketId: string, evaluation: MarketEvaluation) => {
     const holiday = evaluation.holiday;
+    if (marketId === 'chile') {
+      if (holiday) {
+        return (
+          <Badge
+            variant="holiday"
+            showDot={false}
+            className="text-[9px] md:text-[10px] px-1.5 py-0.5 border-purple-400/40 text-purple-300 font-mono font-bold leading-none"
+            title={`Feriado en Chile: ${holiday.name}`}
+          >
+            Feriado
+          </Badge>
+        );
+      }
+      return (
+        <Badge variant="outline" className="text-[9px] md:text-[10px] px-1.5 py-0.5 border-sky-400/40 text-sky-300 font-mono font-bold leading-none">
+          Ref
+        </Badge>
+      );
+    }
     if (holiday) {
       return (
         <Badge
@@ -30,13 +49,6 @@ export const TimelineLeftColumn: React.FC<TimelineLeftColumnProps> = React.memo(
           title={`Feriado bursátil: ${holiday.name}`}
         >
           Feriado
-        </Badge>
-      );
-    }
-    if (marketId === 'chile') {
-      return (
-        <Badge variant="outline" className="text-[9px] md:text-[10px] px-1.5 py-0.5 border-sky-400/40 text-sky-300 font-mono font-bold leading-none">
-          Ref
         </Badge>
       );
     }
@@ -114,16 +126,33 @@ export const TimelineLeftColumn: React.FC<TimelineLeftColumnProps> = React.memo(
             key={market.id}
             className={`h-[38px] sm:h-[46px] md:h-[50px] flex items-center border-b border-border transition-colors ${
               isChile
-                ? 'bg-gradient-to-r from-sky-400/[0.12] to-sky-400/[0.04] border-b-sky-400/35'
+                ? holiday
+                  ? 'bg-gradient-to-r from-purple-500/[0.12] to-purple-500/[0.04] border-b-purple-400/35'
+                  : 'bg-gradient-to-r from-sky-400/[0.12] to-sky-400/[0.04] border-b-sky-400/35'
                 : 'hover:bg-white/[0.02]'
             } ${isHoliday ? 'opacity-60' : ''} ${isColumnCollapsed ? 'justify-center px-0' : 'justify-between px-2 sm:px-3'}`}
             title={
               isColumnCollapsed
-                ? `${market.name} (${market.code}) - ${ev.localTimeFormatted} ${
-                    ev.nextTransition ? `· ${ev.nextTransition.formattedCountdown}` : ''
+                ? `${market.name} (${market.code}) - ${ev.localTimeFormatted}${
+                    holiday
+                      ? isChile
+                        ? ` · Feriado en Chile: ${holiday.name}`
+                        : ` · Feriado: ${holiday.name}`
+                      : ev.nextTransition
+                      ? ` · ${ev.nextTransition.formattedCountdown}`
+                      : ''
                   }`
+                : isChile && holiday
+                ? `Chile: Feriado (${holiday.name})`
                 : undefined
             }
+            aria-label={`${market.name}: ${
+              holiday
+                ? `Feriado (${holiday.name})`
+                : isChile
+                ? 'Eje de referencia 24h'
+                : ev.status
+            }`}
           >
             <div className={`flex items-center ${isColumnCollapsed ? 'justify-center gap-0' : 'gap-1.5 sm:gap-2'} min-w-0`}>
               <span className={`leading-none select-none flex-shrink-0 ${isColumnCollapsed ? 'text-lg sm:text-2xl' : 'text-sm sm:text-xl'}`}>
@@ -146,7 +175,9 @@ export const TimelineLeftColumn: React.FC<TimelineLeftColumnProps> = React.memo(
                     </span>
                     <span
                       className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                        isChile
+                        isChile && holiday
+                          ? 'bg-purple-400 shadow-[0_0_6px_rgba(168,85,247,0.8)]'
+                          : isChile
                           ? 'bg-sky-400'
                           : isHoliday
                           ? 'bg-purple-400 shadow-[0_0_6px_rgba(168,85,247,0.8)]'

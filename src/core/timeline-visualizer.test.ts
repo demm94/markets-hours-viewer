@@ -6,6 +6,8 @@ import { DateTime } from 'luxon';
 import { CHILE_TZ, formatMinutes, getSantiagoOffsetDescription } from './timezone';
 import { MARKETS } from './markets';
 import { pwaManifest } from './pwa-manifest';
+import { getMarketHoliday } from './holidays';
+import { MarketEvaluation } from './types';
 
 // Repository files are resolved from this module's own location, never from the process
 // CWD, so the suite behaves identically no matter which directory the runner starts in.
@@ -110,5 +112,44 @@ describe('timeline-visualizer & pwa-shell compliance', () => {
     const html = readRepoFile('index.html');
     expect(html).toContain('viewport-fit=cover');
     expect(html).toContain('apple-mobile-web-app-title');
+  });
+
+  it('evaluates Chilean holiday reference axis on public holidays', () => {
+    // September 18, 2026: Fiestas Patrias in Chile
+    const fiestasPatrias = DateTime.fromISO('2026-09-18T12:00:00', { zone: CHILE_TZ });
+    const holiday = getMarketHoliday('chile', fiestasPatrias.toISODate()!);
+    expect(holiday).toBeDefined();
+    expect(holiday?.name).toBe('Fiestas Patrias');
+
+    // Emulate chileScrubberEvaluation logic
+    const scrubberMinutes = 720;
+    const chileEvaluation: MarketEvaluation = {
+      marketId: 'chile',
+      status: 'closed',
+      localTimeFormatted: formatMinutes(scrubberMinutes),
+      localDateFormatted: fiestasPatrias.toFormat('ccc d MMM', { locale: 'es' }),
+      ...(holiday ? { holiday, activeSegmentLabel: `Feriado: ${holiday.name}` } : {})
+    };
+
+    expect(chileEvaluation.marketId).toBe('chile');
+    expect(chileEvaluation.holiday).toEqual(holiday);
+    expect(chileEvaluation.activeSegmentLabel).toBe('Feriado: Fiestas Patrias');
+    expect(chileEvaluation.localTimeFormatted).toBe('12:00');
+
+    // Non-holiday day: September 15, 2026
+    const regularDay = DateTime.fromISO('2026-09-15T12:00:00', { zone: CHILE_TZ });
+    const noHoliday = getMarketHoliday('chile', regularDay.toISODate()!);
+    expect(noHoliday).toBeUndefined();
+
+    const normalChileEvaluation: MarketEvaluation = {
+      marketId: 'chile',
+      status: 'closed',
+      localTimeFormatted: formatMinutes(scrubberMinutes),
+      localDateFormatted: regularDay.toFormat('ccc d MMM', { locale: 'es' }),
+      ...(noHoliday ? { holiday: noHoliday, activeSegmentLabel: `Feriado: ${noHoliday.name}` } : {})
+    };
+
+    expect(normalChileEvaluation.holiday).toBeUndefined();
+    expect(normalChileEvaluation.activeSegmentLabel).toBeUndefined();
   });
 });
