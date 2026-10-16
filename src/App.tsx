@@ -66,7 +66,7 @@ export const App: React.FC = () => {
 
   const rollingDays = useMemo(() => {
     return getRollingDaysWindow(now, 7);
-  }, [referenceDayKey, now]);
+  }, [referenceDayKey]);
 
   const [selectedDayIso, setSelectedDayIso] = React.useState<string>(() => {
     return now.toFormat('yyyy-MM-dd');
@@ -93,14 +93,19 @@ export const App: React.FC = () => {
     return map;
   }, [activeDayKey]);
 
+  // Stable reference at minute resolution for components that do not require 1Hz second ticking
+  const chileNowMinute = useMemo(() => {
+    return now.startOf('minute');
+  }, [minuteKey]);
+
   // Real-time evaluation at minute resolution (stable reference within the same minute)
   const evaluationsNow = useMemo(() => {
     const map: Record<string, MarketEvaluation> = {};
     for (const m of MARKETS) {
-      map[m.id] = evaluateMarketAt(m, now);
+      map[m.id] = evaluateMarketAt(m, chileNowMinute);
     }
     return map;
-  }, [minuteKey]);
+  }, [chileNowMinute]);
 
   // Scrubber evaluation at selected minute offset against activeDate
   const scrubberInstant = useMemo(() => {
@@ -142,7 +147,7 @@ export const App: React.FC = () => {
       map[m.id] = hasHighImpactEventsToday(m.id, now);
     }
     return map;
-  }, [referenceDayKey, now]);
+  }, [referenceDayKey]);
 
   const dailyEvents = useMemo(() => {
     return getEventsForChileDay(activeDate);
@@ -247,7 +252,7 @@ export const App: React.FC = () => {
         onClose={handleCloseEvents}
         selectedMarketId={selectedEventMarket}
         onSelectMarketId={setSelectedEventMarket}
-        chileNow={now}
+        chileNow={chileNowMinute}
       />
 
       <EventDetailModal

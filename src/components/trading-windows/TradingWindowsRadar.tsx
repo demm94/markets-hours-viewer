@@ -94,17 +94,19 @@ export const TradingWindowsRadar: React.FC<TradingWindowsRadarProps> = React.mem
         <div className="flex flex-wrap items-center justify-between gap-2.5">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500/20 to-sky-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.2)]">
-              <Zap size={16} />
+              {viewMode === 'radar' ? <Zap size={16} /> : <Layers size={16} className="text-sky-300" />}
             </div>
             <div>
               <h2 className="text-sm sm:text-base font-extrabold tracking-tight text-white flex items-center gap-1.5">
-                <span>Radar de Concurrencia Bursátil</span>
+                <span>{viewMode === 'radar' ? 'Radar de Concurrencia Bursátil' : 'Línea de Tiempo 24 Horas'}</span>
                 <span className="text-[10px] font-mono font-bold text-sky-300 bg-sky-500/15 px-2 py-0.5 rounded-full border border-sky-400/30">
                   🇨🇱 Santiago
                 </span>
               </h2>
               <p className="text-[10px] sm:text-xs text-muted-foreground font-mono">
-                Ventanas de liquidez y solapamiento institucional durante las 24 horas
+                {viewMode === 'radar'
+                  ? 'Ventanas de liquidez y solapamiento institucional durante las 24 horas'
+                  : 'Proyección horaria interactiva con cursor y catalizadores macro'}
               </p>
             </div>
           </div>

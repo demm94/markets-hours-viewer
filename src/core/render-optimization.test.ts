@@ -8,6 +8,7 @@ import { TimelineLeftColumn } from '../components/timeline/TimelineLeftColumn';
 import { TimelineBars } from '../components/timeline/TimelineBars';
 import { TimelineSlider } from '../components/timeline/TimelineSlider';
 import { TimelineLegend } from '../components/timeline/TimelineLegend';
+import { TradingWindowsRadar } from '../components/trading-windows/TradingWindowsRadar';
 import { evaluateMarketAt } from './timezone';
 import { MARKETS } from './markets';
 
@@ -23,6 +24,9 @@ describe('React memoization & render optimization verification', () => {
 
     expect((TimelineGrid as any).$$typeof).toBe(REACT_MEMO_TYPE);
     expect(TimelineGrid.displayName).toBe('TimelineGrid');
+
+    expect((TradingWindowsRadar as any).$$typeof).toBe(REACT_MEMO_TYPE);
+    expect(TradingWindowsRadar.displayName).toBe('TradingWindowsRadar');
   });
 
   it('verifies decomposed timeline atomic subcomponents are wrapped with React.memo', () => {

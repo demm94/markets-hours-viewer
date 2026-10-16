@@ -66,4 +66,50 @@ describe('trading-windows engine', () => {
     // China is still in Golden Week on Tuesday Oct 6
     expect(asiaReopen?.holidayNames?.some((h) => h.includes('China'))).toBe(true);
   });
+
+  it('correctly treats Friday night in Chile as closed for Asian reopen due to weekend in Asia', () => {
+    // 2026-10-16 is Friday. At 23:00 Chile (minute 1380), it is 10:00 Saturday morning in Taipei & 11:00 in Seoul.
+    const fridayNightDate = DateTime.fromISO('2026-10-16T23:00:00', { zone: CHILE_TZ });
+    const windows = getTradingWindows(fridayNightDate, MARKETS, 1380);
+
+    const asiaReopen = windows.find((w) => w.id === 'asia_reopen');
+    expect(asiaReopen).toBeDefined();
+    // In Asia it is Saturday morning -> weekend -> 0 active markets
+    expect(asiaReopen?.concurrencyCount).toBe(0);
+    expect(asiaReopen?.activeMarkets.length).toBe(0);
+    expect(asiaReopen?.liquidityLevel).toBe('quiet');
+  });
+
+  it('correctly marks markets closed and liquidity as quiet on Saturday', () => {
+    // 2026-10-17 is Saturday
+    const saturdayDate = DateTime.fromISO('2026-10-17T12:00:00', { zone: CHILE_TZ });
+    const windows = getTradingWindows(saturdayDate, MARKETS, 720);
+
+    const usSession = windows.find((w) => w.id === 'us_session');
+    expect(usSession).toBeDefined();
+    expect(usSession?.activeMarkets.length).toBe(0);
+    expect(usSession?.concurrencyCount).toBe(0);
+    expect(usSession?.liquidityLevel).toBe('quiet');
+  });
+
+  it('correctly reopens Asian markets on Sunday night Chile time (Monday morning in Asia)', () => {
+    // 2026-10-18 is Sunday. At 23:00 Chile, it is Monday morning in Taipei, Seoul, Shanghai.
+    const sundayNightDate = DateTime.fromISO('2026-10-18T23:00:00', { zone: CHILE_TZ });
+    const windows = getTradingWindows(sundayNightDate, MARKETS, 1380);
+
+    const asiaReopen = windows.find((w) => w.id === 'asia_reopen');
+    expect(asiaReopen).toBeDefined();
+    expect(asiaReopen?.activeMarkets.length).toBeGreaterThanOrEqual(2);
+    expect(asiaReopen?.liquidityLevel).toBe('high');
+  });
+
+  it('simulates scheduled sessions on weekends when isSimulation option is enabled', () => {
+    const saturdayDate = DateTime.fromISO('2026-10-17T12:00:00', { zone: CHILE_TZ });
+    const windows = getTradingWindows(saturdayDate, MARKETS, 720, { isSimulation: true });
+
+    const usSession = windows.find((w) => w.id === 'us_session');
+    expect(usSession).toBeDefined();
+    expect(usSession?.activeMarkets.some((m) => m.id === 'nyse')).toBe(true);
+    expect(usSession?.liquidityLevel).toBe('high');
+  });
 });

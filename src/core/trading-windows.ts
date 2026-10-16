@@ -1,8 +1,12 @@
 import { DateTime } from 'luxon';
 import { MarketConfig, TimelineSegment, TradingWindow, LiquidityLevel } from './types';
-import { projectMarketToTimeline, formatMinutes, CHILE_TZ } from './timezone';
+import { projectMarketToTimeline, formatMinutes, CHILE_TZ, isWeekend } from './timezone';
 import { getMarketHoliday } from './holidays';
 import { getEventsForChileDay } from './events';
+
+export interface TradingWindowsOptions {
+  isSimulation?: boolean;
+}
 
 interface WindowTemplate {
   id: string;
@@ -29,7 +33,8 @@ function formatDuration(minutes: number): string {
 export function getTradingWindows(
   referenceDate: DateTime,
   markets: MarketConfig[],
-  currentMinuteInChile?: number
+  currentMinuteInChile?: number,
+  options: TradingWindowsOptions = {}
 ): TradingWindow[] {
   const chileDate = referenceDate.setZone(CHILE_TZ);
   const dailyEventsMap = getEventsForChileDay(chileDate);
@@ -131,16 +136,20 @@ export function getTradingWindows(
       );
       if (!hasOverlap) return false;
 
-      // Evaluate holiday in market's local date during this specific window
-      const marketLocalDate = windowInstantInChile.setZone(m.timezone).toISODate()!;
-      const isHoliday = Boolean(getMarketHoliday(m.id, marketLocalDate));
+      // Evaluate weekend and holiday in market's local timezone during this specific window
+      const marketInstant = windowInstantInChile.setZone(m.timezone);
+      if (!options.isSimulation && isWeekend(marketInstant)) {
+        return false;
+      }
+      const marketLocalDate = marketInstant.toISODate()!;
+      const isHoliday = !options.isSimulation && Boolean(getMarketHoliday(m.id, marketLocalDate));
       return !isHoliday;
     });
 
     const concurrencyCount = activeMarkets.length;
 
     let liquidityLevel: LiquidityLevel = 'quiet';
-    if (concurrencyCount >= 2 || tmpl.id === 'us_session') {
+    if (concurrencyCount >= 2 || (concurrencyCount >= 1 && tmpl.id === 'us_session')) {
       liquidityLevel = 'high';
     } else if (concurrencyCount === 1) {
       liquidityLevel = 'moderate';
@@ -154,7 +163,11 @@ export function getTradingWindows(
     for (const mId of tmpl.targetMarketIds) {
       const m = markets.find((x) => x.id === mId);
       if (m) {
-        const marketLocalDate = windowInstantInChile.setZone(m.timezone).toISODate()!;
+        const marketInstant = windowInstantInChile.setZone(m.timezone);
+        if (!options.isSimulation && isWeekend(marketInstant)) {
+          continue;
+        }
+        const marketLocalDate = marketInstant.toISODate()!;
         const hol = getMarketHoliday(m.id, marketLocalDate);
         if (hol) {
           holidayNames.push(`${m.name}: ${hol.name}`);

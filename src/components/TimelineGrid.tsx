@@ -53,9 +53,6 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
   onPointerCancel,
   onPointerLeave,
   onKeyDown,
-  rollingDays,
-  selectedIsoDate,
-  onSelectDay,
   isToday = true
 }) => {
   // Default to collapsed on mobile viewports (<= 768px) to maximize timeline space
@@ -71,14 +68,11 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
   const allMarkets = useMemo(() => [CHILE_MARKET, ...markets], [markets]);
 
   return (
-    <section className="rounded-2xl border border-border bg-card backdrop-blur-2xl p-2 sm:p-3.5 md:p-5 shadow-neon flex flex-col gap-2 sm:gap-3.5 relative overflow-hidden neon-edge">
+    <div className="flex flex-col gap-2 sm:gap-3.5">
       {/* Top Controls Row */}
       <TimelineHeader
         isColumnCollapsed={isColumnCollapsed}
         onToggleColumn={toggleColumn}
-        days={rollingDays}
-        selectedIsoDate={selectedIsoDate}
-        onSelectDay={onSelectDay}
       />
 
       {/* Horizontal Table with Left Frozen Column + 24h Bars */}
@@ -118,7 +112,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
 
       {/* Legend */}
       <TimelineLegend />
-    </section>
+    </div>
   );
 });
 
