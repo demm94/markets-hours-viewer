@@ -2,8 +2,8 @@ name: Sync Macroeconomic Events
 
 on:
   schedule:
-    # Runs on the 1st of every month at 04:00 UTC (01:00 AM Chile time)
-    - cron: '0 4 1 * *'
+    # Runs every Monday at 04:00 UTC (01:00 AM Chile time)
+    - cron: '0 4 * * 1'
   workflow_dispatch: # Allows running manually from GitHub Actions tab
 
 permissions:
@@ -28,12 +28,12 @@ jobs:
 
       - name: Commit and push changes
         run: |
-          if git diff --quiet src/data/events.json; then
-            echo "No changes in events calendar. Working tree is clean."
+          if git diff --quiet src/data/events.json src/data/holidays.json; then
+            echo "No changes in events or holidays calendar. Working tree is clean."
           else
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add src/data/events.json
-            git commit -m "chore(data): sync monthly macroeconomic events"
+            git add src/data/events.json src/data/holidays.json
+            git commit -m "chore(data): sync macroeconomic events and market holidays"
             git push origin main
           fi

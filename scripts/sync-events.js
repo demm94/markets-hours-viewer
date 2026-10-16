@@ -50,6 +50,12 @@ function slugify(text) {
     .slice(0, 30);
 }
 
+// Verified dates where exchanges remain open or do not observe compensatory closure
+const NON_CLOSURE_EXCLUSIONS = new Set([
+  'krx:2026-06-05',
+  'nse:2026-08-14'
+]);
+
 async function syncHolidays(apiKey) {
   let existingHolidays = [];
   if (fs.existsSync(HOLIDAYS_FILE)) {
@@ -81,12 +87,20 @@ async function syncHolidays(apiKey) {
       const items = data.data || [];
       for (const item of items) {
         if (!item.atDate) continue;
+        // Skip partial-day / early-close sessions (Finnhub sets tradingHour="" for full closures)
+        if (item.tradingHour && String(item.tradingHour).trim() !== '') continue;
+
         const key = `${ex.marketId}:${item.atDate}`;
-        holidayMap.set(key, {
-          marketId: ex.marketId,
-          date: item.atDate,
-          name: item.eventName || 'Feriado bursátil'
-        });
+        if (NON_CLOSURE_EXCLUSIONS.has(key)) continue;
+
+        // Preserve existing curated holiday names; only insert newly discovered future closures
+        if (!holidayMap.has(key)) {
+          holidayMap.set(key, {
+            marketId: ex.marketId,
+            date: item.atDate,
+            name: item.eventName || 'Feriado bursátil'
+          });
+        }
       }
     } catch (err) {
       console.warn(`⚠️ Could not fetch holidays for exchange ${ex.code}:`, err.message);

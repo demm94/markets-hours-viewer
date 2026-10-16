@@ -140,5 +140,19 @@ describe('events engine', () => {
       expect(days).toHaveLength(3);
       expect(days.map((d) => d.isoDate)).toEqual(['2026-09-16', '2026-09-17', '2026-09-18']);
     });
+
+    it('should provide upcoming macroeconomic catalysts across Q4 2026 and Q1 2027 for all markets', () => {
+      const oct16Now = DateTime.fromISO('2026-10-16T00:00:00', { zone: 'America/Santiago' });
+      const upcoming = getUpcomingEvents(oct16Now, { maxDaysAhead: 120 });
+
+      expect(upcoming.length).toBeGreaterThanOrEqual(20);
+      const coveredMarkets = new Set(upcoming.map((e) => e.marketId));
+      expect(coveredMarkets.has('nyse')).toBe(true);
+      expect(coveredMarkets.has('sse')).toBe(true);
+      expect(coveredMarkets.has('twse')).toBe(true);
+      expect(coveredMarkets.has('krx')).toBe(true);
+      expect(coveredMarkets.has('nse')).toBe(true);
+      expect(coveredMarkets.has('chile')).toBe(true);
+    });
   });
 });
