@@ -141,6 +141,10 @@
   --radius-2xl: calc(var(--radius) + 6px);
 }
 
+html {
+  overscroll-behavior-y: contain;
+}
+
 body {
   background-color: var(--background);
   color: var(--foreground);
@@ -148,6 +152,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100dvh;
+  overscroll-behavior-y: contain;
 }
 
 /* Living Architectural Background Utilities */
@@ -256,6 +261,20 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .ambient-beam-x-1,
+  .ambient-beam-x-2,
+  .ambient-beam-y-1,
+  .ambient-beam-y-2 {
+    display: none !important;
+  }
+
+  .ambient-orb-1,
+  .ambient-orb-2,
+  .ambient-orb-3 {
+    animation: none !important;
+    transform: none !important;
   }
 }
 

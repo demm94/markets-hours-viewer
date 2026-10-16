@@ -100,11 +100,11 @@ export const TradingWindowsRadar: React.FC<TradingWindowsRadarProps> = React.mem
             <div>
               <h2 className="text-sm sm:text-base font-bold tracking-tight text-zinc-100 flex items-center gap-2">
                 <span>{viewMode === 'radar' ? 'Radar de Concurrencia Bursátil' : 'Línea de Tiempo 24 Horas'}</span>
-                <span className="text-[10px] font-mono font-medium text-zinc-300 bg-white/[0.04] px-2 py-0.5 rounded border border-border">
+                <span className="text-xs font-mono font-medium text-zinc-300 bg-white/[0.04] px-2 py-0.5 rounded border border-border">
                   🇨🇱 Santiago
                 </span>
               </h2>
-              <p className="text-[11px] sm:text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 {viewMode === 'radar'
                   ? 'Ventanas de liquidez y solapamiento institucional durante las 24 horas'
                   : 'Proyección horaria interactiva con cursor y catalizadores macro'}
@@ -170,12 +170,12 @@ export const TradingWindowsRadar: React.FC<TradingWindowsRadarProps> = React.mem
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
                     </span>
-                    <span className="text-[10px] sm:text-xs font-mono font-semibold uppercase tracking-wider text-emerald-400">
+                    <span className="text-xs font-mono font-semibold uppercase tracking-wider text-emerald-400">
                       Ventana Operativa Activa en Santiago
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-1.5 font-mono text-[11px] text-zinc-300">
+                  <div className="flex items-center gap-1.5 font-mono text-xs text-zinc-300">
                     <Clock size={12} className="text-emerald-400" />
                     <span className="tabular-nums">
                       {currentWindow.startTimeFormatted} – {currentWindow.endTimeFormatted} (Chile)
@@ -227,7 +227,7 @@ export const TradingWindowsRadar: React.FC<TradingWindowsRadarProps> = React.mem
                           ? 'lunch'
                           : 'closed'
                       }
-                      className="text-[11px] font-mono font-semibold uppercase"
+                      className="text-xs font-mono font-semibold uppercase"
                     >
                       {currentWindow.liquidityLevel === 'high'
                         ? 'Alta Concurrencia'
@@ -249,7 +249,7 @@ export const TradingWindowsRadar: React.FC<TradingWindowsRadarProps> = React.mem
                         transition={{ duration: 0.4, ease: 'easeOut' }}
                       />
                     </div>
-                    <div className="flex justify-between items-center text-[10px] font-mono text-muted-foreground tabular-nums">
+                    <div className="flex justify-between items-center text-xs font-mono text-muted-foreground tabular-nums">
                       <span>Progreso de ventana: {currentWindow.progressPercent}%</span>
                       <span>
                         {currentWindow.minutesRemaining !== undefined && currentWindow.minutesRemaining > 0
@@ -258,7 +258,7 @@ export const TradingWindowsRadar: React.FC<TradingWindowsRadarProps> = React.mem
                       </span>
                     </div>
                     {nextWindow && (
-                      <div className="flex items-center gap-1.5 text-[10px] font-mono text-muted-foreground pt-1 border-t border-border">
+                      <div className="flex items-center gap-1.5 text-xs font-mono text-muted-foreground pt-1 border-t border-border">
                         <span className="text-zinc-300 font-semibold">Próxima fase:</span>
                         <span>{nextWindow.icon} {nextWindow.name}</span>
                         <span className="text-zinc-500 tabular-nums">({nextWindow.startTimeFormatted} STGO)</span>
@@ -289,14 +289,14 @@ export const TradingWindowsRadar: React.FC<TradingWindowsRadarProps> = React.mem
                       <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-zinc-100 tabular-nums">
                         <Clock size={13} className={win.isCurrent ? 'text-emerald-400' : 'text-zinc-400'} />
                         <span>{win.startTimeFormatted} – {win.endTimeFormatted}</span>
-                        <span className="text-[10px] font-normal text-muted-foreground ml-0.5">
+                        <span className="text-xs font-normal text-muted-foreground ml-0.5">
                           ({win.durationFormatted})
                         </span>
                       </div>
 
                       <Badge
                         variant={isHighLiquidity ? 'open' : isModerate ? 'lunch' : 'closed'}
-                        className="text-[9px] sm:text-[10px] font-mono font-semibold uppercase py-0.5"
+                        className="text-xs font-mono font-semibold uppercase py-0.5"
                       >
                         {isHighLiquidity ? 'Alta Liquidez' : isModerate ? 'Moderada' : 'Pausa'}
                       </Badge>
@@ -310,7 +310,7 @@ export const TradingWindowsRadar: React.FC<TradingWindowsRadarProps> = React.mem
                           {win.name}
                         </h4>
                       </div>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed mt-1">
+                      <p className="text-xs text-muted-foreground leading-relaxed mt-1">
                         {win.subtitle}
                       </p>
                     </div>
@@ -318,11 +318,11 @@ export const TradingWindowsRadar: React.FC<TradingWindowsRadarProps> = React.mem
                     {/* Markets participating in this window */}
                     <div className="flex flex-col gap-1.5 border-t border-border pt-2.5">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-mono uppercase text-muted-foreground font-medium">
+                        <span className="text-xs font-mono uppercase text-muted-foreground font-medium">
                           Mercados en sesión:
                         </span>
                         {win.activeMarkets.length > 0 && (
-                          <span className="text-[10px] font-mono font-semibold text-zinc-300 tabular-nums">
+                          <span className="text-xs font-mono font-semibold text-zinc-300 tabular-nums">
                             {win.concurrencyCount} {win.concurrencyCount === 1 ? 'mercado' : 'mercados'}
                           </span>
                         )}
@@ -333,7 +333,7 @@ export const TradingWindowsRadar: React.FC<TradingWindowsRadarProps> = React.mem
                           {win.activeMarkets.map((m) => (
                             <span
                               key={m.id}
-                              className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-medium font-mono px-2 py-0.5 rounded bg-white/[0.03] border border-border text-zinc-200"
+                              className="inline-flex items-center gap-1 text-xs font-medium font-mono px-2 py-0.5 rounded bg-white/[0.03] border border-border text-zinc-200"
                               title={`${m.name} (${m.code}) - ${m.notes ?? ''}`}
                             >
                               <span>{m.flag}</span>
@@ -342,7 +342,7 @@ export const TradingWindowsRadar: React.FC<TradingWindowsRadarProps> = React.mem
                           ))}
                         </div>
                       ) : (
-                        <div className="text-[11px] font-mono text-zinc-500 flex items-center gap-1.5">
+                        <div className="text-xs font-mono text-zinc-500 flex items-center gap-1.5">
                           <Coffee size={12} />
                           <span>Sin ruedas abiertas (receso interbursátil)</span>
                         </div>
@@ -354,7 +354,7 @@ export const TradingWindowsRadar: React.FC<TradingWindowsRadarProps> = React.mem
                           {win.holidayNames.map((h, i) => (
                             <span
                               key={i}
-                              className="text-[9.5px] font-mono font-medium text-violet-300 bg-violet-500/10 border border-violet-500/25 px-1.5 py-0.5 rounded flex items-center gap-1"
+                              className="text-xs font-mono font-medium text-violet-300 bg-violet-500/10 border border-violet-500/25 px-2 py-0.5 rounded flex items-center gap-1"
                             >
                               <span className="truncate max-w-[200px]">Feriado {h}</span>
                             </span>
@@ -365,8 +365,8 @@ export const TradingWindowsRadar: React.FC<TradingWindowsRadarProps> = React.mem
                       {/* Macro Catalysts in this window */}
                       {win.events.length > 0 && (
                         <div className="flex flex-col gap-1 mt-1">
-                          <span className="text-[9.5px] font-mono text-muted-foreground flex items-center gap-1">
-                            <Sparkles size={10} className="text-amber-400" />
+                          <span className="text-xs font-mono text-muted-foreground flex items-center gap-1">
+                            <Sparkles size={11} className="text-amber-400" />
                             <span>Catalizadores macro en esta franja:</span>
                           </span>
                           <div className="flex flex-wrap gap-1">
@@ -375,7 +375,7 @@ export const TradingWindowsRadar: React.FC<TradingWindowsRadarProps> = React.mem
                                 key={evt.id}
                                 type="button"
                                 onClick={() => onEventClick?.(evt)}
-                                className={`inline-flex items-center gap-1.5 min-h-[32px] text-[10px] font-mono px-2.5 py-1 rounded-md border text-left cursor-pointer transition-colors ${
+                                className={`inline-flex items-center gap-1.5 min-h-[32px] text-xs font-mono px-2.5 py-1 rounded-md border text-left cursor-pointer transition-colors ${
                                   evt.importance === 'high'
                                     ? 'bg-rose-500/10 border-rose-500/30 text-rose-300 hover:bg-rose-500/15'
                                     : 'bg-amber-500/10 border-amber-500/30 text-amber-300 hover:bg-amber-500/15'
@@ -383,9 +383,9 @@ export const TradingWindowsRadar: React.FC<TradingWindowsRadarProps> = React.mem
                                 title={`Ver detalles de ${evt.title}`}
                               >
                                 {evt.importance === 'high' ? (
-                                  <Flame size={10} className="text-rose-400 shrink-0" />
+                                  <Flame size={11} className="text-rose-400 shrink-0" />
                                 ) : (
-                                  <AlertCircle size={10} className="text-amber-400 shrink-0" />
+                                  <AlertCircle size={11} className="text-amber-400 shrink-0" />
                                 )}
                                 <span className="font-semibold tabular-nums">{evt.chileTimeFormatted.split(' ')[0]}</span>
                                 <span className="truncate max-w-[130px] sm:max-w-[170px]">{evt.title}</span>

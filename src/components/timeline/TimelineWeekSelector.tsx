@@ -46,7 +46,7 @@ export const TimelineWeekSelector: React.FC<TimelineWeekSelectorProps> = React.m
 
   return (
     <div className="flex items-center gap-2 w-full pt-1 pb-0.5">
-      <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground whitespace-nowrap pl-0.5">
+      <div className="hidden sm:flex items-center gap-1.5 text-xs font-mono text-muted-foreground whitespace-nowrap pl-0.5">
         <Calendar size={13} className="text-zinc-400" />
         <span className="font-medium text-zinc-400">Proyección:</span>
       </div>
@@ -68,7 +68,7 @@ export const TimelineWeekSelector: React.FC<TimelineWeekSelectorProps> = React.m
               role="tab"
               aria-selected={isSelected}
               onClick={() => onSelectDay(day)}
-              className={`group relative flex items-center gap-1.5 min-h-[34px] sm:min-h-[36px] px-3 py-1 rounded-lg border text-[11px] sm:text-xs font-medium transition-colors duration-150 cursor-pointer whitespace-nowrap outline-none focus-visible:ring-1 focus-visible:ring-sky-400 ${
+              className={`group relative flex items-center gap-1.5 min-h-[34px] sm:min-h-[36px] px-3 py-1 rounded-lg border text-xs font-medium transition-colors duration-150 cursor-pointer whitespace-nowrap outline-none focus-visible:ring-1 focus-visible:ring-sky-400 ${
                 isSelected
                   ? 'border-border-strong bg-white/[0.08] text-zinc-100 font-semibold'
                   : 'border-border bg-muted/40 text-muted-foreground hover:text-zinc-200 hover:bg-muted/80 hover:border-border-strong'

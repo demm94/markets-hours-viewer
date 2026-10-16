@@ -182,7 +182,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                   <h2 id="events-drawer-title" className="text-sm font-semibold text-zinc-100 tracking-tight">
                     Próximos Eventos
                   </h2>
-                  <p id="events-drawer-desc" className="text-[11px] text-muted-foreground">
+                  <p id="events-drawer-desc" className="text-xs text-muted-foreground">
                     Catalizadores macro y eventos clave
                   </p>
                 </div>
@@ -288,7 +288,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
               {/* Secondary filter info */}
               {viewMode === 'events' ? (
                 <div className="flex items-center justify-between pt-0.5">
-                  <span className="text-[11px] text-muted-foreground">
+                  <span className="text-xs text-muted-foreground">
                     {upcomingEvents.length}{' '}
                     {upcomingEvents.length === 1 ? 'evento encontrado' : 'eventos encontrados'}
                   </span>
@@ -297,7 +297,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                     onClick={() => setOnlyHighImportance((prev) => !prev)}
                     aria-pressed={onlyHighImportance}
                     className={cn(
-                      'flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
+                      'flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
                       onlyHighImportance
                         ? 'bg-rose-500/15 border-rose-500/35 text-rose-300'
                         : 'bg-muted/50 border-border text-muted-foreground hover:text-zinc-200'
@@ -309,11 +309,11 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                 </div>
               ) : (
                 <div className="flex items-center justify-between pt-0.5">
-                  <span className="text-[11px] text-muted-foreground">
+                  <span className="text-xs text-muted-foreground">
                     {upcomingHolidays.length}{' '}
                     {upcomingHolidays.length === 1 ? 'feriado próximo' : 'feriados próximos'}
                   </span>
-                  <span className="text-[11px] font-mono text-violet-300/80 font-medium">
+                  <span className="text-xs font-mono text-violet-300/80 font-medium">
                     Ventana 120 días
                   </span>
                 </div>
@@ -342,13 +342,13 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                       className="p-3 rounded-xl bg-card border border-border hover:border-border-strong transition-colors duration-150 flex flex-col gap-2"
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-semibold bg-white/[0.04] text-zinc-200 border border-border">
+                        <span className="flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-semibold bg-white/[0.04] text-zinc-200 border border-border">
                           <span>{holiday.marketFlag}</span>
                           <span>{holiday.marketName}</span>
                         </span>
                         <span
                           className={cn(
-                            'px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider font-mono',
+                            'px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wider font-mono',
                             holiday.relativeDays === 0
                               ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/35'
                               : holiday.relativeDays === 1
@@ -361,14 +361,14 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                       </div>
 
                       <div>
-                        <h3 className="text-xs font-semibold text-zinc-100 leading-snug">
+                        <h3 className="text-sm font-semibold text-zinc-100 leading-snug">
                           {holiday.name}
                         </h3>
                       </div>
 
-                      <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1.5 border-t border-border">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground pt-1.5 border-t border-border">
                         <span className="font-mono text-zinc-300">{holiday.dateFormatted} ({holiday.date})</span>
-                        <span className="text-[10px] font-medium text-violet-300 uppercase tracking-wider">
+                        <span className="text-xs font-medium text-violet-300 uppercase tracking-wider">
                           Mercado cerrado
                         </span>
                       </div>
@@ -412,13 +412,13 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                       {/* Top row: tags & badges */}
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-white/[0.04] text-zinc-200 border border-border">
+                          <span className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-white/[0.04] text-zinc-200 border border-border">
                             <span>{market?.flag ?? '🌐'}</span>
                             <span>{market?.name ?? ev.marketId.toUpperCase()}</span>
                           </span>
 
-                          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-white/[0.03] text-muted-foreground">
-                            <CatIcon className="w-3 h-3" />
+                          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-white/[0.03] text-muted-foreground">
+                            <CatIcon className="w-3.5 h-3.5" />
                             <span>{catInfo.label}</span>
                           </span>
                         </div>
@@ -426,7 +426,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                         <div className="flex items-center gap-1.5">
                           <span
                             className={cn(
-                              'px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider font-mono',
+                              'px-1.5 py-0.5 rounded text-xs font-semibold uppercase tracking-wider font-mono',
                               isHigh
                                 ? 'bg-rose-500/15 text-rose-300 border border-rose-500/35'
                                 : 'bg-amber-500/15 text-amber-300 border border-amber-500/35'
@@ -434,7 +434,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                           >
                             {isHigh ? 'Alta' : 'Media'}
                           </span>
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-white/[0.04] text-zinc-300 border border-border">
+                          <span className="px-1.5 py-0.5 rounded text-xs font-mono font-medium bg-white/[0.04] text-zinc-300 border border-border">
                             {ev.relativeTimeDescriptor}
                           </span>
                         </div>
@@ -442,20 +442,20 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
 
                       {/* Title & description */}
                       <div>
-                        <h3 className="text-xs font-semibold text-zinc-100 leading-snug">
+                        <h3 className="text-sm font-semibold text-zinc-100 leading-snug">
                           {ev.title}
                         </h3>
                         {ev.description && (
-                          <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+                          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
                             {ev.description}
                           </p>
                         )}
                       </div>
 
                       {/* Timestamps conversion grid */}
-                      <div className="grid grid-cols-2 gap-2 mt-1 p-2 rounded-lg bg-muted border border-border text-[11px]">
+                      <div className="grid grid-cols-2 gap-2 mt-1 p-2 rounded-lg bg-muted border border-border text-xs">
                         <div>
-                          <span className="text-[10px] uppercase font-semibold tracking-wider text-zinc-300 flex items-center gap-1">
+                          <span className="text-xs uppercase font-semibold tracking-wider text-zinc-300 flex items-center gap-1">
                             <span>🇨🇱</span> Hora Chile
                           </span>
                           <span className="font-mono font-medium text-zinc-100 mt-0.5 block tabular-nums">
@@ -463,7 +463,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                           </span>
                         </div>
                         <div>
-                          <span className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground flex items-center gap-1">
+                          <span className="text-xs uppercase font-semibold tracking-wider text-muted-foreground flex items-center gap-1">
                             <span>{market?.flag ?? '🌐'}</span> Hora Bolsa
                           </span>
                           <span className="font-mono font-medium text-zinc-300 mt-0.5 block tabular-nums">
@@ -474,7 +474,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
 
                       {/* Forecast / Previous metrics if available */}
                       {(ev.forecast || ev.previous) && (
-                        <div className="flex items-center gap-4 text-[10px] text-muted-foreground pt-0.5 px-0.5">
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground pt-0.5 px-0.5">
                           {ev.forecast && (
                             <span>
                               <strong className="text-foreground/80">Previsto:</strong> {ev.forecast}
@@ -495,7 +495,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
           )}
 
             {/* Footer */}
-            <div className="px-4 py-2.5 border-t border-border bg-popover/90 text-[10px] text-muted-foreground flex items-center justify-between">
+            <div className="px-4 py-2.5 border-t border-border bg-popover/90 text-xs text-muted-foreground flex items-center justify-between">
               <span>Sincronizado con IANA America/Santiago</span>
               <span className="font-mono">PWA Offline ready</span>
             </div>

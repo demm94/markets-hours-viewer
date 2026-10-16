@@ -40,30 +40,27 @@ export const AmbientBackground: React.FC<AmbientBackgroundProps> = React.memo(({
 
       {/* 3. Living Volumetric Aurora Orbs (GPU compositor animated) */}
       <div
-        className="ambient-orb-1 absolute -top-[12%] left-[8%] w-[38rem] h-[38rem] rounded-full opacity-80"
+        className="ambient-orb-1 absolute -top-[10%] left-[5%] w-80 h-80 sm:w-[30rem] sm:h-[30rem] lg:w-[38rem] lg:h-[38rem] rounded-full opacity-70 sm:opacity-80 blur-[50px] sm:blur-[75px] lg:blur-[85px] transform-gpu pointer-events-none"
         style={{
           background:
-            'radial-gradient(circle, rgba(56, 189, 248, 0.22) 0%, rgba(34, 211, 238, 0.08) 45%, transparent 72%)',
-          filter: 'blur(80px)'
+            'radial-gradient(circle, rgba(56, 189, 248, 0.22) 0%, rgba(34, 211, 238, 0.08) 45%, transparent 72%)'
         }}
       />
 
       <div
-        className="ambient-orb-2 absolute top-[18%] right-[4%] w-[36rem] h-[36rem] rounded-full transition-colors duration-1000 opacity-85"
+        className="ambient-orb-2 absolute top-[20%] right-[3%] w-72 h-72 sm:w-[28rem] sm:h-[28rem] lg:w-[36rem] lg:h-[36rem] rounded-full transition-colors duration-1000 opacity-75 sm:opacity-85 blur-[50px] sm:blur-[75px] lg:blur-[85px] transform-gpu pointer-events-none"
         style={{
           background: hasActiveMarkets
             ? 'radial-gradient(circle, rgba(16, 185, 129, 0.20) 0%, rgba(56, 189, 248, 0.08) 48%, transparent 72%)'
-            : 'radial-gradient(circle, rgba(99, 102, 241, 0.20) 0%, rgba(56, 189, 248, 0.07) 48%, transparent 72%)',
-          filter: 'blur(85px)'
+            : 'radial-gradient(circle, rgba(99, 102, 241, 0.20) 0%, rgba(56, 189, 248, 0.07) 48%, transparent 72%)'
         }}
       />
 
       <div
-        className="ambient-orb-3 absolute -bottom-[15%] left-[22%] w-[42rem] h-[42rem] rounded-full opacity-75"
+        className="ambient-orb-3 absolute -bottom-[12%] left-[18%] w-80 h-80 sm:w-[32rem] sm:h-[32rem] lg:w-[42rem] lg:h-[42rem] rounded-full opacity-65 sm:opacity-75 blur-[55px] sm:blur-[80px] lg:blur-[90px] transform-gpu pointer-events-none"
         style={{
           background:
-            'radial-gradient(circle, rgba(139, 92, 246, 0.16) 0%, rgba(56, 189, 248, 0.06) 50%, transparent 72%)',
-          filter: 'blur(90px)'
+            'radial-gradient(circle, rgba(139, 92, 246, 0.16) 0%, rgba(56, 189, 248, 0.06) 50%, transparent 72%)'
         }}
       />
 
@@ -93,9 +90,9 @@ export const AmbientBackground: React.FC<AmbientBackgroundProps> = React.memo(({
           }}
         />
 
-        {/* 5. Animated Telemetry Light Beams ("Order Flow Pulses") along grid lines */}
+        {/* 5. Animated Telemetry Light Beams (desktop & tablet only for peak mobile performance) */}
         <div
-          className="ambient-beam-x-1 absolute top-[192px] left-0 h-[1px] w-72"
+          className="ambient-beam-x-1 absolute top-[192px] left-0 h-[1px] w-72 hidden sm:block"
           style={{
             background:
               'linear-gradient(90deg, transparent 0%, rgba(56, 189, 248, 0.65) 50%, rgba(255, 255, 255, 0.9) 85%, transparent 100%)',
@@ -104,7 +101,7 @@ export const AmbientBackground: React.FC<AmbientBackgroundProps> = React.memo(({
         />
 
         <div
-          className="ambient-beam-x-2 absolute top-[432px] left-0 h-[1px] w-96"
+          className="ambient-beam-x-2 absolute top-[432px] left-0 h-[1px] w-96 hidden sm:block"
           style={{
             background: hasActiveMarkets
               ? 'linear-gradient(90deg, transparent 0%, rgba(16, 185, 129, 0.65) 50%, rgba(110, 231, 183, 0.9) 85%, transparent 100%)'
@@ -116,7 +113,7 @@ export const AmbientBackground: React.FC<AmbientBackgroundProps> = React.memo(({
         />
 
         <div
-          className="ambient-beam-y-1 absolute top-0 left-[240px] w-[1px] h-64"
+          className="ambient-beam-y-1 absolute top-0 left-[240px] w-[1px] h-64 hidden sm:block"
           style={{
             background:
               'linear-gradient(180deg, transparent 0%, rgba(56, 189, 248, 0.55) 60%, rgba(255, 255, 255, 0.85) 90%, transparent 100%)',
