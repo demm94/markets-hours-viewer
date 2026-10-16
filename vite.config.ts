@@ -19,7 +19,8 @@ export default defineConfig({
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
-          luxon: ['luxon']
+          luxon: ['luxon'],
+          motion: ['framer-motion']
         }
       }
     }
