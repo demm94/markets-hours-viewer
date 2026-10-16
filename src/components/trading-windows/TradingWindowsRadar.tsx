@@ -38,8 +38,9 @@ interface TradingWindowsRadarProps {
   onPointerMove: (e: React.PointerEvent<HTMLDivElement>) => void;
   onPointerUp: (e: React.PointerEvent<HTMLDivElement>) => void;
   onPointerCancel?: (e: React.PointerEvent<HTMLDivElement>) => void;
-  onPointerLeave: () => void;
+  onPointerLeave: (e: React.PointerEvent<HTMLDivElement>) => void;
   onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
+  onResetScrubber?: () => void;
   rollingDays?: RollingDayInfo[];
   selectedIsoDate?: string;
   onSelectDay?: (day: RollingDayInfo) => void;
@@ -112,11 +113,11 @@ export const TradingWindowsRadar: React.FC<TradingWindowsRadarProps> = React.mem
           </div>
 
           {/* Dual Mode Switch */}
-          <div className="flex items-center rounded-xl border border-border/80 bg-muted/60 p-1 gap-1 select-none">
+          <div className="flex items-center w-full sm:w-auto rounded-xl border border-border/80 bg-muted/60 p-1 gap-1 select-none">
             <button
               type="button"
               onClick={() => setViewMode('radar')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
+              className={`flex-1 sm:flex-initial justify-center flex items-center gap-1.5 min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
                 viewMode === 'radar'
                   ? 'bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.25)]'
                   : 'text-muted-foreground hover:text-white'
@@ -128,7 +129,7 @@ export const TradingWindowsRadar: React.FC<TradingWindowsRadarProps> = React.mem
             <button
               type="button"
               onClick={() => setViewMode('timeline')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
+              className={`flex-1 sm:flex-initial justify-center flex items-center gap-1.5 min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
                 viewMode === 'timeline'
                   ? 'bg-sky-500/20 border border-sky-400/50 text-sky-300 shadow-[0_0_12px_rgba(56,189,248,0.25)]'
                   : 'text-muted-foreground hover:text-white'
@@ -375,7 +376,7 @@ export const TradingWindowsRadar: React.FC<TradingWindowsRadarProps> = React.mem
                                 key={evt.id}
                                 type="button"
                                 onClick={() => onEventClick?.(evt)}
-                                className={`inline-flex items-center gap-1 text-[9.5px] font-mono px-2 py-0.5 rounded border text-left cursor-pointer transition-all hover:scale-[1.02] ${
+                                className={`inline-flex items-center gap-1.5 min-h-[32px] text-[10px] font-mono px-2.5 py-1 rounded-md border text-left cursor-pointer transition-all hover:scale-[1.02] ${
                                   evt.importance === 'high'
                                     ? 'bg-rose-500/15 border-rose-400/40 text-rose-300 shadow-[0_0_8px_rgba(244,63,94,0.2)]'
                                     : 'bg-amber-500/15 border-amber-400/40 text-amber-300'

@@ -112,4 +112,36 @@ describe('trading-windows engine', () => {
     expect(usSession?.activeMarkets.some((m) => m.id === 'nyse')).toBe(true);
     expect(usSession?.liquidityLevel).toBe('high');
   });
+
+  it('maintains strictly positive durations and accurate India regular close across Chile Summer (UTC-3) and Winter (UTC-4) DST regimes', () => {
+    // Chile Summer Time (UTC-3): NSE pre-market is 00:30-00:45 (30-45m) and regular is 00:45-07:00 (45-420m)
+    const summerDate = DateTime.fromISO('2026-10-16T05:00:00', { zone: CHILE_TZ });
+    const summerWindows = getTradingWindows(summerDate, MARKETS, 300);
+
+    for (const w of summerWindows) {
+      expect(w.endMinute).toBeGreaterThan(w.startMinute);
+      expect(w.durationFormatted).not.toContain('-');
+    }
+
+    const summerIndiaSolo = summerWindows.find((w) => w.id === 'india_solo');
+    expect(summerIndiaSolo?.startMinute).toBe(240);
+    expect(summerIndiaSolo?.endMinute).toBe(420); // 07:00 Chile (15:30 IST), not 00:45 pre-market end
+    expect(summerIndiaSolo?.durationFormatted).toBe('3h');
+    expect(summerIndiaSolo?.activeMarkets.some((m) => m.id === 'nse')).toBe(true);
+
+    // Chile Winter Time (UTC-4): NSE regular morning segment is 00:00-06:00 (0-360m)
+    const winterDate = DateTime.fromISO('2026-06-17T05:00:00', { zone: CHILE_TZ });
+    const winterWindows = getTradingWindows(winterDate, MARKETS, 300);
+
+    for (const w of winterWindows) {
+      expect(w.endMinute).toBeGreaterThan(w.startMinute);
+      expect(w.durationFormatted).not.toContain('-');
+    }
+
+    const winterIndiaSolo = winterWindows.find((w) => w.id === 'india_solo');
+    expect(winterIndiaSolo?.startMinute).toBe(240);
+    expect(winterIndiaSolo?.endMinute).toBe(360); // 06:00 Chile (15:30 IST)
+    expect(winterIndiaSolo?.durationFormatted).toBe('2h');
+    expect(winterIndiaSolo?.activeMarkets.some((m) => m.id === 'nse')).toBe(true);
+  });
 });

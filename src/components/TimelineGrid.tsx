@@ -27,8 +27,9 @@ interface TimelineGridProps {
   onPointerMove: (e: React.PointerEvent<HTMLDivElement>) => void;
   onPointerUp: (e: React.PointerEvent<HTMLDivElement>) => void;
   onPointerCancel?: (e: React.PointerEvent<HTMLDivElement>) => void;
-  onPointerLeave: () => void;
+  onPointerLeave: (e: React.PointerEvent<HTMLDivElement>) => void;
   onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
+  onResetScrubber?: () => void;
   rollingDays?: RollingDayInfo[];
   selectedIsoDate?: string;
   onSelectDay?: (day: RollingDayInfo) => void;
@@ -53,6 +54,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
   onPointerCancel,
   onPointerLeave,
   onKeyDown,
+  onResetScrubber,
   isToday = true
 }) => {
   // Default to collapsed on mobile viewports (<= 768px) to maximize timeline space
@@ -73,6 +75,8 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
       <TimelineHeader
         isColumnCollapsed={isColumnCollapsed}
         onToggleColumn={toggleColumn}
+        isScrubbing={isHovering}
+        onResetScrubber={onResetScrubber}
       />
 
       {/* Horizontal Table with Left Frozen Column + 24h Bars */}

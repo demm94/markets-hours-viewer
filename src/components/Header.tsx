@@ -30,24 +30,25 @@ export const Header: React.FC<HeaderProps> = React.memo(({
     <header className="flex flex-col md:flex-row md:justify-between items-stretch md:items-center gap-1.5 sm:gap-3 md:gap-5 px-2.5 py-1.5 sm:px-4 sm:py-3 md:px-5 md:py-2.5 rounded-2xl border border-border bg-card backdrop-blur-xl shadow-neon relative overflow-hidden neon-edge">
       <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/[0.06] to-transparent [animation:neon-sheen_9s_ease-in-out_infinite]" />
 
-      <div className="flex items-center justify-between w-full md:w-auto gap-2 sm:gap-3.5">
-        <div className="flex items-center gap-2 sm:gap-2.5">
-          <img src="/favicon.svg" alt="Markets View Logo" className="w-5 h-5 sm:w-6 sm:h-6 rounded-md drop-shadow-[0_2px_10px_rgba(56,189,248,0.55)]" width="24" height="24" />
-          <h1 className="text-sm sm:text-base md:text-lg font-extrabold tracking-tight neon-text whitespace-nowrap">
+      <div className="flex items-center justify-between w-full md:w-auto gap-1.5 sm:gap-3.5 min-w-0">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
+          <img src="/favicon.svg" alt="Markets View Logo" className="w-5 h-5 sm:w-6 sm:h-6 rounded-md drop-shadow-[0_2px_10px_rgba(56,189,248,0.55)] shrink-0" width="24" height="24" />
+          <h1 className="text-sm sm:text-base md:text-lg font-extrabold tracking-tight neon-text whitespace-nowrap truncate">
             Markets View
           </h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <motion.div
             key={openMarketsCount}
             initial={{ scale: 0.92 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 400, damping: 20 }}
           >
-            <Badge variant="open" showDot={false} className="gap-1.5 sm:gap-2 px-2.5 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs font-semibold">
+            <Badge variant="open" showDot={false} className="min-h-[32px] sm:min-h-[36px] gap-1 sm:gap-2 px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-semibold whitespace-nowrap">
               <Activity size={11} className="animate-pulse text-emerald-400 shrink-0" />
               <span>
-                <strong className="text-emerald-300 font-bold">{openMarketsCount}</strong>/{totalMarketsCount} abiertos
+                <strong className="text-emerald-300 font-bold">{openMarketsCount}</strong>/{totalMarketsCount}
+                <span className="hidden min-[360px]:inline"> abiertos</span>
               </span>
             </Badge>
           </motion.div>
@@ -56,7 +57,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
             <button
               type="button"
               onClick={onOpenEvents}
-              className="relative flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-md border border-border bg-white/[0.04] hover:border-border-strong hover:bg-white/[0.07] hover:text-white active:bg-white/[0.10] text-[10px] sm:text-xs font-semibold text-slate-200 transition-[color,background-color,border-color,box-shadow] duration-200 cursor-pointer"
+              className="relative flex items-center gap-1.5 min-h-[36px] px-2.5 sm:px-3 py-1.5 rounded-lg border border-border bg-white/[0.04] hover:border-border-strong hover:bg-white/[0.07] hover:text-white active:bg-white/[0.10] text-[10px] sm:text-xs font-semibold text-slate-200 transition-[color,background-color,border-color,box-shadow] duration-200 cursor-pointer whitespace-nowrap"
               title="Ver próximos eventos y catalizadores"
             >
               <Calendar className="w-3.5 h-3.5 text-neon-sky shrink-0" />

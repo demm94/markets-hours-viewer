@@ -68,7 +68,7 @@ export const TimelineWeekSelector: React.FC<TimelineWeekSelectorProps> = React.m
               role="tab"
               aria-selected={isSelected}
               onClick={() => onSelectDay(day)}
-              className={`group relative flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl border text-[11px] sm:text-xs font-medium transition-all duration-150 cursor-pointer whitespace-nowrap outline-none focus-visible:ring-1 focus-visible:ring-sky-400 ${
+              className={`group relative flex items-center gap-1.5 min-h-[36px] sm:min-h-[38px] px-3 py-1.5 rounded-xl border text-[11px] sm:text-xs font-medium transition-all duration-150 cursor-pointer whitespace-nowrap outline-none focus-visible:ring-1 focus-visible:ring-sky-400 ${
                 isSelected
                   ? 'border-sky-400/90 bg-sky-500/20 text-white font-semibold shadow-[0_0_12px_rgba(56,189,248,0.25)] ring-1 ring-sky-400/40'
                   : 'border-border/60 bg-muted/40 text-muted-foreground hover:text-foreground hover:bg-muted/80 hover:border-border/90'

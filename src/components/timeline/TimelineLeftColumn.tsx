@@ -99,11 +99,11 @@ export const TimelineLeftColumn: React.FC<TimelineLeftColumnProps> = React.memo(
           onClick={onToggleColumn}
           whileHover={{ scale: 1.08 }}
           whileTap={{ scale: 0.92 }}
-          className="relative inline-flex items-center justify-center w-5 h-5 sm:w-7 sm:h-7 rounded-md bg-white/[0.04] border border-border text-foreground/80 hover:bg-sky-400/20 hover:border-sky-400/40 hover:text-sky-400 transition-colors cursor-pointer before:absolute before:-inset-2 before:content-['']"
+          className="relative inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-md bg-white/[0.04] border border-border text-foreground/80 hover:bg-sky-400/20 hover:border-sky-400/40 hover:text-sky-400 transition-colors cursor-pointer before:absolute before:-inset-2 before:content-['']"
           title={isColumnCollapsed ? 'Expandir nombres y detalles de mercados' : 'Colapsar a solo banderas'}
           aria-label={isColumnCollapsed ? 'Expandir columna' : 'Colapsar columna'}
         >
-          {isColumnCollapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
+          {isColumnCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
         </motion.button>
       </div>
 

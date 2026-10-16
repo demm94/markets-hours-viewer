@@ -1,5 +1,5 @@
 import React from 'react';
-import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { PanelLeftClose, PanelLeftOpen, RotateCcw } from 'lucide-react';
 import { Button } from '../ui/button';
 import { RollingDayInfo } from '../../core/types';
 import { TimelineWeekSelector } from './TimelineWeekSelector';
@@ -7,6 +7,8 @@ import { TimelineWeekSelector } from './TimelineWeekSelector';
 interface TimelineHeaderProps {
   isColumnCollapsed: boolean;
   onToggleColumn: () => void;
+  isScrubbing?: boolean;
+  onResetScrubber?: () => void;
   days?: RollingDayInfo[];
   selectedIsoDate?: string;
   onSelectDay?: (day: RollingDayInfo) => void;
@@ -15,6 +17,8 @@ interface TimelineHeaderProps {
 export const TimelineHeader: React.FC<TimelineHeaderProps> = React.memo(({
   isColumnCollapsed,
   onToggleColumn,
+  isScrubbing = false,
+  onResetScrubber,
   days,
   selectedIsoDate,
   onSelectDay
@@ -28,12 +32,24 @@ export const TimelineHeader: React.FC<TimelineHeaderProps> = React.memo(({
             🇨🇱 Chile
           </span>
         </h2>
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3">
+          {isScrubbing && onResetScrubber && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onResetScrubber}
+              className="gap-1 min-h-[36px] px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs font-semibold border-sky-400/40 bg-sky-500/15 text-sky-300 hover:bg-sky-500/25 hover:text-white"
+              title="Restablecer cursor a la hora actual"
+            >
+              <RotateCcw size={12} />
+              <span>Volver a Ahora</span>
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"
             onClick={onToggleColumn}
-            className="gap-1 min-h-[26px] sm:min-h-[32px] px-2 sm:px-3 py-0.5 text-[10px] sm:text-xs font-semibold"
+            className="gap-1 min-h-[36px] px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs font-semibold"
             title={isColumnCollapsed ? 'Expandir nombres y detalles de mercados' : 'Colapsar a solo banderas para más espacio'}
           >
             {isColumnCollapsed ? <PanelLeftOpen size={13} /> : <PanelLeftClose size={13} />}

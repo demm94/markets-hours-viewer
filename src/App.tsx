@@ -59,7 +59,8 @@ export const App: React.FC = () => {
     handlePointerUp,
     handlePointerCancel,
     handlePointerLeave,
-    handleKeyDown
+    handleKeyDown,
+    resetToNow
   } = useScrubber(currentMinutes);
 
   const referenceDayKey = `${now.year}-${now.month}-${now.day}`;
@@ -228,6 +229,7 @@ export const App: React.FC = () => {
             onPointerCancel={handlePointerCancel}
             onPointerLeave={handlePointerLeave}
             onKeyDown={handleKeyDown}
+            onResetScrubber={resetToNow}
             rollingDays={rollingDays}
             selectedIsoDate={activeDay.isoDate}
             onSelectDay={handleSelectDay}

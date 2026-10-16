@@ -9,7 +9,7 @@ export interface UseScrubberResult {
   handlePointerMove: (e: React.PointerEvent<HTMLDivElement>) => void;
   handlePointerUp: (e: React.PointerEvent<HTMLDivElement>) => void;
   handlePointerCancel: (e: React.PointerEvent<HTMLDivElement>) => void;
-  handlePointerLeave: () => void;
+  handlePointerLeave: (e?: React.PointerEvent<HTMLDivElement>) => void;
   handleKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => void;
   resetToNow: () => void;
   setScrubberMinutes: (minutes: number | null) => void;
@@ -78,6 +78,7 @@ export function useScrubber(defaultMinutes: number): UseScrubberResult {
     (e: React.PointerEvent<HTMLDivElement>) => {
       setIsDragging(false);
       setIsHovering(false);
+      setScrubberMinutes(null);
       try {
         if (e.currentTarget.hasPointerCapture(e.pointerId)) {
           e.currentTarget.releasePointerCapture(e.pointerId);
@@ -89,12 +90,19 @@ export function useScrubber(defaultMinutes: number): UseScrubberResult {
     []
   );
 
-  const handlePointerLeave = useCallback(() => {
-    if (!isDragging) {
-      setIsHovering(false);
-      setScrubberMinutes(null);
-    }
-  }, [isDragging]);
+  const handlePointerLeave = useCallback(
+    (e?: React.PointerEvent<HTMLDivElement>) => {
+      // On touch/pen devices, keep the scrubbed position persistent after lifting the finger
+      if (e && e.pointerType !== 'mouse') {
+        return;
+      }
+      if (!isDragging) {
+        setIsHovering(false);
+        setScrubberMinutes(null);
+      }
+    },
+    [isDragging]
+  );
 
   const resetToNow = useCallback(() => {
     setScrubberMinutes(null);

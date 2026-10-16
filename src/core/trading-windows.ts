@@ -48,11 +48,13 @@ export function getTradingWindows(
   }
 
   const nyseSegments = marketSegmentsMap['nyse'] ?? [];
-  const nyseStart = nyseSegments[0]?.startMinute ?? 630;  // 10:30 default
-  const nyseEnd = nyseSegments[0]?.endMinute ?? 1020;     // 17:00 default
+  const nyseRegular = nyseSegments.find((s) => s.type === 'regular');
+  const nyseStart = nyseRegular?.startMinute ?? 630;  // 10:30 default
+  const nyseEnd = nyseRegular?.endMinute ?? 1020;     // 17:00 default
 
   const nseSegments = marketSegmentsMap['nse'] ?? [];
-  const nseEnd = nseSegments[0]?.endMinute ?? 420;        // 07:00 default
+  const nseMorningRegular = nseSegments.find((s) => s.type === 'regular' && s.startMinute < 600);
+  const nseEnd = nseMorningRegular?.endMinute ?? 420; // 07:00 default
 
   const twseSegments = marketSegmentsMap['twse'] ?? [];
   const asiaReopenStart = twseSegments.find((s) => s.startMinute >= 1200)?.startMinute ?? 1320; // 22:00 default

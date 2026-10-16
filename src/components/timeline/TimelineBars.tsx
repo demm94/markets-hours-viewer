@@ -23,7 +23,7 @@ interface TimelineBarsProps {
   onPointerMove: (e: React.PointerEvent<HTMLDivElement>) => void;
   onPointerUp: (e: React.PointerEvent<HTMLDivElement>) => void;
   onPointerCancel?: (e: React.PointerEvent<HTMLDivElement>) => void;
-  onPointerLeave: () => void;
+  onPointerLeave: (e: React.PointerEvent<HTMLDivElement>) => void;
   onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
   isToday?: boolean;
 }
@@ -72,7 +72,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
 
   return (
     <div
-      className="timeline-bars-container flex-1 w-full min-w-0 relative flex flex-col cursor-crosshair touch-none select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/50"
+      className="timeline-bars-container flex-1 w-full min-w-0 relative flex flex-col cursor-crosshair touch-pan-y select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/50"
       ref={containerRef}
       tabIndex={0}
       role="slider"
