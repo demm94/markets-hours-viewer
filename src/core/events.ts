@@ -1,5 +1,12 @@
 import { DateTime } from 'luxon';
-import { MarketEvent, FormattedMarketEvent, EventImportance, TimelineEventMarkerData, RollingDayInfo } from './types';
+import {
+  MarketEvent,
+  FormattedMarketEvent,
+  EventImportance,
+  EventCategory,
+  TimelineEventMarkerData,
+  RollingDayInfo
+} from './types';
 import { MARKETS, CHILE_CONFIG } from './markets';
 
 export const MARKET_TIMEZONE_MAP: Record<string, string> = {
@@ -182,4 +189,96 @@ export function getRollingDaysWindow(
   }
 
   return result;
+}
+
+/**
+ * Accurately infers the macroeconomic category for an event title using word boundaries and domain precedence.
+ */
+export function inferCategory(eventTitle: string): EventCategory {
+  const text = (eventTitle || '').toLowerCase();
+
+  // 1. Employment (higher specificity: unemployment, nonfarm payrolls, jobless claims)
+  if (
+    /\b(unemployment|payroll|payrolls|jobless|employment|desempleo|empleo|labor force|labor market|non-?farm|adp|jolts)\b/.test(
+      text
+    )
+  ) {
+    return 'employment';
+  }
+
+  // 2. Inflation (cpi, ppi, pce, inflation, price index, ipc, deflator)
+  // Ensure "shipping" or "clipping" does not trigger "ppi"
+  if (
+    /\b(cpi|ipc|inflation|inflaci[oó]n|price index|\bppi\b|\bpce\b|deflator|cost of living)\b/.test(
+      text
+    )
+  ) {
+    return 'inflation';
+  }
+
+  // 3. Central Bank (rates, FOMC, Fed meetings, monetary policy, repo rate)
+  // Ensure "confederation" does not trigger "fed"
+  if (
+    /\b(interest rate|policy rate|loan prime rate|fomc|federal reserve|\bfed\b|\bpboc\b|central bank|banco central|monetary policy|pol[ií]tica monetaria|\brpm\b|\blpr\b|repo rate|tasa de inter[eé]s|discount rate|target rate|rate decision|decisi[oó]n de tasa|decisi[oó]n tasa)\b/.test(
+      text
+    )
+  ) {
+    return 'central_bank';
+  }
+
+  // 4. Growth, Output & Trade (GDP, PIB, PMI, Retail, Industrial Production, Trade Balance)
+  if (
+    /\b(gdp|pib|growth|trade balance|balanza comercial|industrial production|producci[oó]n industrial|retail sales|ventas minoristas|pmi|ism|manufacturing|servicios|current account)\b/.test(
+      text
+    )
+  ) {
+    return 'gdp';
+  }
+
+  // 5. Holidays
+  if (/\b(holiday|feriado|closure|festivo)\b/.test(text)) {
+    return 'holidays';
+  }
+
+  return 'gdp';
+}
+
+export interface DataFreshnessStatus {
+  latestEventDateStr: string;
+  isStale: boolean;
+  daysUntilExpiry: number;
+  message?: string;
+}
+
+/**
+ * Computes calendar data coverage horizon and warns when data needs a sync or is expired.
+ */
+export function getDataFreshnessStatus(
+  chileNow: DateTime = DateTime.now().setZone(CHILE_CONFIG.timezone)
+): DataFreshnessStatus {
+  const latestEventUtc =
+    MARKET_EVENTS.length > 0
+      ? MARKET_EVENTS.reduce(
+          (max, e) => (e.timestampUtc > max ? e.timestampUtc : max),
+          MARKET_EVENTS[0].timestampUtc
+        )
+      : '2026-01-01';
+
+  const latestEventDate = DateTime.fromISO(latestEventUtc, { zone: 'America/Santiago' });
+  const daysUntilExpiry = Math.round(latestEventDate.diff(chileNow, 'days').days);
+  const isStale = daysUntilExpiry <= 14;
+
+  return {
+    latestEventDateStr: latestEventDate.toFormat('yyyy-MM-dd'),
+    isStale,
+    daysUntilExpiry,
+    ...(isStale
+      ? {
+          message:
+            daysUntilExpiry <= 0
+              ? 'El calendario macroeconómico requiere actualización de datos para el período actual.'
+              : `La cobertura del calendario vence en ${daysUntilExpiry} días. Se recomienda sincronizar.`
+        }
+      : {})
+  };
 }

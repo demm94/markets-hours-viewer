@@ -7,7 +7,9 @@ import {
   getUpcomingEvents,
   hasHighImpactEventsToday,
   getEventsForChileDay,
-  getRollingDaysWindow
+  getRollingDaysWindow,
+  inferCategory,
+  getDataFreshnessStatus
 } from './events';
 import { MarketEvent } from './types';
 
@@ -155,4 +157,75 @@ describe('events engine', () => {
       expect(coveredMarkets.has('chile')).toBe(true);
     });
   });
+
+  describe('inferCategory', () => {
+    it('should correctly classify employment events with priority over central bank rates', () => {
+      expect(inferCategory('Unemployment Rate')).toBe('employment');
+      expect(inferCategory('Initial Jobless Claims')).toBe('employment');
+      expect(inferCategory('Nonfarm Payrolls')).toBe('employment');
+      expect(inferCategory('US ADP Employment Change')).toBe('employment');
+      expect(inferCategory('Tasa de desempleo INE')).toBe('employment');
+      expect(inferCategory('JOLTS Job Openings')).toBe('employment');
+    });
+
+    it('should correctly classify inflation events with word boundary safety', () => {
+      expect(inferCategory('CPI YoY')).toBe('inflation');
+      expect(inferCategory('US PPI Final Demand MoM')).toBe('inflation');
+      expect(inferCategory('Core PCE Price Index')).toBe('inflation');
+      expect(inferCategory('Inflation Rate YoY')).toBe('inflation');
+      expect(inferCategory('IPC Mensual')).toBe('inflation');
+    });
+
+    it('should prevent false positives from substring collisions in word boundaries', () => {
+      // "shipping" or "clipping" contains "ppi" substring but is not PPI
+      expect(inferCategory('Global Shipping Freight Index')).not.toBe('inflation');
+      // "confederation" contains "fed" substring but is not the Federal Reserve
+      expect(inferCategory('Confederation of British Industry Survey')).not.toBe('central_bank');
+    });
+
+    it('should correctly classify central bank decisions and meetings', () => {
+      expect(inferCategory('FOMC Rate Decision')).toBe('central_bank');
+      expect(inferCategory('Federal Reserve Interest Rate Decision')).toBe('central_bank');
+      expect(inferCategory('PBoC Loan Prime Rate 1Y')).toBe('central_bank');
+      expect(inferCategory('Decisión de política monetaria RPM Banco Central')).toBe('central_bank');
+      expect(inferCategory('Bank of Korea Policy Rate')).toBe('central_bank');
+    });
+
+    it('should correctly classify growth, PMI and GDP metrics', () => {
+      expect(inferCategory('GDP Annual Growth Rate')).toBe('gdp');
+      expect(inferCategory('PMI Manufacturero S&P Global')).toBe('gdp');
+      expect(inferCategory('ISM Manufacturing PMI')).toBe('gdp');
+      expect(inferCategory('Retail Sales MoM')).toBe('gdp');
+      expect(inferCategory('Producción Industrial')).toBe('gdp');
+      expect(inferCategory('Trade Balance')).toBe('gdp');
+    });
+
+    it('should correctly classify holidays', () => {
+      expect(inferCategory('Market Holiday - Thanksgiving')).toBe('holidays');
+      expect(inferCategory('Feriado Bancario - Fiestas Patrias')).toBe('holidays');
+    });
+  });
+
+  describe('getDataFreshnessStatus', () => {
+    it('should report fresh data when current time is well within calendar horizon', () => {
+      const sepNow = DateTime.fromISO('2026-09-01T12:00:00', { zone: 'America/Santiago' });
+      const status = getDataFreshnessStatus(sepNow);
+
+      expect(status.isStale).toBe(false);
+      expect(status.daysUntilExpiry).toBeGreaterThan(14);
+      expect(status.message).toBeUndefined();
+      expect(status.latestEventDateStr).toBeDefined();
+    });
+
+    it('should warn when reference time is close to or past calendar horizon', () => {
+      // Future date past the latest event in 2027
+      const lateFuture = DateTime.fromISO('2027-04-01T12:00:00', { zone: 'America/Santiago' });
+      const status = getDataFreshnessStatus(lateFuture);
+
+      expect(status.isStale).toBe(true);
+      expect(status.daysUntilExpiry).toBeLessThanOrEqual(14);
+      expect(status.message).toContain('requiere actualización');
+    });
+  });
 });
+

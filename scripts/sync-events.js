@@ -23,23 +23,60 @@ const COUNTRY_TO_MARKET = {
 };
 
 function inferCategory(eventTitle) {
-  const lower = eventTitle.toLowerCase();
-  if (lower.includes('rate') || lower.includes('fed') || lower.includes('fomc') || lower.includes('central bank') || lower.includes('tasa') || lower.includes('policy')) {
-    return 'central_bank';
-  }
-  if (lower.includes('cpi') || lower.includes('inflation') || lower.includes('ipc') || lower.includes('price index') || lower.includes('ppi')) {
-    return 'inflation';
-  }
-  if (lower.includes('gdp') || lower.includes('pib') || lower.includes('growth') || lower.includes('trade balance') || lower.includes('industrial') || lower.includes('retail')) {
-    return 'gdp';
-  }
-  if (lower.includes('pmi') || lower.includes('employment') || lower.includes('payroll') || lower.includes('jobless') || lower.includes('desempleo')) {
+  const text = (eventTitle || '').toLowerCase();
+
+  // 1. Employment (unemployment, nonfarm payrolls, jobless claims)
+  if (
+    /\b(unemployment|payroll|payrolls|jobless|employment|desempleo|empleo|labor force|labor market|non-?farm|adp|jolts)\b/.test(
+      text
+    )
+  ) {
     return 'employment';
   }
-  if (lower.includes('holiday') || lower.includes('feriado')) {
+
+  // 2. Inflation (cpi, ppi, pce, inflation, price index, ipc, deflator)
+  if (
+    /\b(cpi|ipc|inflation|inflaci[oó]n|price index|\bppi\b|\bpce\b|deflator|cost of living)\b/.test(
+      text
+    )
+  ) {
+    return 'inflation';
+  }
+
+  // 3. Central Bank (rates, FOMC, Fed meetings, monetary policy, repo rate)
+  if (
+    /\b(interest rate|policy rate|loan prime rate|fomc|federal reserve|\bfed\b|\bpboc\b|central bank|banco central|monetary policy|pol[ií]tica monetaria|\brpm\b|\blpr\b|repo rate|tasa de inter[eé]s|discount rate|target rate|rate decision|decisi[oó]n de tasa|decisi[oó]n tasa)\b/.test(
+      text
+    )
+  ) {
+    return 'central_bank';
+  }
+
+  // 4. Growth, Output & Trade (GDP, PIB, PMI, Retail, Industrial Production, Trade Balance)
+  if (
+    /\b(gdp|pib|growth|trade balance|balanza comercial|industrial production|producci[oó]n industrial|retail sales|ventas minoristas|pmi|ism|manufacturing|servicios|current account)\b/.test(
+      text
+    )
+  ) {
+    return 'gdp';
+  }
+
+  // 5. Holidays
+  if (/\b(holiday|feriado|closure|festivo)\b/.test(text)) {
     return 'holidays';
   }
+
   return 'gdp';
+}
+
+function parseUtcTimestamp(timeStr) {
+  if (!timeStr) return new Date().toISOString();
+  const clean = String(timeStr).trim();
+  if (clean.endsWith('Z')) return new Date(clean).toISOString();
+  // Finnhub format: "YYYY-MM-DD HH:mm:ss" in UTC
+  const isoCandidate = clean.replace(' ', 'T') + 'Z';
+  const d = new Date(isoCandidate);
+  return isNaN(d.getTime()) ? new Date(clean).toISOString() : d.toISOString();
 }
 
 function slugify(text) {
@@ -115,16 +152,7 @@ async function syncHolidays(apiKey) {
   console.log(`✅ Successfully updated ${HOLIDAYS_FILE} (${mergedHolidays.length} total holidays).`);
 }
 
-async function syncEvents() {
-  const apiKey = process.env.FINNHUB_API_KEY;
-
-  if (!apiKey) {
-    console.warn('⚠️  FINNHUB_API_KEY not found in environment variables.');
-    console.warn('ℹ️  Add FINNHUB_API_KEY to your GitHub Repository Secrets to enable automatic updates.');
-    console.warn('ℹ️  Preserving existing data files without modification.');
-    return;
-  }
-
+async function syncEvents(apiKey) {
   // Determine 4-month rolling window (yesterday to +120 days in UTC)
   const now = new Date();
   const startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000); // yesterday
@@ -172,7 +200,7 @@ async function syncEvents() {
   // Normalize and merge
   for (const item of relevantEvents) {
     const marketId = COUNTRY_TO_MARKET[item.country];
-    const timestampUtc = new Date(item.time).toISOString();
+    const timestampUtc = parseUtcTimestamp(item.time);
     const datePrefix = timestampUtc.slice(0, 10);
     const id = `${marketId}-${slugify(item.event)}-${datePrefix}`;
 
@@ -197,12 +225,36 @@ async function syncEvents() {
 
   fs.writeFileSync(EVENTS_FILE, JSON.stringify(merged, null, 2) + '\n', 'utf-8');
   console.log(`✅ Successfully updated ${EVENTS_FILE} (${merged.length} total events).`);
-
-  // Sync market holidays
-  await syncHolidays(apiKey);
 }
 
-syncEvents().catch((err) => {
-  console.error('❌ Sync failed:', err);
+async function main() {
+  const apiKey = process.env.FINNHUB_API_KEY;
+
+  if (!apiKey) {
+    console.warn('⚠️  FINNHUB_API_KEY not found in environment variables.');
+    console.warn('ℹ️  Add FINNHUB_API_KEY to your GitHub Repository Secrets to enable automatic updates.');
+    console.warn('ℹ️  Preserving existing data files without modification.');
+    return;
+  }
+
+  // 1. Sync official exchange holidays (standard stock API endpoint)
+  try {
+    await syncHolidays(apiKey);
+  } catch (err) {
+    console.error('❌ Failed syncing market holidays:', err.message);
+  }
+
+  // 2. Sync macroeconomic calendar events (graceful fallback if endpoint requires premium access)
+  try {
+    await syncEvents(apiKey);
+  } catch (err) {
+    console.warn('⚠️  Could not fetch economic calendar from Finnhub:', err.message);
+    console.warn('ℹ️  Note: /calendar/economic may require a Finnhub plan with economic calendar access.');
+    console.warn('ℹ️  Preserving existing curated events in events.json.');
+  }
+}
+
+main().catch((err) => {
+  console.error('❌ Pipeline run failed:', err);
   process.exit(1);
 });

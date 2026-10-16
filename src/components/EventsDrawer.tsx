@@ -4,7 +4,7 @@ import { DateTime } from 'luxon';
 import { X, Calendar, Flame, AlertCircle, Building2, TrendingUp, DollarSign } from 'lucide-react';
 import { EventCategory } from '../core/types';
 import { MARKETS, CHILE_CONFIG } from '../core/markets';
-import { getUpcomingEvents } from '../core/events';
+import { getUpcomingEvents, getDataFreshnessStatus } from '../core/events';
 import { getUpcomingHolidays } from '../core/holidays';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { cn } from '../lib/utils';
@@ -135,6 +135,10 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
       maxDaysAhead: 120
     });
   }, [chileNow, selectedMarketId]);
+
+  const freshness = useMemo(() => {
+    return getDataFreshnessStatus(chileNow);
+  }, [chileNow]);
 
   const marketTabs = useMemo(() => {
     return [
@@ -319,6 +323,14 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                 </div>
               )}
             </div>
+
+            {/* Stale Data Warning Banner if coverage window is close to expiry */}
+            {freshness.isStale && freshness.message && (
+              <div className="mx-3 mt-2.5 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/25 flex items-start gap-2 text-xs text-amber-200">
+                <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" aria-hidden="true" />
+                <span className="leading-snug">{freshness.message}</span>
+              </div>
+            )}
 
             {/* Content List: Holidays or Macro Events */}
             {viewMode === 'holidays' ? (
