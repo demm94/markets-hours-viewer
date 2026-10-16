@@ -6,7 +6,6 @@ import { TimelineGrid } from '../components/TimelineGrid';
 import { TimelineHeader } from '../components/timeline/TimelineHeader';
 import { TimelineLeftColumn } from '../components/timeline/TimelineLeftColumn';
 import { TimelineBars } from '../components/timeline/TimelineBars';
-import { TimelineSlider } from '../components/timeline/TimelineSlider';
 import { TimelineLegend } from '../components/timeline/TimelineLegend';
 import { TradingWindowsRadar } from '../components/trading-windows/TradingWindowsRadar';
 import { evaluateMarketAt } from './timezone';
@@ -39,9 +38,6 @@ describe('React memoization & render optimization verification', () => {
     expect((TimelineBars as any).$$typeof).toBe(REACT_MEMO_TYPE);
     expect(TimelineBars.displayName).toBe('TimelineBars');
 
-    expect((TimelineSlider as any).$$typeof).toBe(REACT_MEMO_TYPE);
-    expect(TimelineSlider.displayName).toBe('TimelineSlider');
-
     expect((TimelineLegend as any).$$typeof).toBe(REACT_MEMO_TYPE);
     expect(TimelineLegend.displayName).toBe('TimelineLegend');
   });
@@ -62,7 +58,7 @@ describe('React memoization & render optimization verification', () => {
     expect(eval1.activeSegmentLabel).toBe(eval2.activeSegmentLabel);
   });
 
-  it('confirms orphaned TrackRow component has been removed', async () => {
+  it('confirms orphaned components have been removed', async () => {
     let trackRowExists = true;
     try {
       await import('../components/TrackRow' as any);
@@ -70,5 +66,13 @@ describe('React memoization & render optimization verification', () => {
       trackRowExists = false;
     }
     expect(trackRowExists).toBe(false);
+
+    let timelineSliderExists = true;
+    try {
+      await import('../components/timeline/TimelineSlider' as any);
+    } catch {
+      timelineSliderExists = false;
+    }
+    expect(timelineSliderExists).toBe(false);
   });
 });
