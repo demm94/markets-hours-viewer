@@ -59,14 +59,14 @@ export const TimelineEventMarker: React.FC<TimelineEventMarkerProps> = React.mem
           onOpenToggle();
           onEventClick?.(event);
         }}
-        className={`group relative flex items-center gap-0.5 sm:gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold font-mono tracking-tight transition-all duration-150 shadow-sm hover:scale-110 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-white cursor-pointer before:absolute before:-inset-y-2.5 before:-inset-x-1.5 before:content-[''] ${
+        className={`group relative flex items-center gap-0.5 sm:gap-1 rounded px-1.5 py-0.5 text-[9px] font-bold font-mono tracking-tight transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-white cursor-pointer before:absolute before:-inset-y-2.5 before:-inset-x-1.5 before:content-[''] ${
           isHigh
-            ? 'bg-rose-600/95 text-white border border-rose-300/80 shadow-[0_0_8px_rgba(225,29,72,0.7)] hover:bg-rose-500'
-            : 'bg-amber-500/95 text-zinc-950 border border-amber-200/80 shadow-[0_0_6px_rgba(245,158,11,0.7)] hover:bg-amber-400'
+            ? 'bg-rose-600 text-white border border-rose-400/50 hover:bg-rose-500'
+            : 'bg-amber-500 text-zinc-950 border border-amber-300/60 hover:bg-amber-400'
         }`}
       >
         {isHigh ? (
-          <Flame className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-white fill-current animate-pulse flex-shrink-0" />
+          <Flame className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-white fill-current flex-shrink-0" />
         ) : (
           <AlertCircle className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-zinc-950 flex-shrink-0" />
         )}
@@ -79,15 +79,15 @@ export const TimelineEventMarker: React.FC<TimelineEventMarkerProps> = React.mem
       {isOpen && (
         <div
           role="tooltip"
-          className={`hidden md:flex absolute ${verticalPositionClass} ${tooltipAlignClass} w-60 sm:w-64 p-3 rounded-xl border border-border-strong bg-popover/95 backdrop-blur-2xl shadow-neon-lg z-50 pointer-events-auto flex-col gap-2 animate-in fade-in zoom-in-95 duration-100`}
+          className={`hidden md:flex absolute ${verticalPositionClass} ${tooltipAlignClass} w-60 sm:w-64 p-3 rounded-xl border border-border-strong bg-popover shadow-neon-lg z-50 pointer-events-auto flex-col gap-2`}
         >
           {/* Header with Impact Badge and Market */}
-          <div className="flex items-center justify-between gap-2 border-b border-border/80 pb-1.5">
+          <div className="flex items-center justify-between gap-2 border-b border-border pb-1.5">
             <span
-              className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider font-mono ${
+              className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wider font-mono ${
                 isHigh
-                  ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
-                  : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                  ? 'bg-rose-500/15 text-rose-300 border border-rose-500/35'
+                  : 'bg-amber-500/15 text-amber-300 border border-amber-500/35'
               }`}
             >
               {isHigh ? <Flame className="w-2.5 h-2.5" /> : <AlertCircle className="w-2.5 h-2.5" />}

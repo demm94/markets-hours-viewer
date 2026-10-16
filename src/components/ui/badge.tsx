@@ -3,22 +3,22 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../../lib/utils";
 
 const badgeVariants = cva(
-  "inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring select-none whitespace-nowrap leading-none",
+  "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring select-none whitespace-nowrap leading-none",
   {
     variants: {
       variant: {
         default:
-          "border-transparent bg-primary text-primary-foreground font-semibold shadow-[0_0_18px_-4px_rgba(56,189,248,0.65)] hover:bg-primary/90",
+          "border-transparent bg-primary text-primary-foreground font-semibold hover:bg-primary/90",
         secondary:
           "border border-border bg-secondary text-secondary-foreground hover:bg-secondary/80",
         destructive:
-          "border border-destructive/45 bg-destructive/20 text-rose-200 shadow-[0_0_18px_-6px_rgba(251,59,107,0.70)] hover:bg-destructive/30",
-        outline: "text-foreground border border-border bg-white/[0.03]",
-        open: "border border-emerald-400/45 bg-emerald-500/15 text-emerald-300 font-sans font-semibold tracking-normal text-xs shadow-[0_0_0_1px_rgba(16,185,129,0.18),0_0_18px_-4px_rgba(16,185,129,0.55)]",
-        lunch: "border border-amber-400/45 bg-amber-500/15 text-amber-300 font-sans font-semibold tracking-normal text-xs shadow-[0_0_0_1px_rgba(245,158,11,0.18),0_0_18px_-4px_rgba(245,158,11,0.50)]",
-        pre: "border border-cyan-400/45 bg-cyan-500/15 text-cyan-300 font-sans font-semibold tracking-normal text-xs shadow-[0_0_0_1px_rgba(34,211,238,0.18),0_0_18px_-4px_rgba(34,211,238,0.50)]",
-        holiday: "border border-purple-400/45 bg-purple-500/15 text-purple-300 font-sans font-semibold tracking-normal text-xs shadow-[0_0_0_1px_rgba(168,85,247,0.18),0_0_18px_-4px_rgba(168,85,247,0.50)]",
-        closed: "border border-slate-600/50 bg-slate-800/50 text-slate-300 font-sans font-medium tracking-normal text-xs"
+          "border border-destructive/35 bg-destructive/15 text-rose-300 hover:bg-destructive/25",
+        outline: "text-foreground border border-border bg-white/[0.02]",
+        open: "border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-sans font-semibold tracking-normal text-xs",
+        lunch: "border border-amber-500/30 bg-amber-500/10 text-amber-400 font-sans font-semibold tracking-normal text-xs",
+        pre: "border border-sky-500/30 bg-sky-500/10 text-sky-400 font-sans font-semibold tracking-normal text-xs",
+        holiday: "border border-violet-500/30 bg-violet-500/10 text-violet-300 font-sans font-semibold tracking-normal text-xs",
+        closed: "border border-white/[0.07] bg-white/[0.03] text-zinc-400 font-sans font-medium tracking-normal text-xs"
       }
     },
     defaultVariants: {
@@ -42,7 +42,7 @@ function Badge({ className, variant, showDot, children, ...props }: BadgeProps) 
       {shouldShowDot && (
         <span
           className={cn(
-            "h-1.5 w-1.5 rounded-full bg-current shadow-[0_0_8px_currentColor]",
+            "h-1.5 w-1.5 rounded-full bg-current",
             variant === "open" && "animate-pulse"
           )}
         />

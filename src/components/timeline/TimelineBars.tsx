@@ -116,7 +116,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
         {GRID_LINES.map((h) => (
           <div
             key={h}
-            className={`absolute top-0 bottom-0 w-[1px] ${h % 3 === 0 ? 'bg-white/[0.08]' : 'bg-white/[0.02]'}`}
+            className={`absolute top-0 bottom-0 w-[1px] ${h % 3 === 0 ? 'bg-white/[0.06]' : 'bg-white/[0.02]'}`}
             style={{ left: `${(h / 24) * 100}%` }}
           />
         ))}
@@ -140,33 +140,30 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                 isRowElevated ? 'z-40' : 'hover:z-30 focus-within:z-40'
               } ${
                 isChile
-                  ? holiday
-                    ? 'border-b-purple-400/35 bg-gradient-to-r from-purple-500/[0.08] to-purple-500/[0.02]'
-                    : 'bg-gradient-to-r from-sky-400/[0.08] to-sky-400/[0.02] border-b-sky-400/35'
-                  : 'hover:bg-white/[0.02]'
-              } ${isHoliday ? 'opacity-40 hover:opacity-75 transition-opacity' : ''}`}
+                  ? 'bg-white/[0.015]'
+                  : 'hover:bg-white/[0.015]'
+              } ${isHoliday ? 'opacity-45 hover:opacity-75 transition-opacity' : ''}`}
             >
               <div
-                className={`relative w-full h-[22px] sm:h-[26px] md:h-[30px] border rounded sm:rounded-lg shadow-[inset_0_2px_6px_rgba(0,0,0,0.5)] transition-colors ${
+                className={`relative w-full h-[22px] sm:h-[26px] md:h-[28px] border rounded-md transition-colors ${
                   (isHoliday || (isChile && holiday))
-                    ? 'border-purple-500/30 bg-purple-950/20'
-                    : 'border-border bg-white/[0.02]'
+                    ? 'border-violet-500/25 bg-violet-950/15'
+                    : 'border-border bg-card/70'
                 }`}
               >
                 {/* Session blocks container (clipped to rounded track) */}
-                <div className="absolute inset-0 rounded sm:rounded-lg overflow-hidden pointer-events-none z-[2]">
+                <div className="absolute inset-0 rounded-md overflow-hidden pointer-events-none z-[2]">
                   {/* Chile reference track */}
                   {isChile && (
                     holiday ? (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-purple-500/[0.12] via-purple-500/[0.22] to-purple-500/[0.12] border border-purple-500/30 rounded sm:rounded-lg">
-                        <span className="font-mono text-[10px] sm:text-xs font-bold text-purple-200 tracking-wider flex items-center gap-1.5 uppercase px-2 truncate">
-                          <span>🎉</span>
-                          <span className="truncate">Eje 24h Santiago · Feriado: {holiday.name}</span>
+                      <div className="w-full h-full flex items-center justify-center bg-violet-500/10">
+                        <span className="font-mono text-[10px] sm:text-[11px] font-semibold text-violet-300 tracking-wider uppercase px-2 truncate">
+                          Eje 24h Santiago · Feriado: {holiday.name}
                         </span>
                       </div>
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-sky-400/[0.06] via-sky-400/[0.16] to-sky-400/[0.06]">
-                        <span className="font-mono text-xs font-bold text-sky-400 tracking-wider uppercase">
+                      <div className="w-full h-full flex items-center justify-center bg-white/[0.02]">
+                        <span className="font-mono text-[10px] sm:text-[11px] font-medium text-zinc-400 tracking-widest uppercase">
                           Eje 24h Santiago de Chile
                         </span>
                       </div>
@@ -175,10 +172,9 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
 
                   {/* Holiday track overlay */}
                   {isHoliday && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-purple-950/65 backdrop-blur-[1px] border border-purple-500/35 rounded sm:rounded-lg z-[3]">
-                      <span className="font-mono text-[9px] sm:text-[11px] font-semibold text-purple-200 tracking-wider flex items-center gap-1.5 px-2 py-0.5 rounded bg-purple-900/80 border border-purple-400/40 shadow-[0_0_10px_rgba(168,85,247,0.35)]">
-                        <span>🎉</span>
-                        <span className="truncate max-w-[180px] sm:max-w-none">Feriado: {holiday?.name}</span>
+                    <div className="absolute inset-0 flex items-center justify-center bg-violet-950/40 rounded-md z-[3]">
+                      <span className="font-mono text-[9px] sm:text-[10px] font-medium text-violet-200 tracking-wider px-2 py-0.5 rounded bg-violet-950/80 border border-violet-500/30 truncate max-w-[180px] sm:max-w-none">
+                        Feriado: {holiday?.name}
                       </span>
                     </div>
                   )}
@@ -194,42 +190,42 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                     let statusDescriptor = 'Cerrado';
 
                     if (isHoliday) {
-                      blockClasses = 'bg-slate-700/30 grayscale border border-white/10 opacity-30 shadow-none';
+                      blockClasses = 'bg-zinc-800/40 border border-white/5 opacity-30';
                       statusDescriptor = 'Feriado';
                     } else if (isActive) {
                       statusDescriptor = 'Abierto ahora';
                       if (seg.type === 'lunch') {
-                        blockClasses = 'bg-gradient-to-b from-amber-500 to-amber-600 ring-2 ring-white shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_2px_8px_rgba(0,0,0,0.5),0_0_24px_rgba(245,158,11,0.85)] z-10 text-white';
+                        blockClasses = 'bg-amber-500 ring-1 ring-amber-300/80 z-10 text-zinc-950';
                       } else if (seg.type === 'pre_market') {
-                        blockClasses = 'bg-gradient-to-b from-cyan-500 to-sky-600 ring-2 ring-white shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_2px_8px_rgba(0,0,0,0.5),0_0_24px_rgba(34,211,238,0.85)] z-10 text-white';
+                        blockClasses = 'bg-sky-500 ring-1 ring-sky-300/80 z-10 text-zinc-950';
                       } else {
-                        blockClasses = 'bg-gradient-to-b from-emerald-500 to-emerald-600 ring-2 ring-white shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_2px_8px_rgba(0,0,0,0.5),0_0_24px_rgba(16,185,129,0.85)] z-10 text-white';
+                        blockClasses = 'bg-emerald-500 ring-1 ring-emerald-300/80 z-10 text-zinc-950';
                       }
                     } else if (isUpcoming) {
                       statusDescriptor = 'Aún no abre';
                       if (seg.type === 'lunch') {
-                        blockClasses = 'bg-amber-500/25 border-2 border-amber-400/60 shadow-[inset_0_0_12px_rgba(245,158,11,0.15)] text-amber-300';
+                        blockClasses = 'bg-amber-500/20 border border-amber-500/45 text-amber-300';
                       } else if (seg.type === 'pre_market') {
-                        blockClasses = 'bg-cyan-500/25 border-2 border-cyan-400/60 shadow-[inset_0_0_12px_rgba(6,182,212,0.15)] text-cyan-300';
+                        blockClasses = 'bg-sky-500/20 border border-sky-500/45 text-sky-300';
                       } else {
-                        blockClasses = 'bg-emerald-500/25 border-2 border-emerald-400/60 shadow-[inset_0_0_12px_rgba(16,185,129,0.15)] text-emerald-300';
+                        blockClasses = 'bg-emerald-500/20 border border-emerald-500/45 text-emerald-300';
                       }
                     } else {
                       // isPast
                       statusDescriptor = 'Ya cerró';
                       if (seg.type === 'lunch') {
-                        blockClasses = 'bg-amber-500/10 border border-amber-500/30 text-amber-500/40 shadow-none';
+                        blockClasses = 'bg-amber-500/[0.08] border border-amber-500/20 text-amber-500/40';
                       } else if (seg.type === 'pre_market') {
-                        blockClasses = 'bg-cyan-500/10 border border-cyan-500/30 text-cyan-500/40 shadow-none';
+                        blockClasses = 'bg-sky-500/[0.08] border border-sky-500/20 text-sky-500/40';
                       } else {
-                        blockClasses = 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-500/40 shadow-none';
+                        blockClasses = 'bg-emerald-500/[0.08] border border-emerald-500/20 text-emerald-500/40';
                       }
                     }
 
                     return (
                       <div
                         key={idx}
-                        className={`absolute top-0 bottom-0 flex items-center justify-center text-[11px] font-bold rounded-md overflow-hidden whitespace-nowrap transition-all duration-200 ${blockClasses}`}
+                        className={`absolute top-0 bottom-0 flex items-center justify-center text-[11px] font-semibold rounded-xs overflow-hidden whitespace-nowrap transition-colors duration-150 ${blockClasses}`}
                         style={{
                           left: `${leftPercent}%`,
                           width: `${widthPercent}%`
@@ -271,11 +267,11 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
       {/* Persistent "Now" Line (only active when viewing current day) */}
       {isToday && (
         <div
-          className="absolute top-0 bottom-0 -translate-x-1/2 w-[2px] bg-rose-600 shadow-[0_0_14px_rgba(225,29,72,0.65)] z-[5] pointer-events-none"
+          className="absolute top-0 bottom-0 -translate-x-1/2 w-[1.5px] bg-rose-500 z-[5] pointer-events-none"
           style={{ left: `${nowPercent}%` }}
         >
         <div
-          className="absolute top-1 sm:top-1.5 left-0 inline-flex items-center gap-1 sm:gap-1.5 bg-rose-600 text-white font-mono text-[10px] sm:text-xs font-extrabold px-2 sm:px-3 py-0.5 sm:py-1 rounded sm:rounded-lg shadow-[0_4px_14px_rgba(225,29,72,0.65)] whitespace-nowrap tabular-nums"
+          className="absolute top-1 sm:top-1.5 left-0 inline-flex items-center gap-1 sm:gap-1.5 bg-rose-600 text-white font-mono text-[10px] sm:text-[11px] font-bold px-2 sm:px-2.5 py-0.5 rounded shadow-sm whitespace-nowrap tabular-nums"
           style={{
             transform:
               nowPercent < 4
@@ -327,23 +323,23 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                   ? 'translate(calc(-100% - 6px), -50%)'
                   : 'translate(-50%, -50%)';
 
-              let statusClasses = 'border-border text-foreground/80';
+              let statusClasses = 'border-border text-zinc-300';
               if (ev.holiday) {
-                statusClasses = 'border-purple-500/70 text-purple-300 shadow-[0_4px_14px_rgba(0,0,0,0.75),0_0_10px_rgba(168,85,247,0.3)]';
+                statusClasses = 'border-violet-500/45 text-violet-300';
               } else if (isChile) {
-                statusClasses = 'border-sky-400/70 text-sky-300 shadow-[0_4px_14px_rgba(0,0,0,0.75),0_0_12px_rgba(56,189,248,0.25)]';
+                statusClasses = 'border-sky-500/45 text-sky-300';
               } else if (ev.status === 'open') {
-                statusClasses = 'border-emerald-500/70 text-emerald-300 shadow-[0_4px_14px_rgba(0,0,0,0.75),0_0_12px_rgba(16,185,129,0.3)]';
+                statusClasses = 'border-emerald-500/45 text-emerald-300';
               } else if (ev.status === 'lunch') {
-                statusClasses = 'border-amber-500/70 text-amber-300 shadow-[0_4px_14px_rgba(0,0,0,0.75),0_0_10px_rgba(245,158,11,0.3)]';
+                statusClasses = 'border-amber-500/45 text-amber-300';
               } else if (ev.status === 'pre_market') {
-                statusClasses = 'border-cyan-500/70 text-cyan-300 shadow-[0_4px_14px_rgba(0,0,0,0.75),0_0_10px_rgba(6,182,212,0.3)]';
+                statusClasses = 'border-sky-500/45 text-sky-300';
               }
 
               return (
                 <div
                   key={market.id}
-                  className={`absolute left-0 inline-flex items-center gap-1.5 sm:gap-2 bg-popover/95 backdrop-blur-md border rounded-md sm:rounded-lg px-2 sm:px-3 py-0.5 sm:py-1 font-mono text-[10px] sm:text-xs font-bold whitespace-nowrap shadow-neon z-10 pointer-events-none tabular-nums ${statusClasses}`}
+                  className={`absolute left-0 inline-flex items-center gap-1.5 bg-popover/95 border rounded-md px-2 py-0.5 font-mono text-[10px] sm:text-xs font-semibold whitespace-nowrap shadow-md z-10 pointer-events-none tabular-nums ${statusClasses}`}
                   style={{
                     top: `${topPx}px`,
                     transform: edgeTransform
@@ -363,11 +359,11 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
       {/* Interactive Scrubber Line */}
       {(isActivelyScrubbing || !isToday || isHovering) && (
         <div
-          className="absolute top-0 bottom-0 -translate-x-1/2 w-[2.5px] bg-sky-400 shadow-[0_0_16px_rgba(56,189,248,0.75)] z-[6] pointer-events-none"
+          className="absolute top-0 bottom-0 -translate-x-1/2 w-[2px] bg-sky-400 z-[6] pointer-events-none"
           style={{ left: `${scrubberPercent}%` }}
         >
           <div
-            className="absolute top-1 sm:top-1.5 left-0 bg-gradient-to-br from-sky-600 to-sky-700 text-white font-mono text-[10px] sm:text-xs font-extrabold px-2 sm:px-3 py-0.5 sm:py-1 rounded sm:rounded-lg border border-border-strong shadow-[0_4px_16px_rgba(2,132,199,0.7)] whitespace-nowrap tabular-nums"
+            className="absolute top-1 sm:top-1.5 left-0 bg-sky-500 text-zinc-950 font-mono text-[10px] sm:text-[11px] font-bold px-2 sm:px-2.5 py-0.5 rounded shadow-sm whitespace-nowrap tabular-nums"
             style={{
               transform:
                 scrubberPercent < 4
@@ -380,7 +376,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
             <span className="hidden sm:inline">🇨🇱 </span>
             <span>{formatMinutes(scrubberMinutes)}</span>
             {!isToday && (
-              <span className="ml-1 text-[9px] font-normal text-sky-200">
+              <span className="ml-1 text-[9px] font-medium text-zinc-900">
                 proyección
               </span>
             )}
@@ -413,23 +409,23 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                     ? 'translate(calc(-100% - 6px), -50%)'
                     : 'translate(-50%, -50%)';
 
-                let statusClasses = 'border-border text-foreground/80';
+                let statusClasses = 'border-border text-zinc-300';
                 if (ev.holiday) {
-                  statusClasses = 'border-purple-500/70 text-purple-300 shadow-[0_4px_14px_rgba(0,0,0,0.75),0_0_10px_rgba(168,85,247,0.3)]';
+                  statusClasses = 'border-violet-500/45 text-violet-300';
                 } else if (isChile) {
-                  statusClasses = 'border-sky-400/70 text-sky-300 shadow-[0_4px_14px_rgba(0,0,0,0.75),0_0_12px_rgba(56,189,248,0.25)]';
+                  statusClasses = 'border-sky-500/45 text-sky-300';
                 } else if (ev.status === 'open') {
-                  statusClasses = 'border-emerald-500/70 text-emerald-300 shadow-[0_4px_14px_rgba(0,0,0,0.75),0_0_12px_rgba(16,185,129,0.3)]';
+                  statusClasses = 'border-emerald-500/45 text-emerald-300';
                 } else if (ev.status === 'lunch') {
-                  statusClasses = 'border-amber-500/70 text-amber-300 shadow-[0_4px_14px_rgba(0,0,0,0.75),0_0_10px_rgba(245,158,11,0.3)]';
+                  statusClasses = 'border-amber-500/45 text-amber-300';
                 } else if (ev.status === 'pre_market') {
-                  statusClasses = 'border-cyan-500/70 text-cyan-300 shadow-[0_4px_14px_rgba(0,0,0,0.75),0_0_10px_rgba(6,182,212,0.3)]';
+                  statusClasses = 'border-sky-500/45 text-sky-300';
                 }
 
                 return (
                   <div
                     key={market.id}
-                    className={`absolute left-0 inline-flex items-center gap-1.5 sm:gap-2 bg-popover/95 backdrop-blur-md border rounded-md sm:rounded-lg px-2 sm:px-3 py-0.5 sm:py-1 font-mono text-[10px] sm:text-xs font-bold whitespace-nowrap shadow-neon z-10 pointer-events-none tabular-nums ${statusClasses}`}
+                    className={`absolute left-0 inline-flex items-center gap-1.5 bg-popover/95 border rounded-md px-2 py-0.5 font-mono text-[10px] sm:text-xs font-semibold whitespace-nowrap shadow-md z-10 pointer-events-none tabular-nums ${statusClasses}`}
                     style={{
                       top: `${topPx}px`,
                       transform: edgeTransform

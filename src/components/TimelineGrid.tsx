@@ -81,7 +81,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
 
       {/* Horizontal Table with Left Frozen Column + 24h Bars */}
       <div 
-        className="timeline-table-wrapper relative flex w-full overflow-x-auto select-none rounded-2xl border border-border bg-muted shadow-[inset_0_2px_14px_rgba(0,0,0,0.6)] touch-pan-y [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="timeline-table-wrapper relative flex w-full overflow-x-auto select-none rounded-xl border border-border bg-muted/40 touch-pan-y [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         <TimelineLeftColumn
           allMarkets={allMarkets}

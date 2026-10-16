@@ -9,17 +9,17 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground font-semibold shadow-[0_0_20px_-6px_rgba(56,189,248,0.80)] hover:bg-primary/90 hover:shadow-[0_0_28px_-4px_rgba(56,189,248,0.95)]",
+          "bg-zinc-100 text-zinc-950 font-semibold hover:bg-white",
         destructive:
-          "bg-destructive/20 text-rose-200 border border-destructive/45 shadow-[0_0_18px_-6px_rgba(251,59,107,0.70)] hover:bg-destructive/30 hover:border-destructive/65",
+          "bg-destructive/15 text-rose-300 border border-destructive/35 hover:bg-destructive/25",
         outline:
-          "border border-border bg-card text-slate-200 shadow-sm hover:border-border-strong hover:bg-white/[0.05] hover:text-white",
+          "border border-border bg-white/[0.02] text-zinc-200 hover:border-border-strong hover:bg-white/[0.05] hover:text-white",
         secondary:
           "bg-secondary text-secondary-foreground border border-border hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground text-slate-300",
+        ghost: "hover:bg-accent hover:text-accent-foreground text-zinc-300",
         link: "text-primary underline-offset-4 hover:underline",
-        now: "bg-rose-500/20 text-rose-200 border border-rose-400/50 font-mono font-bold shadow-[0_0_0_1px_rgba(244,63,94,0.20),0_0_18px_-4px_rgba(244,63,94,0.65)] hover:bg-rose-500/30 hover:border-rose-400/70",
-        pill: "bg-sky-500/10 text-sky-300 border border-sky-400/35 font-mono font-semibold shadow-[0_0_0_1px_rgba(56,189,248,0.15),0_0_18px_-6px_rgba(56,189,248,0.60)] hover:bg-sky-500/20 hover:border-sky-400/60"
+        now: "bg-rose-500/15 text-rose-300 border border-rose-500/35 font-mono font-bold hover:bg-rose-500/25",
+        pill: "bg-sky-500/10 text-sky-300 border border-sky-500/30 font-mono font-semibold hover:bg-sky-500/20"
       },
       size: {
         default: "h-9 px-4 py-2 min-h-[44px]",

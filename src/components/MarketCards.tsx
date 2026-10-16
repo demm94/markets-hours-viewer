@@ -46,32 +46,32 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
   return (
     <>
       {/* Mobile Condensed Strip (All 5 markets visible at a glance) */}
-      <div className="grid grid-cols-5 gap-1 sm:gap-1.5 md:hidden">
+      <div className="grid grid-cols-5 gap-1.5 md:hidden">
         {markets.map((market) => {
           const ev = evaluations[market.id];
           const status = ev?.status ?? 'closed';
           const isHoliday = Boolean(ev?.holiday);
           const hasCatalyst = catalystsMap?.[market.id];
 
-          let borderClass = 'border-slate-600/45 bg-slate-900/55 text-slate-400';
-          let dotColor = 'bg-slate-500';
+          let borderClass = 'border-border bg-card text-zinc-400';
+          let dotColor = 'bg-zinc-600';
           let statusLabel = 'Cerrado';
 
           if (isHoliday) {
-            borderClass = 'border-purple-400/50 bg-purple-500/[0.12] text-purple-300 shadow-[0_0_0_1px_rgba(168,85,247,0.16),0_0_18px_-6px_rgba(168,85,247,0.55)]';
-            dotColor = 'bg-purple-400';
+            borderClass = 'border-violet-500/35 bg-violet-500/[0.05] text-violet-300';
+            dotColor = 'bg-violet-400';
             statusLabel = 'Feriado';
           } else if (status === 'open') {
-            borderClass = 'border-emerald-400/50 bg-emerald-500/[0.12] text-emerald-300 shadow-[0_0_0_1px_rgba(16,185,129,0.16),0_0_18px_-6px_rgba(16,185,129,0.60)]';
+            borderClass = 'border-emerald-500/35 bg-emerald-500/[0.05] text-emerald-400';
             dotColor = 'bg-emerald-400 animate-pulse';
             statusLabel = 'Abierto';
           } else if (status === 'lunch') {
-            borderClass = 'border-amber-400/50 bg-amber-500/[0.12] text-amber-300 shadow-[0_0_0_1px_rgba(245,158,11,0.16),0_0_18px_-6px_rgba(245,158,11,0.55)]';
+            borderClass = 'border-amber-500/35 bg-amber-500/[0.05] text-amber-400';
             dotColor = 'bg-amber-400';
             statusLabel = 'Almuerzo';
           } else if (status === 'pre_market') {
-            borderClass = 'border-cyan-400/50 bg-cyan-500/[0.12] text-cyan-300 shadow-[0_0_0_1px_rgba(34,211,238,0.16),0_0_18px_-6px_rgba(34,211,238,0.55)]';
-            dotColor = 'bg-cyan-400';
+            borderClass = 'border-sky-500/35 bg-sky-500/[0.05] text-sky-400';
+            dotColor = 'bg-sky-400';
             statusLabel = 'Pre';
           }
 
@@ -81,34 +81,34 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
               key={market.id}
               onClick={() => onSelectMarketEvents?.(market.id)}
               className={cn(
-                "relative flex flex-col items-center justify-between p-1 sm:p-1.5 rounded-lg border transition-[border-color,background-color,box-shadow,transform,scale] duration-200 min-h-[58px] w-full text-center cursor-pointer hover:border-border-strong active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                "relative flex flex-col items-center justify-between p-1.5 rounded-lg border transition-colors duration-150 min-h-[60px] w-full text-center cursor-pointer hover:border-border-strong active:scale-98 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400",
                 borderClass
               )}
               title={`${market.name} (${market.code}) - ${isHoliday ? `Feriado: ${ev?.holiday?.name}` : statusLabel} - ${ev?.localTimeFormatted ?? '--:--'} (${ev?.timezoneOffset ?? ''})${hasCatalyst ? ' (Evento hoy)' : ''}`}
               aria-label={`${market.name} (${market.code}), ${isHoliday ? `Feriado: ${ev?.holiday?.name}` : statusLabel}, hora local ${ev?.localTimeFormatted ?? '--:--'} ${ev?.timezoneOffset ?? ''}${hasCatalyst ? ', tiene evento hoy' : ''}`}
             >
               {hasCatalyst && (
-                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_8px_#f43f5e]" aria-hidden="true" />
+                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-rose-500" aria-hidden="true" />
               )}
               <div className="flex items-center gap-1 leading-none">
                 <span className="text-xs select-none" aria-hidden="true">{market.flag}</span>
-                <span className="text-[10px] font-mono font-bold tracking-tight text-foreground/80">
+                <span className="text-[10px] font-mono font-semibold tracking-tight text-zinc-300">
                   {market.code.split(' ')[0]}
                 </span>
               </div>
               <div className="flex flex-col items-center leading-none my-0.5 gap-0.5">
-                <span className="font-mono text-xs font-black text-white tabular-nums tracking-tight">
+                <span className="font-mono text-xs font-bold text-zinc-100 tabular-nums tracking-tight">
                   {ev?.localTimeFormatted ?? '--:--'}
                 </span>
                 {ev?.timezoneOffset && (
-                  <span className="font-mono text-[9px] font-medium text-muted-foreground/80 leading-none">
+                  <span className="font-mono text-[9px] font-medium text-muted-foreground leading-none">
                     {ev.timezoneOffset}
                   </span>
                 )}
               </div>
               <div className="flex items-center gap-1 leading-none">
-                <span className={cn("w-1.5 h-1.5 rounded-full shadow-[0_0_8px_currentColor]", dotColor)} aria-hidden="true" />
-                <span className="text-[10px] font-semibold leading-none truncate max-w-[48px]">
+                <span className={cn("w-1.5 h-1.5 rounded-full", dotColor)} aria-hidden="true" />
+                <span className="text-[9.5px] font-medium leading-none truncate max-w-[48px]">
                   {statusLabel}
                 </span>
               </div>
@@ -119,7 +119,7 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
 
       {/* Desktop Rich Cards */}
       <motion.div
-        className="hidden md:grid md:grid-cols-3 lg:grid-cols-5 gap-3.5 lg:gap-4"
+        className="hidden md:grid md:grid-cols-3 lg:grid-cols-5 gap-3 lg:gap-3.5"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -149,48 +149,40 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
             ? 'Pre-apertura'
             : 'Cerrado';
 
-          let cardBorderClass = 'border-l-slate-500/60';
-          let cardBgClass = '';
+          let cardStateClass = 'border-border bg-card hover:border-border-strong';
 
           if (isHoliday) {
-            cardBorderClass = 'border-l-purple-400 shadow-[0_0_0_1px_rgba(168,85,247,0.22),0_0_28px_-8px_rgba(168,85,247,0.58),0_14px_40px_-18px_rgba(2,6,23,0.95)]';
-            cardBgClass = 'bg-gradient-to-br from-purple-500/[0.12] via-transparent to-violet-500/[0.07]';
+            cardStateClass = 'border-violet-500/30 bg-gradient-to-b from-violet-500/[0.04] to-transparent hover:border-violet-500/45';
           } else if (status === 'open') {
-            cardBorderClass = 'border-l-emerald-400 shadow-[0_0_0_1px_rgba(16,185,129,0.22),0_0_28px_-8px_rgba(16,185,129,0.65),0_14px_40px_-18px_rgba(2,6,23,0.95)]';
-            cardBgClass = 'bg-gradient-to-br from-emerald-500/[0.12] via-transparent to-violet-500/[0.07]';
+            cardStateClass = 'border-emerald-500/30 bg-gradient-to-b from-emerald-500/[0.04] to-transparent hover:border-emerald-500/45';
           } else if (status === 'lunch') {
-            cardBorderClass = 'border-l-amber-400 shadow-[0_0_0_1px_rgba(245,158,11,0.22),0_0_28px_-8px_rgba(245,158,11,0.58),0_14px_40px_-18px_rgba(2,6,23,0.95)]';
-            cardBgClass = 'bg-gradient-to-br from-amber-500/[0.12] via-transparent to-violet-500/[0.07]';
+            cardStateClass = 'border-amber-500/30 bg-gradient-to-b from-amber-500/[0.04] to-transparent hover:border-amber-500/45';
           } else if (status === 'pre_market') {
-            cardBorderClass = 'border-l-cyan-400 shadow-[0_0_0_1px_rgba(34,211,238,0.22),0_0_28px_-8px_rgba(34,211,238,0.58),0_14px_40px_-18px_rgba(2,6,23,0.95)]';
-            cardBgClass = 'bg-gradient-to-br from-cyan-500/[0.12] via-transparent to-violet-500/[0.07]';
+            cardStateClass = 'border-sky-500/30 bg-gradient-to-b from-sky-500/[0.04] to-transparent hover:border-sky-500/45';
           }
 
           return (
             <motion.div 
               key={market.id}
               variants={cardVariants}
-              whileHover={{ scale: 1.02, transition: { duration: 0.15 } }}
-              whileTap={{ scale: 0.98 }}
               layout
             >
               <Card
                 className={cn(
-                  "border-l-[3px] p-3.5 sm:p-4 flex flex-col justify-between gap-3 overflow-hidden h-full",
-                  cardBorderClass,
-                  cardBgClass
+                  "p-3.5 sm:p-4 flex flex-col justify-between gap-3.5 overflow-hidden h-full",
+                  cardStateClass
                 )}
                 title={`${market.name} (${market.code}) - ${statusText} - ${ev?.localTimeFormatted ?? '--:--'}`}
               >
                 {/* Row 1: Flag + Country Name + Exchange on left, Status Badge on right */}
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-xl leading-none select-none shrink-0">{market.flag}</span>
+                    <span className="text-lg leading-none select-none shrink-0">{market.flag}</span>
                     <div className="min-w-0">
-                      <div className="text-sm font-bold text-white tracking-tight leading-tight truncate">
+                      <div className="text-sm font-semibold text-zinc-100 tracking-tight leading-tight truncate">
                         {market.name}
                       </div>
-                      <div className="text-[10px] font-mono font-semibold text-muted-foreground tracking-wider uppercase">
+                      <div className="text-[10px] font-mono font-medium text-muted-foreground tracking-wider uppercase mt-0.5">
                         {market.code}
                       </div>
                     </div>
@@ -203,18 +195,18 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
                           e.stopPropagation();
                           onSelectMarketEvents(market.id);
                         }}
-                        className="relative flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold text-muted-foreground hover:text-sky-300 hover:bg-white/[0.06] hover:shadow-[0_0_14px_-4px_rgba(56,189,248,0.55)] transition-[color,background-color,box-shadow] duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                        className="relative flex items-center gap-1 min-h-[26px] px-2 py-0.5 rounded-md text-[10px] font-medium text-muted-foreground hover:text-zinc-100 hover:bg-white/[0.05] border border-transparent hover:border-border transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
                         title="Ver eventos de este mercado"
                         aria-label={`Ver eventos y catalizadores de ${market.name}`}
                       >
                         <Calendar className="w-3 h-3" aria-hidden="true" />
                         <span className="hidden xl:inline">Eventos</span>
                         {catalystsMap?.[market.id] && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_8px_#f43f5e]" aria-hidden="true" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500" aria-hidden="true" />
                         )}
                       </button>
                     )}
-                    <Badge variant={badgeVariant} className="px-2.5 py-0.5 text-[11px] font-semibold shrink-0">
+                    <Badge variant={badgeVariant} className="px-2 py-0.5 text-[11px] font-medium shrink-0">
                       {statusText}
                     </Badge>
                   </div>
@@ -223,29 +215,29 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
                 {/* Holiday Banner if closed for holiday */}
                 {ev?.holiday && (
                   <div
-                    className="flex items-center gap-1.5 px-2 py-1 rounded bg-purple-500/15 border border-purple-400/30 text-[11px] text-purple-200 font-medium truncate shadow-[0_0_12px_-4px_rgba(168,85,247,0.4)]"
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-violet-500/10 border border-violet-500/25 text-[11px] text-violet-200 font-medium truncate"
                     title={`Feriado bursátil: ${ev.holiday.name}`}
                   >
-                    <span className="shrink-0 text-xs">🎉</span>
-                    <span className="truncate font-semibold">{ev.holiday.name}</span>
+                    <Calendar className="w-3 h-3 text-violet-400 shrink-0" />
+                    <span className="truncate">{ev.holiday.name}</span>
                   </div>
                 )}
 
                 {/* Row 2: Local Time (prominent) on left, Date & Timezone on right */}
-                <div className="flex items-end justify-between gap-2 pt-2 border-t border-border">
+                <div className="flex items-end justify-between gap-2 pt-2.5 border-t border-border">
                   <div>
-                    <span className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider block leading-none mb-1">
+                    <span className="text-[10px] uppercase font-medium text-muted-foreground tracking-wider block leading-none mb-1">
                       Hora local
                     </span>
-                    <span className="font-mono text-xl sm:text-2xl font-black text-white tabular-nums tracking-tight leading-none">
+                    <span className="font-mono text-xl sm:text-2xl font-bold text-zinc-100 tabular-nums tracking-tight leading-none">
                       {ev?.localTimeFormatted ?? '--:--'}
                     </span>
                   </div>
                   <div className="flex flex-col items-end text-right min-w-0">
-                    <span className="font-mono text-xs font-semibold text-foreground/80 leading-none">
+                    <span className="font-mono text-xs font-medium text-zinc-300 leading-none">
                       {ev?.localDateFormatted}
                     </span>
-                    <span className="font-mono text-[10px] text-muted-foreground/70 truncate max-w-[130px] mt-1 leading-none" title={`${market.timezone} (${ev?.timezoneOffset ?? ''})`}>
+                    <span className="font-mono text-[10px] text-muted-foreground truncate max-w-[130px] mt-1 leading-none" title={`${market.timezone} (${ev?.timezoneOffset ?? ''})`}>
                       {market.timezone.replace('_', ' ')} · {ev?.timezoneOffset ?? ''}
                     </span>
                   </div>

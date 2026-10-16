@@ -13,6 +13,7 @@ import { useCurrentTime } from './hooks/useCurrentTime';
 import { useScrubber } from './hooks/useScrubber';
 import { usePullToRefresh } from './hooks/usePullToRefresh';
 import { Header } from './components/Header';
+import { AmbientBackground } from './components/AmbientBackground';
 import { MarketCards } from './components/MarketCards';
 import { TradingWindowsRadar } from './components/trading-windows/TradingWindowsRadar';
 import { EventsDrawer } from './components/EventsDrawer';
@@ -159,7 +160,9 @@ export const App: React.FC = () => {
   }, [catalystsMap]);
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-background text-foreground safe-area-container px-2.5 py-2 sm:px-5 sm:py-4 md:px-8 md:py-5 lg:px-10 overflow-x-hidden neon-grid">
+    <div className="relative min-h-screen min-h-[100dvh] bg-background text-foreground safe-area-container px-2.5 py-2 sm:px-5 sm:py-4 md:px-8 md:py-5 lg:px-10 overflow-x-hidden neon-grid">
+      <AmbientBackground openMarketsCount={openMarketsCount} />
+
       {/* Native-style Pull to Refresh indicator */}
       <div
         className="fixed top-3 left-0 right-0 flex justify-center items-center z-[1000] pointer-events-none transition-opacity duration-200"
@@ -187,7 +190,7 @@ export const App: React.FC = () => {
       </div>
 
       <div
-        className="max-w-[1480px] w-full mx-auto flex flex-col gap-2.5 sm:gap-4 md:gap-6 overflow-x-hidden"
+        className="relative z-10 max-w-[1480px] w-full mx-auto flex flex-col gap-2.5 sm:gap-4 md:gap-6 overflow-x-hidden"
         style={{
           transform: pullDistance > 0 ? `translateY(${pullDistance * 0.55}px)` : undefined,
           transition: pullDistance === 0 ? 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)' : 'none'

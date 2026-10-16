@@ -173,13 +173,13 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
             className="relative z-10 flex flex-col w-full max-w-md h-full bg-popover border-l border-border shadow-neon-lg overflow-hidden"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3.5 border-b border-border bg-popover/90 backdrop-blur-md">
+            <div className="flex items-center justify-between px-4 py-3.5 border-b border-border bg-popover">
               <div className="flex items-center gap-2.5">
-                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/[0.15] border border-emerald-400/45 text-emerald-300 shadow-[0_0_0_1px_rgba(16,185,129,0.18),0_0_18px_-6px_rgba(16,185,129,0.55)]">
+                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.04] border border-border text-zinc-200">
                   <Calendar className="w-4 h-4" aria-hidden="true" />
                 </div>
                 <div>
-                  <h2 id="events-drawer-title" className="text-sm font-semibold text-white tracking-wide">
+                  <h2 id="events-drawer-title" className="text-sm font-semibold text-zinc-100 tracking-tight">
                     Próximos Eventos
                   </h2>
                   <p id="events-drawer-desc" className="text-[11px] text-muted-foreground">
@@ -191,26 +191,26 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                 ref={closeButtonRef}
                 type="button"
                 onClick={onClose}
-                className="flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:text-white hover:bg-white/5 active:bg-white/10 transition-[color,background-color,border-color,box-shadow] duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                className="flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-white hover:bg-white/[0.06] transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 cursor-pointer"
                 aria-label="Cerrar panel de eventos"
               >
-                <X className="w-5 h-5" aria-hidden="true" />
+                <X className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
 
             {/* Filter Bar */}
-            <div className="p-3 bg-popover/90 border-b border-border space-y-2.5">
+            <div className="p-3 bg-popover border-b border-border space-y-2.5">
               {/* Mode Segmented Control: Eventos Macro vs Feriados Bursátiles */}
-              <div className="grid grid-cols-2 p-1 bg-white/[0.04] rounded-lg border border-border text-xs font-semibold" role="group" aria-label="Modo de visualización de eventos">
+              <div className="grid grid-cols-2 p-0.5 bg-muted rounded-lg border border-border text-xs font-medium" role="group" aria-label="Modo de visualización de eventos">
                 <button
                   type="button"
                   onClick={() => setViewMode('events')}
                   aria-pressed={viewMode === 'events'}
                   className={cn(
-                    'py-1.5 px-2 rounded-md text-center transition-all duration-200 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
+                    'py-1.5 px-2 rounded-md text-center transition-colors duration-150 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
                     viewMode === 'events'
-                      ? 'bg-emerald-500/[0.18] text-emerald-300 border border-emerald-400/45 shadow-[0_0_0_1px_rgba(16,185,129,0.18),0_0_12px_-4px_rgba(16,185,129,0.5)]'
-                      : 'text-muted-foreground hover:text-white'
+                      ? 'bg-card text-zinc-100 border border-border-strong font-semibold'
+                      : 'text-muted-foreground hover:text-zinc-200 border border-transparent'
                   )}
                 >
                   Eventos Macro ({upcomingEvents.length})
@@ -220,10 +220,10 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                   onClick={() => setViewMode('holidays')}
                   aria-pressed={viewMode === 'holidays'}
                   className={cn(
-                    'py-1.5 px-2 rounded-md text-center transition-all duration-200 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
+                    'py-1.5 px-2 rounded-md text-center transition-colors duration-150 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
                     viewMode === 'holidays'
-                      ? 'bg-purple-500/[0.18] text-purple-300 border border-purple-400/45 shadow-[0_0_0_1px_rgba(168,85,247,0.18),0_0_12px_-4px_rgba(168,85,247,0.5)]'
-                      : 'text-muted-foreground hover:text-white'
+                      ? 'bg-card text-zinc-100 border border-border-strong font-semibold'
+                      : 'text-muted-foreground hover:text-zinc-200 border border-transparent'
                   )}
                 >
                   Feriados ({upcomingHolidays.length})
@@ -255,10 +255,10 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                         }}
                         aria-pressed={isActive}
                         className={cn(
-                          'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md font-medium whitespace-nowrap transition-[color,background-color,border-color,box-shadow] duration-200 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 shrink-0',
+                          'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md font-medium whitespace-nowrap transition-colors duration-150 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 shrink-0',
                           isActive
-                            ? 'bg-emerald-500/[0.15] text-emerald-300 border border-emerald-400/45 shadow-[0_0_0_1px_rgba(16,185,129,0.18),0_0_18px_-6px_rgba(16,185,129,0.55)]'
-                            : 'bg-white/[0.05] text-muted-foreground border border-border hover:bg-white/[0.08] hover:text-foreground/80'
+                            ? 'bg-white/[0.08] text-zinc-100 border border-border-strong font-semibold'
+                            : 'bg-muted/50 text-muted-foreground border border-border hover:bg-muted hover:text-zinc-200'
                         )}
                       >
                         <span aria-hidden="true">{tab.flag}</span>
@@ -297,10 +297,10 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                     onClick={() => setOnlyHighImportance((prev) => !prev)}
                     aria-pressed={onlyHighImportance}
                     className={cn(
-                      'flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border transition-[color,background-color,border-color,box-shadow] duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
+                      'flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
                       onlyHighImportance
-                        ? 'bg-rose-500/[0.15] border-rose-400/45 text-rose-300 shadow-[0_0_0_1px_rgba(244,63,94,0.18),0_0_18px_-6px_rgba(244,63,94,0.55)]'
-                        : 'bg-white/[0.05] border-border text-muted-foreground hover:text-foreground/80'
+                        ? 'bg-rose-500/15 border-rose-500/35 text-rose-300'
+                        : 'bg-muted/50 border-border text-muted-foreground hover:text-zinc-200'
                     )}
                   >
                     <Flame className="w-3.5 h-3.5" aria-hidden="true" />
@@ -313,7 +313,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                     {upcomingHolidays.length}{' '}
                     {upcomingHolidays.length === 1 ? 'feriado próximo' : 'feriados próximos'}
                   </span>
-                  <span className="text-[11px] font-mono text-purple-300/80 font-medium">
+                  <span className="text-[11px] font-mono text-violet-300/80 font-medium">
                     Ventana 120 días
                   </span>
                 </div>
@@ -322,7 +322,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
 
             {/* Content List: Holidays or Macro Events */}
             {viewMode === 'holidays' ? (
-              <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
+              <div className="flex-1 overflow-y-auto p-3 space-y-2">
                 {upcomingHolidays.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
                     <div className="flex items-center justify-center w-12 h-12 rounded-full bg-secondary text-muted-foreground/70 mb-3">
@@ -339,21 +339,21 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                   upcomingHolidays.map((holiday, idx) => (
                     <div
                       key={`${holiday.marketId}-${holiday.date}-${idx}`}
-                      className="p-3 rounded-xl bg-white/[0.03] border border-purple-500/25 hover:border-purple-400/40 hover:bg-purple-950/20 transition-[background-color,border-color] duration-200 flex flex-col gap-2 shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
+                      className="p-3 rounded-xl bg-card border border-border hover:border-border-strong transition-colors duration-150 flex flex-col gap-2"
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold bg-white/[0.05] text-foreground/90 border border-border">
+                        <span className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-semibold bg-white/[0.04] text-zinc-200 border border-border">
                           <span>{holiday.marketFlag}</span>
                           <span>{holiday.marketName}</span>
                         </span>
                         <span
                           className={cn(
-                            'px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider',
+                            'px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider font-mono',
                             holiday.relativeDays === 0
-                              ? 'bg-emerald-500/[0.15] text-emerald-300 border border-emerald-400/45 shadow-[0_0_0_1px_rgba(16,185,129,0.18),0_0_12px_-4px_rgba(16,185,129,0.5)] animate-pulse'
+                              ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/35'
                               : holiday.relativeDays === 1
-                              ? 'bg-amber-500/[0.15] text-amber-300 border border-amber-400/45'
-                              : 'bg-white/[0.05] text-muted-foreground border border-border'
+                              ? 'bg-amber-500/15 text-amber-300 border border-amber-500/35'
+                              : 'bg-white/[0.04] text-muted-foreground border border-border'
                           )}
                         >
                           {holiday.relativeDescriptor}
@@ -361,14 +361,14 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                       </div>
 
                       <div>
-                        <h3 className="text-xs font-bold text-purple-200 leading-snug">
+                        <h3 className="text-xs font-semibold text-zinc-100 leading-snug">
                           {holiday.name}
                         </h3>
                       </div>
 
-                      <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1.5 border-t border-purple-500/15">
-                        <span className="font-mono text-foreground/80">{holiday.dateFormatted} ({holiday.date})</span>
-                        <span className="text-[10px] font-semibold text-purple-300/90 uppercase tracking-wider">
+                      <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1.5 border-t border-border">
+                        <span className="font-mono text-zinc-300">{holiday.dateFormatted} ({holiday.date})</span>
+                        <span className="text-[10px] font-medium text-violet-300 uppercase tracking-wider">
                           Mercado cerrado
                         </span>
                       </div>
@@ -377,7 +377,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                 )}
               </div>
             ) : (
-              <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
+              <div className="flex-1 overflow-y-auto p-3 space-y-2">
                 {upcomingEvents.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
                     <div className="flex items-center justify-center w-12 h-12 rounded-full bg-secondary text-muted-foreground/70 mb-3">
@@ -407,17 +407,17 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                   return (
                     <div
                       key={ev.id}
-                      className="group flex flex-col gap-2 p-3 rounded-xl bg-white/[0.03] border border-border hover:border-border-strong hover:bg-white/[0.06] transition-[background-color,border-color] duration-200 shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
+                      className="group flex flex-col gap-2 p-3 rounded-xl bg-card border border-border hover:border-border-strong transition-colors duration-150"
                     >
                       {/* Top row: tags & badges */}
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-white/[0.05] text-foreground/80 border border-border">
+                          <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-white/[0.04] text-zinc-200 border border-border">
                             <span>{market?.flag ?? '🌐'}</span>
                             <span>{market?.name ?? ev.marketId.toUpperCase()}</span>
                           </span>
 
-                          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-white/[0.05] text-muted-foreground">
+                          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-white/[0.03] text-muted-foreground">
                             <CatIcon className="w-3 h-3" />
                             <span>{catInfo.label}</span>
                           </span>
@@ -426,15 +426,15 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                         <div className="flex items-center gap-1.5">
                           <span
                             className={cn(
-                              'px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider',
+                              'px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider font-mono',
                               isHigh
-                                ? 'bg-rose-500/[0.15] text-rose-300 border border-rose-400/45 shadow-[0_0_0_1px_rgba(244,63,94,0.18),0_0_18px_-6px_rgba(244,63,94,0.55)]'
-                                : 'bg-amber-500/[0.15] text-amber-300 border border-amber-400/45 shadow-[0_0_0_1px_rgba(245,158,11,0.18),0_0_18px_-6px_rgba(245,158,11,0.55)]'
+                                ? 'bg-rose-500/15 text-rose-300 border border-rose-500/35'
+                                : 'bg-amber-500/15 text-amber-300 border border-amber-500/35'
                             )}
                           >
                             {isHigh ? 'Alta' : 'Media'}
                           </span>
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/[0.15] text-emerald-300 border border-emerald-400/45 shadow-[0_0_0_1px_rgba(16,185,129,0.18),0_0_18px_-6px_rgba(16,185,129,0.55)]">
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-white/[0.04] text-zinc-300 border border-border">
                             {ev.relativeTimeDescriptor}
                           </span>
                         </div>
@@ -442,7 +442,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
 
                       {/* Title & description */}
                       <div>
-                        <h3 className="text-xs font-semibold text-white leading-snug">
+                        <h3 className="text-xs font-semibold text-zinc-100 leading-snug">
                           {ev.title}
                         </h3>
                         {ev.description && (
@@ -455,18 +455,18 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                       {/* Timestamps conversion grid */}
                       <div className="grid grid-cols-2 gap-2 mt-1 p-2 rounded-lg bg-muted border border-border text-[11px]">
                         <div>
-                          <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-300 flex items-center gap-1">
+                          <span className="text-[10px] uppercase font-semibold tracking-wider text-zinc-300 flex items-center gap-1">
                             <span>🇨🇱</span> Hora Chile
                           </span>
-                          <span className="font-mono font-medium text-foreground/80 mt-0.5 block">
+                          <span className="font-mono font-medium text-zinc-100 mt-0.5 block tabular-nums">
                             {ev.chileTimeFormatted}
                           </span>
                         </div>
                         <div>
-                          <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground flex items-center gap-1">
+                          <span className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground flex items-center gap-1">
                             <span>{market?.flag ?? '🌐'}</span> Hora Bolsa
                           </span>
-                          <span className="font-mono font-medium text-foreground/80 mt-0.5 block">
+                          <span className="font-mono font-medium text-zinc-300 mt-0.5 block tabular-nums">
                             {ev.exchangeTimeFormatted}
                           </span>
                         </div>

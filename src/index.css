@@ -62,33 +62,33 @@
 
   /* base */
   --background: #05060a;
-  --foreground: #e9eef8;
+  --foreground: #f4f4f5;
 
-  /* surfaces (glass over the grid) */
-  --card: rgba(11, 16, 28, 0.72);
-  --card-foreground: #f1f5fb;
-  --popover: #0a0e1a;
-  --popover-foreground: #f1f5fb;
+  /* surfaces (translucent obsidian elevation over living background) */
+  --card: rgba(11, 14, 22, 0.74);
+  --card-foreground: #fafafa;
+  --popover: #0e1017;
+  --popover-foreground: #fafafa;
 
   /* accents */
   --primary: #38bdf8;
-  --primary-foreground: #04070e;
-  --secondary: #17203a;
-  --secondary-foreground: #e9eef8;
-  --muted: #0b101c;
-  --muted-foreground: #8ba0bd;
-  --accent: rgba(56, 189, 248, 0.14);
-  --accent-foreground: #7dd3fc;
-  --destructive: #fb3b6b;
+  --primary-foreground: #05060a;
+  --secondary: #151821;
+  --secondary-foreground: #e4e4e7;
+  --muted: rgba(16, 18, 26, 0.80);
+  --muted-foreground: #8b92a5;
+  --accent: rgba(255, 255, 255, 0.05);
+  --accent-foreground: #f4f4f5;
+  --destructive: #f43f5e;
   --destructive-foreground: #ffffff;
 
-  /* luminous strokes */
-  --border: rgba(148, 190, 255, 0.14);
-  --border-strong: rgba(56, 189, 248, 0.35);
-  --input: rgba(148, 190, 255, 0.18);
+  /* precision 1px strokes */
+  --border: rgba(255, 255, 255, 0.085);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --input: rgba(255, 255, 255, 0.10);
   --ring: #38bdf8;
 
-  /* neon spectrum */
+  /* semantic spectrum */
   --neon-cyan: #22d3ee;
   --neon-sky: #38bdf8;
   --neon-violet: #a855f7;
@@ -96,7 +96,7 @@
   --neon-amber: #f59e0b;
   --neon-rose: #f43f5e;
 
-  --radius: 0.875rem;
+  --radius: 0.75rem;
 
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -131,14 +131,14 @@
   --color-neon-emerald: var(--neon-emerald);
   --color-neon-amber: var(--neon-amber);
   --color-neon-rose: var(--neon-rose);
-  --shadow-neon: 0 0 0 1px rgba(56,189,248,0.16), 0 0 26px -8px rgba(56,189,248,0.50), 0 14px 40px -18px rgba(2,6,23,0.95);
-  --shadow-neon-lg: 0 0 0 1px rgba(56,189,248,0.28), 0 0 44px -10px rgba(56,189,248,0.62), 0 20px 56px -22px rgba(2,6,23,0.98);
-  --shadow-neon-violet: 0 0 0 1px rgba(168,85,247,0.22), 0 0 36px -10px rgba(168,85,247,0.58), 0 16px 44px -20px rgba(2,6,23,0.95);
+  --shadow-neon: 0 1px 2px rgba(0, 0, 0, 0.45), 0 8px 24px -8px rgba(0, 0, 0, 0.60);
+  --shadow-neon-lg: 0 24px 48px -12px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  --shadow-neon-violet: 0 1px 2px rgba(0, 0, 0, 0.45), 0 8px 24px -8px rgba(0, 0, 0, 0.60);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-2xl: calc(var(--radius) + 6px);
 }
 
 body {
@@ -150,19 +150,84 @@ body {
   min-height: 100dvh;
 }
 
-/* Neon Grid Background */
-.neon-grid {
-  background-image:
-    radial-gradient(ellipse 85% 45% at 50% -12%, rgba(56, 189, 248, 0.22), transparent 68%),
-    radial-gradient(ellipse 55% 40% at 100% 104%, rgba(168, 85, 247, 0.18), transparent 62%),
-    radial-gradient(ellipse 45% 34% at -6% 46%, rgba(34, 211, 238, 0.12), transparent 58%),
-    linear-gradient(to right, rgba(125, 211, 252, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(125, 211, 252, 0.05) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 100% 100%, 44px 44px, 44px 44px;
-  background-attachment: fixed;
+/* Living Architectural Background Utilities */
+.ambient-grid-mask {
+  mask-image: radial-gradient(ellipse 90% 75% at 50% 25%, #000 25%, rgba(0, 0, 0, 0.55) 60%, transparent 95%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 75% at 50% 25%, #000 25%, rgba(0, 0, 0, 0.55) 60%, transparent 95%);
 }
 
-/* gradient hairline along a top edge; pseudo-element only, adds no DOM node */
+@keyframes aurora-drift-1 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33% { transform: translate3d(6vw, 4vh, 0) scale(1.08); }
+  66% { transform: translate3d(-4vw, 7vh, 0) scale(0.95); }
+}
+
+@keyframes aurora-drift-2 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  40% { transform: translate3d(-7vw, 6vh, 0) scale(1.1); }
+  75% { transform: translate3d(4vw, -5vh, 0) scale(0.94); }
+}
+
+@keyframes aurora-drift-3 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(8vw, -6vh, 0) scale(1.12); }
+}
+
+@keyframes telemetry-beam-x {
+  0% { transform: translate3d(-120%, 0, 0); opacity: 0; }
+  10% { opacity: 0.9; }
+  85% { opacity: 0.9; }
+  100% { transform: translate3d(100vw, 0, 0); opacity: 0; }
+}
+
+@keyframes telemetry-beam-y {
+  0% { transform: translate3d(0, -120%, 0); opacity: 0; }
+  12% { opacity: 0.85; }
+  85% { opacity: 0.85; }
+  100% { transform: translate3d(0, 100vh, 0); opacity: 0; }
+}
+
+.ambient-orb-1 {
+  animation: aurora-drift-1 22s ease-in-out infinite;
+  will-change: transform;
+}
+
+.ambient-orb-2 {
+  animation: aurora-drift-2 26s ease-in-out infinite;
+  will-change: transform;
+}
+
+.ambient-orb-3 {
+  animation: aurora-drift-3 30s ease-in-out infinite;
+  will-change: transform;
+}
+
+.ambient-beam-x-1 {
+  animation: telemetry-beam-x 11s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  will-change: transform, opacity;
+}
+
+.ambient-beam-x-2 {
+  animation: telemetry-beam-x 15s cubic-bezier(0.4, 0, 0.2, 1) 4s infinite;
+  will-change: transform, opacity;
+}
+
+.ambient-beam-y-1 {
+  animation: telemetry-beam-y 13s cubic-bezier(0.4, 0, 0.2, 1) 2s infinite;
+  will-change: transform, opacity;
+}
+
+.ambient-beam-y-2 {
+  animation: telemetry-beam-y 17s cubic-bezier(0.4, 0, 0.2, 1) 7s infinite;
+  will-change: transform, opacity;
+}
+
+/* Subtle top ambient light for minimalist terminal depth */
+.neon-grid {
+  position: relative;
+}
+
+/* Subtle specular top border highlight */
 .neon-edge {
   position: relative;
 }
@@ -171,26 +236,16 @@ body {
   position: absolute;
   inset: 0 0 auto 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.60), rgba(168, 85, 247, 0.40), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.11), transparent);
   pointer-events: none;
 }
 
-/* bloom for small static data marks (dots, short bars, icons). Never on large or animated surfaces. */
 .neon-bloom {
-  filter: drop-shadow(0 0 6px currentColor);
+  filter: none;
 }
 
-/* gradient display text */
 .neon-text {
-  background-image: linear-gradient(100deg, #e9eef8 0%, #a5f3fc 44%, #c4b5fd 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-@keyframes neon-sheen {
-  0% { transform: translateX(-120%); }
-  100% { transform: translateX(220%); }
+  color: #fafafa;
 }
 
 @media (prefers-reduced-motion: reduce) {

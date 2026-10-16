@@ -80,26 +80,25 @@ export const TimelineLeftColumn: React.FC<TimelineLeftColumnProps> = React.memo(
   return (
     <motion.div
       layout
-      className={`timeline-left-column sticky left-0 bg-muted border-r border-border shadow-[6px_0_20px_rgba(0,0,0,0.7)] flex flex-col z-10 transition-[width,min-width] duration-200 ease-out ${
+      className={`timeline-left-column sticky left-0 bg-card border-r border-border shadow-[4px_0_16px_rgba(0,0,0,0.45)] flex flex-col z-10 transition-[width,min-width] duration-200 ease-out ${
         isColumnCollapsed
           ? 'w-11 min-w-[44px] sm:w-14 sm:min-w-[56px]'
           : 'w-[84px] min-w-[84px] sm:w-48 sm:min-w-[192px] md:w-56 md:min-w-[224px]'
       }`}
     >
       <div
-        className={`h-9 sm:h-11 flex items-center border-b border-border bg-muted font-mono text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted-foreground ${
+        className={`h-9 sm:h-11 flex items-center border-b border-border bg-muted font-mono text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground ${
           isColumnCollapsed ? 'justify-center px-0' : 'justify-between px-2 sm:px-3'
         }`}
       >
         {!isColumnCollapsed && (
-          <span className="text-[9px] sm:text-[11px] font-bold">Mercado</span>
+          <span className="text-[9px] sm:text-[11px] font-semibold">Mercado</span>
         )}
         <motion.button
           type="button"
           onClick={onToggleColumn}
-          whileHover={{ scale: 1.08 }}
-          whileTap={{ scale: 0.92 }}
-          className="relative inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-md bg-white/[0.04] border border-border text-foreground/80 hover:bg-sky-400/20 hover:border-sky-400/40 hover:text-sky-400 transition-colors cursor-pointer before:absolute before:-inset-2 before:content-['']"
+          whileTap={{ scale: 0.95 }}
+          className="relative inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-md bg-white/[0.03] border border-border text-zinc-300 hover:bg-white/[0.06] hover:border-border-strong hover:text-white transition-colors cursor-pointer before:absolute before:-inset-2 before:content-['']"
           title={isColumnCollapsed ? 'Expandir nombres y detalles de mercados' : 'Colapsar a solo banderas'}
           aria-label={isColumnCollapsed ? 'Expandir columna' : 'Colapsar columna'}
         >
@@ -126,9 +125,7 @@ export const TimelineLeftColumn: React.FC<TimelineLeftColumnProps> = React.memo(
             key={market.id}
             className={`h-[38px] sm:h-[46px] md:h-[50px] flex items-center border-b border-border transition-colors ${
               isChile
-                ? holiday
-                  ? 'bg-gradient-to-r from-purple-500/[0.12] to-purple-500/[0.04] border-b-purple-400/35'
-                  : 'bg-gradient-to-r from-sky-400/[0.12] to-sky-400/[0.04] border-b-sky-400/35'
+                ? 'bg-white/[0.02]'
                 : 'hover:bg-white/[0.02]'
             } ${isHoliday ? 'opacity-60' : ''} ${isColumnCollapsed ? 'justify-center px-0' : 'justify-between px-2 sm:px-3'}`}
             title={
@@ -155,43 +152,43 @@ export const TimelineLeftColumn: React.FC<TimelineLeftColumnProps> = React.memo(
             }`}
           >
             <div className={`flex items-center ${isColumnCollapsed ? 'justify-center gap-0' : 'gap-1.5 sm:gap-2'} min-w-0`}>
-              <span className={`leading-none select-none flex-shrink-0 ${isColumnCollapsed ? 'text-lg sm:text-2xl' : 'text-sm sm:text-xl'}`}>
+              <span className={`leading-none select-none flex-shrink-0 ${isColumnCollapsed ? 'text-lg sm:text-xl' : 'text-sm sm:text-lg'}`}>
                 {market.flag}
               </span>
               {!isColumnCollapsed && (
                 <div className="flex flex-col min-w-0">
                   {/* Desktop: Name on top, Code below */}
-                  <span className="text-[11px] sm:text-xs font-bold text-white whitespace-nowrap truncate hidden sm:inline">
+                  <span className="text-[11px] sm:text-xs font-semibold text-zinc-100 whitespace-nowrap truncate hidden sm:inline">
                     {market.name}
                   </span>
-                  <span className="text-[10px] font-semibold text-muted-foreground font-mono leading-none hidden sm:inline">
+                  <span className="text-[10px] font-medium text-muted-foreground font-mono leading-none hidden sm:inline">
                     {market.code}
                   </span>
 
                   {/* Mobile: Code on top with Status Dot, Time below */}
                   <div className="flex items-center gap-1 sm:hidden">
-                    <span className="text-[9.5px] font-extrabold text-white font-mono leading-none tracking-tight">
+                    <span className="text-[9.5px] font-bold text-zinc-100 font-mono leading-none tracking-tight">
                       {market.code}
                     </span>
                     <span
                       className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
                         isChile && holiday
-                          ? 'bg-purple-400 shadow-[0_0_6px_rgba(168,85,247,0.8)]'
+                          ? 'bg-violet-400'
                           : isChile
                           ? 'bg-sky-400'
                           : isHoliday
-                          ? 'bg-purple-400 shadow-[0_0_6px_rgba(168,85,247,0.8)]'
+                          ? 'bg-violet-400'
                           : ev.status === 'open'
-                          ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]'
+                          ? 'bg-emerald-400'
                           : ev.status === 'lunch'
-                          ? 'bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)]'
+                          ? 'bg-amber-400'
                           : ev.status === 'pre_market'
-                          ? 'bg-cyan-400 shadow-[0_0_6px_rgba(34,211,238,0.8)]'
+                          ? 'bg-sky-400'
                           : 'bg-zinc-600'
                       }`}
                     />
                   </div>
-                  <span className="font-mono text-[9px] font-semibold text-muted-foreground tabular-nums leading-none mt-0.5 sm:hidden">
+                  <span className="font-mono text-[9px] font-medium text-muted-foreground tabular-nums leading-none mt-0.5 sm:hidden">
                     {ev.localTimeFormatted}
                   </span>
                 </div>
@@ -202,7 +199,7 @@ export const TimelineLeftColumn: React.FC<TimelineLeftColumnProps> = React.memo(
             {!isColumnCollapsed && (
               <div className="hidden sm:flex flex-col items-end justify-center gap-1 flex-shrink-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="font-mono text-xs md:text-sm font-extrabold text-white tabular-nums leading-none">
+                  <span className="font-mono text-xs md:text-sm font-bold text-zinc-100 tabular-nums leading-none">
                     {ev.localTimeFormatted}
                   </span>
                   {getStatusBadge(market.id, ev)}

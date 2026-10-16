@@ -46,16 +46,16 @@ export const TimelineWeekSelector: React.FC<TimelineWeekSelectorProps> = React.m
 
   return (
     <div className="flex items-center gap-2 w-full pt-1 pb-0.5">
-      <div className="hidden sm:flex items-center gap-1 text-[11px] font-mono text-muted-foreground whitespace-nowrap pl-0.5">
-        <Calendar size={13} className="text-sky-400" />
-        <span className="font-semibold text-foreground/80">Proyección:</span>
+      <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground whitespace-nowrap pl-0.5">
+        <Calendar size={13} className="text-zinc-400" />
+        <span className="font-medium text-zinc-400">Proyección:</span>
       </div>
 
       <div
         ref={scrollRef}
         role="tablist"
         aria-label="Selector de día para la línea de tiempo"
-        className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto select-none py-0.5 px-0.5 w-full [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x"
+        className="flex items-center gap-1.5 overflow-x-auto select-none py-0.5 px-0.5 w-full [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x"
       >
         {days.map((day) => {
           const isSelected = day.isoDate === selectedIsoDate;
@@ -68,30 +68,30 @@ export const TimelineWeekSelector: React.FC<TimelineWeekSelectorProps> = React.m
               role="tab"
               aria-selected={isSelected}
               onClick={() => onSelectDay(day)}
-              className={`group relative flex items-center gap-1.5 min-h-[36px] sm:min-h-[38px] px-3 py-1.5 rounded-xl border text-[11px] sm:text-xs font-medium transition-all duration-150 cursor-pointer whitespace-nowrap outline-none focus-visible:ring-1 focus-visible:ring-sky-400 ${
+              className={`group relative flex items-center gap-1.5 min-h-[34px] sm:min-h-[36px] px-3 py-1 rounded-lg border text-[11px] sm:text-xs font-medium transition-colors duration-150 cursor-pointer whitespace-nowrap outline-none focus-visible:ring-1 focus-visible:ring-sky-400 ${
                 isSelected
-                  ? 'border-sky-400/90 bg-sky-500/20 text-white font-semibold shadow-[0_0_12px_rgba(56,189,248,0.25)] ring-1 ring-sky-400/40'
-                  : 'border-border/60 bg-muted/40 text-muted-foreground hover:text-foreground hover:bg-muted/80 hover:border-border/90'
+                  ? 'border-border-strong bg-white/[0.08] text-zinc-100 font-semibold'
+                  : 'border-border bg-muted/40 text-muted-foreground hover:text-zinc-200 hover:bg-muted/80 hover:border-border-strong'
               }`}
               title={`${day.label}, ${day.dayOfWeekShort} ${day.dayOfMonth} (${day.isoDate})${
                 day.hasEvents ? ` — ${day.eventCount} catalizador(es)` : ''
               }`}
             >
               {/* Day Label & Number */}
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 <span>{day.label}</span>
                 {day.isToday && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                 )}
               </div>
 
               {/* Event Catalyst Dot */}
               {day.hasEvents && (
                 <span
-                  className={`inline-flex items-center justify-center rounded-full transition-transform ${
+                  className={`inline-flex items-center justify-center rounded-full ${
                     day.hasHighImpact
-                      ? 'w-1.5 h-1.5 bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.9)] animate-pulse'
-                      : 'w-1.5 h-1.5 bg-amber-400 shadow-[0_0_5px_rgba(251,191,36,0.9)]'
+                      ? 'w-1.5 h-1.5 bg-rose-500'
+                      : 'w-1.5 h-1.5 bg-amber-400'
                   }`}
                   aria-label={`${day.eventCount} eventos${day.hasHighImpact ? ' (alto impacto)' : ''}`}
                 />
