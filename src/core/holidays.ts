@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon';
-import { MarketHoliday } from './types';
+import { MarketHoliday, MarketConfig, SessionConfig } from './types';
 import rawHolidays from '../data/holidays.json';
 import { MARKETS, CHILE_CONFIG } from './markets';
 
@@ -19,10 +19,56 @@ export function getMarketHoliday(marketId: string, localDateStr: string): Market
 }
 
 /**
- * Checks if a market is closed for holiday on a given local date (YYYY-MM-DD).
+ * Checks if a market is completely closed for holiday on a given local date (YYYY-MM-DD).
+ * Returns false if it is an early-close trading day.
  */
 export function isMarketHoliday(marketId: string, localDateStr: string): boolean {
-  return HOLIDAYS_BY_KEY.has(`${marketId}:${localDateStr}`);
+  const holiday = HOLIDAYS_BY_KEY.get(`${marketId}:${localDateStr}`);
+  return !!holiday && !holiday.isEarlyClose;
+}
+
+/**
+ * Checks if a market operates on an early-close schedule on a given local date (YYYY-MM-DD).
+ */
+export function isEarlyCloseDay(marketId: string, localDateStr: string): boolean {
+  const holiday = HOLIDAYS_BY_KEY.get(`${marketId}:${localDateStr}`);
+  return !!holiday && !!holiday.isEarlyClose;
+}
+
+/**
+ * Resolves the effective trading sessions for a given date, shortening sessions if it is an early-close day.
+ */
+export function getEffectiveMarketSessions(
+  market: MarketConfig,
+  localDateStr: string
+): SessionConfig[] {
+  const holiday = HOLIDAYS_BY_KEY.get(`${market.id}:${localDateStr}`);
+  if (!holiday || !holiday.isEarlyClose || !holiday.closeTime) {
+    return market.sessions;
+  }
+
+  const [closeH, closeM] = holiday.closeTime.split(':').map(Number);
+  const closeMins = closeH * 60 + closeM;
+
+  return market.sessions
+    .filter((session) => {
+      const [startH, startM] = session.start.split(':').map(Number);
+      return startH * 60 + startM < closeMins;
+    })
+    .map((session) => {
+      const [endH, endM] = session.end.split(':').map(Number);
+      const endMins = endH * 60 + endM;
+      if (endMins > closeMins) {
+        return {
+          ...session,
+          end: holiday.closeTime!,
+          label: session.label
+            ? `${session.label} (Cierre temprano ${holiday.closeTime})`
+            : `Cierre temprano (${holiday.closeTime})`
+        };
+      }
+      return session;
+    });
 }
 
 export interface UpcomingHoliday extends MarketHoliday {

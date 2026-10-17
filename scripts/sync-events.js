@@ -123,19 +123,25 @@ async function syncHolidays(apiKey) {
       const data = await res.json();
       const items = data.data || [];
       for (const item of items) {
-        if (!item.atDate) continue;
-        // Skip partial-day / early-close sessions (Finnhub sets tradingHour="" for full closures)
-        if (item.tradingHour && String(item.tradingHour).trim() !== '') continue;
-
         const key = `${ex.marketId}:${item.atDate}`;
         if (NON_CLOSURE_EXCLUSIONS.has(key)) continue;
+
+        // Finnhub sets tradingHour="" for full closures, or e.g. "09:30-13:00" for early closes
+        const tradingHour = String(item.tradingHour || '').trim();
+        const isEarlyClose = tradingHour !== '' && tradingHour.includes('-');
+        let closeTime;
+        if (isEarlyClose) {
+          const parts = tradingHour.split('-');
+          closeTime = parts[1]?.trim();
+        }
 
         // Preserve existing curated holiday names; only insert newly discovered future closures
         if (!holidayMap.has(key)) {
           holidayMap.set(key, {
             marketId: ex.marketId,
             date: item.atDate,
-            name: item.eventName || 'Feriado bursátil'
+            name: item.eventName || (isEarlyClose ? 'Cierre temprano' : 'Feriado bursátil'),
+            ...(isEarlyClose && closeTime ? { isEarlyClose: true, closeTime } : {})
           });
         }
       }

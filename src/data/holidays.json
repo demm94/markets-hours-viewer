@@ -8,6 +8,8 @@
   { "marketId": "nyse", "date": "2026-07-03", "name": "Independence Day (observado)" },
   { "marketId": "nyse", "date": "2026-09-07", "name": "Labor Day" },
   { "marketId": "nyse", "date": "2026-11-26", "name": "Thanksgiving Day" },
+  { "marketId": "nyse", "date": "2026-11-27", "name": "Black Friday (Cierre temprano)", "isEarlyClose": true, "closeTime": "13:00" },
+  { "marketId": "nyse", "date": "2026-12-24", "name": "Víspera de Navidad (Cierre temprano)", "isEarlyClose": true, "closeTime": "13:00" },
   { "marketId": "nyse", "date": "2026-12-25", "name": "Navidad" },
   { "marketId": "nyse", "date": "2027-01-01", "name": "Año Nuevo 2027" },
   { "marketId": "nyse", "date": "2027-01-18", "name": "Martin Luther King Jr. Day" },
@@ -25,7 +27,9 @@
   { "marketId": "chile", "date": "2026-10-31", "name": "Día Iglesias Evangélicas" },
   { "marketId": "chile", "date": "2026-11-01", "name": "Todos los Santos" },
   { "marketId": "chile", "date": "2026-12-08", "name": "Inmaculada Concepción" },
+  { "marketId": "chile", "date": "2026-12-24", "name": "Víspera de Navidad (Cierre temprano)", "isEarlyClose": true, "closeTime": "13:00" },
   { "marketId": "chile", "date": "2026-12-25", "name": "Navidad" },
+  { "marketId": "chile", "date": "2026-12-31", "name": "Víspera de Año Nuevo (Cierre temprano)", "isEarlyClose": true, "closeTime": "12:30" },
   { "marketId": "chile", "date": "2027-01-01", "name": "Año Nuevo 2027" },
 
   { "marketId": "sse", "date": "2026-01-01", "name": "Año Nuevo" },

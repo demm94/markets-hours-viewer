@@ -380,8 +380,15 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
 
                       <div className="flex items-center justify-between text-xs text-muted-foreground pt-1.5 border-t border-border">
                         <span className="font-mono text-zinc-300">{holiday.dateFormatted} ({holiday.date})</span>
-                        <span className="text-xs font-medium text-violet-300 uppercase tracking-wider">
-                          Mercado cerrado
+                        <span
+                          className={cn(
+                            'text-xs font-medium uppercase tracking-wider',
+                            holiday.isEarlyClose ? 'text-amber-300' : 'text-violet-300'
+                          )}
+                        >
+                          {holiday.isEarlyClose
+                            ? `Cierre temprano (${holiday.closeTime})`
+                            : 'Mercado cerrado'}
                         </span>
                       </div>
                     </div>

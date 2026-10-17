@@ -1,7 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import { DateTime } from 'luxon';
-import { getMarketHoliday, isMarketHoliday, getUpcomingHolidays } from './holidays';
-import { evaluateMarketAt } from './timezone';
+import {
+  getMarketHoliday,
+  isMarketHoliday,
+  isEarlyCloseDay,
+  getEffectiveMarketSessions,
+  getUpcomingHolidays
+} from './holidays';
+import { evaluateMarketAt, projectMarketToTimeline } from './timezone';
 import { MARKETS, CHILE_CONFIG } from './markets';
 import { MarketConfig } from './types';
 
@@ -146,4 +152,79 @@ describe('market holidays engine', () => {
     expect(evalFriday.holiday).toBeDefined();
     expect(evalFriday.holiday?.name).toBe('Día del Hangeul');
   });
+
+  describe('early close / half-day sessions', () => {
+    it('correctly identifies early close days without marking them as full-day closures', () => {
+      // Black Friday 2026-11-27
+      expect(isEarlyCloseDay('nyse', '2026-11-27')).toBe(true);
+      expect(isMarketHoliday('nyse', '2026-11-27')).toBe(false);
+
+      const holiday = getMarketHoliday('nyse', '2026-11-27');
+      expect(holiday?.isEarlyClose).toBe(true);
+      expect(holiday?.closeTime).toBe('13:00');
+
+      // Regular day
+      expect(isEarlyCloseDay('nyse', '2026-11-25')).toBe(false);
+      // Full holiday
+      expect(isEarlyCloseDay('nyse', '2026-11-26')).toBe(false);
+    });
+
+    it('shortens effective market sessions on an early close day', () => {
+      const normalSessions = nyse.sessions;
+      expect(normalSessions[0].end).toBe('16:00');
+
+      const blackFridaySessions = getEffectiveMarketSessions(nyse, '2026-11-27');
+      expect(blackFridaySessions).toHaveLength(1);
+      expect(blackFridaySessions[0].start).toBe('09:30');
+      expect(blackFridaySessions[0].end).toBe('13:00');
+      expect(blackFridaySessions[0].label).toContain('13:00');
+    });
+
+    it('evaluates market as open before early close time and counts down to early close', () => {
+      // 2026-11-27 at 11:00 NY time (13:00 Chile time)
+      const blackFridayMorningNY = DateTime.fromObject(
+        { year: 2026, month: 11, day: 27, hour: 11, minute: 0 },
+        { zone: 'America/New_York' }
+      );
+
+      const evaluation = evaluateMarketAt(nyse, blackFridayMorningNY);
+      expect(evaluation.status).toBe('open');
+      expect(evaluation.holiday?.isEarlyClose).toBe(true);
+      expect(evaluation.nextTransition).toBeDefined();
+      expect(evaluation.nextTransition?.type).toBe('close');
+      expect(evaluation.nextTransition?.inMinutes).toBe(120); // 2 hours until 13:00
+      expect(evaluation.nextTransition?.formattedCountdown).toBe('Cierra en 2h');
+    });
+
+    it('evaluates market as closed after early close time and targets the next regular day', () => {
+      // 2026-11-27 at 13:30 NY time (after 13:00 early close)
+      const blackFridayAfternoonNY = DateTime.fromObject(
+        { year: 2026, month: 11, day: 27, hour: 13, minute: 30 },
+        { zone: 'America/New_York' }
+      );
+
+      const evaluation = evaluateMarketAt(nyse, blackFridayAfternoonNY);
+      expect(evaluation.status).toBe('closed');
+      expect(evaluation.activeSegmentLabel).toContain('Cerrado (Black Friday');
+      expect(evaluation.holiday?.isEarlyClose).toBe(true);
+      expect(evaluation.nextTransition).toBeDefined();
+      expect(evaluation.nextTransition?.type).toBe('open');
+      expect(evaluation.nextTransition?.formattedCountdown).toContain('Abre lun 09:30');
+    });
+
+    it('projects shortened session to timeline on early close days', () => {
+      // Reference date: 2026-11-27 (Chile time)
+      // NYSE session 09:30-13:00 EST -> 11:30-15:00 Chile (UTC-3 vs UTC-5)
+      // 11:30 = 690 min, 15:00 = 900 min
+      const refDate = DateTime.fromISO('2026-11-27T12:00:00', { zone: 'America/Santiago' });
+      const segments = projectMarketToTimeline(nyse, refDate);
+
+      expect(segments.length).toBeGreaterThan(0);
+      const regularSegment = segments.find((s) => s.type === 'regular');
+      expect(regularSegment).toBeDefined();
+      expect(regularSegment?.startMinute).toBe(11 * 60 + 30);
+      expect(regularSegment?.endMinute).toBe(15 * 60); // 900 min (ends at 13:00 NY = 15:00 Chile)
+    });
+  });
 });
+

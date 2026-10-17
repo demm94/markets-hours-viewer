@@ -38,6 +38,8 @@ export interface MarketHoliday {
   marketId: string;
   date: string; // YYYY-MM-DD
   name: string;
+  isEarlyClose?: boolean;
+  closeTime?: string; // "HH:mm" in exchange local timezone
 }
 
 export interface MarketEvaluation {

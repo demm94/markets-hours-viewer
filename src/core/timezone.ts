@@ -1,7 +1,7 @@
 import { DateTime } from 'luxon';
 import { MarketConfig, MarketEvaluation, MarketStatus, TimelineSegment, MarketTransition } from './types';
 import { CHILE_CONFIG } from './markets';
-import { getMarketHoliday, isMarketHoliday } from './holidays';
+import { getMarketHoliday, isMarketHoliday, getEffectiveMarketSessions } from './holidays';
 
 export const CHILE_TZ = CHILE_CONFIG.timezone; // 'America/Santiago'
 
@@ -31,8 +31,10 @@ export function projectMarketToTimeline(
 
   for (const dayOffset of daysToCheck) {
     const targetDay = refDayStart.plus({ days: dayOffset }).setZone(market.timezone);
+    const targetDateStr = targetDay.toFormat('yyyy-MM-dd');
+    const sessions = getEffectiveMarketSessions(market, targetDateStr);
 
-    for (const session of market.sessions) {
+    for (const session of sessions) {
       const { hour: startH, minute: startM } = parseTime(session.start);
       const { hour: endH, minute: endM } = parseTime(session.end);
 
@@ -137,16 +139,25 @@ export function getNextTransition(
   if (!market.sessions || market.sessions.length === 0) return undefined;
 
   const localDateStr = localTime.toFormat('yyyy-MM-dd');
+  const holiday = !options.isSimulation ? getMarketHoliday(market.id, localDateStr) : undefined;
   const isTodayHoliday = !options.isSimulation && isMarketHoliday(market.id, localDateStr);
+  const todaySessions = options.isSimulation
+    ? market.sessions
+    : getEffectiveMarketSessions(market, localDateStr);
 
   // Weekend handling
   if (!options.isSimulation && isWeekend(localTime)) {
     for (let dayOffset = 1; dayOffset <= 10; dayOffset++) {
       const day = localTime.plus({ days: dayOffset }).startOf('day');
       if (isWeekend(day)) continue;
-      if (isMarketHoliday(market.id, day.toFormat('yyyy-MM-dd'))) continue;
+      const dayStr = day.toFormat('yyyy-MM-dd');
+      if (isMarketHoliday(market.id, dayStr)) continue;
 
-      const firstSession = market.sessions[0];
+      const daySessions = options.isSimulation
+        ? market.sessions
+        : getEffectiveMarketSessions(market, dayStr);
+      if (daySessions.length === 0) continue;
+      const firstSession = daySessions[0];
       const { hour, minute } = parseTime(firstSession.start);
       const dayOpen = day.set({ hour, minute, second: 0, millisecond: 0 });
       const diffMins = Math.round(dayOpen.diff(localTime, 'minutes').minutes);
@@ -159,9 +170,9 @@ export function getNextTransition(
     }
   }
 
-  // If currently active (open, lunch, pre_market) and not a holiday
+  // If currently active (open, lunch, pre_market) and not a full holiday closure
   if (!isTodayHoliday) {
-    for (const session of market.sessions) {
+    for (const session of todaySessions) {
       const { hour: startH, minute: startM } = parseTime(session.start);
       const { hour: endH, minute: endM } = parseTime(session.end);
 
@@ -188,7 +199,7 @@ export function getNextTransition(
             formattedCountdown: `Reanuda en ${formatMinutesCountdown(diffMins)}`
           };
         }
-        const nextSession = market.sessions.find((s) => s.start === session.end);
+        const nextSession = todaySessions.find((s) => s.start === session.end);
         if (nextSession?.type === 'lunch') {
           return {
             type: 'lunch',
@@ -205,13 +216,18 @@ export function getNextTransition(
     }
   }
 
-  // If currently closed (or today is a holiday), find next session start across upcoming days
+  // If currently closed (or today is a holiday / post-early-close), find next session start across upcoming days
   for (let dayOffset = 0; dayOffset <= 10; dayOffset++) {
     const day = localTime.plus({ days: dayOffset }).startOf('day');
     if (!options.isSimulation && isWeekend(day)) continue;
-    if (!options.isSimulation && isMarketHoliday(market.id, day.toFormat('yyyy-MM-dd'))) continue;
+    const dayStr = day.toFormat('yyyy-MM-dd');
+    if (!options.isSimulation && isMarketHoliday(market.id, dayStr)) continue;
 
-    for (const session of market.sessions) {
+    const daySessions = options.isSimulation
+      ? market.sessions
+      : getEffectiveMarketSessions(market, dayStr);
+
+    for (const session of daySessions) {
       const { hour: startH, minute: startM } = parseTime(session.start);
       const sessionStart = day.set({
         hour: startH,
@@ -225,7 +241,7 @@ export function getNextTransition(
         const prefix = session.type === 'pre_market' ? 'Pre en' : 'Abre en';
 
         let formattedCountdown: string;
-        if (isTodayHoliday && dayOffset >= 1) {
+        if ((isTodayHoliday || holiday?.isEarlyClose) && dayOffset >= 1) {
           const dayName = day.toFormat('ccc', { locale: 'es' });
           formattedCountdown = `Abre ${dayName} ${session.start}`;
         } else {
@@ -271,7 +287,7 @@ export function evaluateMarketAt(
 
   const localDateStr = localTime.toFormat('yyyy-MM-dd');
   const holiday = getMarketHoliday(market.id, localDateStr);
-  if (!options.isSimulation && holiday) {
+  if (!options.isSimulation && holiday && !holiday.isEarlyClose) {
     const nextTransition = getNextTransition(market, localTime, 'closed', options);
     return {
       marketId: market.id,
@@ -285,10 +301,14 @@ export function evaluateMarketAt(
     };
   }
 
+  const sessions = options.isSimulation
+    ? market.sessions
+    : getEffectiveMarketSessions(market, localDateStr);
+
   let status: MarketStatus = 'closed';
   let activeSegmentLabel: string | undefined;
 
-  for (const session of market.sessions) {
+  for (const session of sessions) {
     const { hour: startH, minute: startM } = parseTime(session.start);
     const { hour: endH, minute: endM } = parseTime(session.end);
 
@@ -313,6 +333,11 @@ export function evaluateMarketAt(
     }
   }
 
+  // If closed on an early close day (after closeTime)
+  if (status === 'closed' && holiday?.isEarlyClose && !options.isSimulation) {
+    activeSegmentLabel = `Cerrado (${holiday.name})`;
+  }
+
   const nextTransition = getNextTransition(market, localTime, status, options);
 
   return {
@@ -322,6 +347,7 @@ export function evaluateMarketAt(
     localDateFormatted: localTime.toFormat('ccc d MMM', { locale: 'es' }),
     timezoneOffset,
     activeSegmentLabel,
+    ...(holiday && !options.isSimulation ? { holiday } : {}),
     nextTransition
   };
 }
