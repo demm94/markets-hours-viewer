@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, type Variants } from 'framer-motion';
-import { Calendar } from 'lucide-react';
+import { Bell, BellOff, Calendar } from 'lucide-react';
 import { MarketConfig, MarketEvaluation } from '../core/types';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
@@ -11,6 +11,9 @@ interface MarketCardsProps {
   evaluations: Record<string, MarketEvaluation>;
   onSelectMarketEvents?: (marketId: string) => void;
   catalystsMap?: Record<string, boolean>;
+  notificationsEnabled?: boolean;
+  subscribedMarketIds?: string[];
+  onToggleMarketAlert?: (marketId: string) => void;
 }
 
 const containerVariants: Variants = {
@@ -41,7 +44,10 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
   markets,
   evaluations,
   onSelectMarketEvents,
-  catalystsMap
+  catalystsMap,
+  notificationsEnabled = false,
+  subscribedMarketIds,
+  onToggleMarketAlert
 }) => {
   return (
     <>
@@ -128,6 +134,7 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
           const ev = evaluations[market.id];
           const status = ev?.status ?? 'closed';
           const isHoliday = Boolean(ev?.holiday && !ev.holiday.isEarlyClose);
+          const isSubscribed = subscribedMarketIds ? subscribedMarketIds.includes(market.id) : true;
 
           const badgeVariant = isHoliday
             ? 'holiday'
@@ -187,7 +194,39 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
+                  <div className="flex items-center gap-1 shrink-0">
+                    {notificationsEnabled && onToggleMarketAlert && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onToggleMarketAlert(market.id);
+                        }}
+                        aria-pressed={isSubscribed}
+                        aria-label={
+                          isSubscribed
+                            ? `Silenciar alertas de apertura para ${market.name}`
+                            : `Activar alertas de apertura para ${market.name}`
+                        }
+                        title={
+                          isSubscribed
+                            ? `Alertas activas para ${market.name} (clic para silenciar)`
+                            : `Alertas silenciadas para ${market.name} (clic para activar)`
+                        }
+                        className={cn(
+                          "flex items-center justify-center min-h-[26px] min-w-[26px] p-1 rounded-md border transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400",
+                          isSubscribed
+                            ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/20"
+                            : "text-zinc-500 bg-transparent border-transparent hover:text-zinc-300 hover:bg-white/[0.05] hover:border-border"
+                        )}
+                      >
+                        {isSubscribed ? (
+                          <Bell className="w-3.5 h-3.5" aria-hidden="true" />
+                        ) : (
+                          <BellOff className="w-3.5 h-3.5" aria-hidden="true" />
+                        )}
+                      </button>
+                    )}
                     {onSelectMarketEvents && (
                       <button
                         type="button"

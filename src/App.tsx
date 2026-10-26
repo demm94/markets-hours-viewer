@@ -12,6 +12,7 @@ import { MarketEvaluation, TimelineEventMarkerData, RollingDayInfo } from './cor
 import { useCurrentTime } from './hooks/useCurrentTime';
 import { useScrubber } from './hooks/useScrubber';
 import { usePullToRefresh } from './hooks/usePullToRefresh';
+import { useMarketNotifications } from './hooks/useMarketNotifications';
 import { Header } from './components/Header';
 import { AmbientBackground } from './components/AmbientBackground';
 import { MarketCards } from './components/MarketCards';
@@ -117,6 +118,13 @@ export const App: React.FC = () => {
     return map;
   }, [chileNowMinute]);
 
+  const {
+    permission: notificationPermission,
+    preferences: notificationPreferences,
+    toggleNotifications,
+    toggleMarketSubscription
+  } = useMarketNotifications(MARKETS, evaluationsNow);
+
   // Scrubber evaluation at selected minute offset against activeDate
   const scrubberInstant = useMemo(() => {
     return minuteOffsetToDateTime(scrubberMinutes, activeDate);
@@ -212,6 +220,9 @@ export const App: React.FC = () => {
           totalMarketsCount={MARKETS.length}
           onOpenEvents={handleOpenAllEvents}
           hasUpcomingCatalysts={hasUpcomingCatalysts}
+          notificationsEnabled={notificationPreferences.enabled}
+          notificationPermission={notificationPermission}
+          onToggleNotifications={toggleNotifications}
         />
 
         <main className="flex flex-col gap-2.5 sm:gap-4 md:gap-6">
@@ -220,6 +231,9 @@ export const App: React.FC = () => {
             evaluations={evaluationsNow}
             onSelectMarketEvents={handleOpenEvents}
             catalystsMap={catalystsMap}
+            notificationsEnabled={notificationPreferences.enabled && notificationPermission === 'granted'}
+            subscribedMarketIds={notificationPreferences.subscribedMarketIds}
+            onToggleMarketAlert={toggleMarketSubscription}
           />
 
           <TradingWindowsRadar

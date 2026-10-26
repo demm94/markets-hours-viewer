@@ -1,8 +1,9 @@
 import React from 'react';
 import { DateTime } from 'luxon';
-import { Activity, Calendar } from 'lucide-react';
+import { Activity, Bell, BellOff, BellRing, Calendar } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { getSantiagoOffsetDescription } from '../core/timezone';
+import { NotificationPermissionState } from '../hooks/useMarketNotifications';
 
 interface HeaderProps {
   now: DateTime;
@@ -12,6 +13,9 @@ interface HeaderProps {
   totalMarketsCount: number;
   onOpenEvents?: () => void;
   hasUpcomingCatalysts?: boolean;
+  notificationsEnabled?: boolean;
+  notificationPermission?: NotificationPermissionState;
+  onToggleNotifications?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = React.memo(({
@@ -21,9 +25,23 @@ export const Header: React.FC<HeaderProps> = React.memo(({
   openMarketsCount,
   totalMarketsCount,
   onOpenEvents,
-  hasUpcomingCatalysts
+  hasUpcomingCatalysts,
+  notificationsEnabled = false,
+  notificationPermission = 'default',
+  onToggleNotifications
 }) => {
   const santiagoOffset = getSantiagoOffsetDescription(now);
+  const isDenied = notificationPermission === 'denied';
+  const isUnsupported = notificationPermission === 'unsupported';
+  const isActive = notificationsEnabled && notificationPermission === 'granted';
+
+  const bellTitle = isUnsupported
+    ? 'Tu navegador no soporta notificaciones web'
+    : isDenied
+    ? 'Permiso de notificaciones bloqueado en el navegador'
+    : isActive
+    ? 'Alertas de campana activas (15m antes de apertura/cierre). Clic para silenciar'
+    : 'Activar alertas de campana (15m antes de apertura/cierre)';
 
   return (
     <header className="flex flex-col md:flex-row md:justify-between items-stretch md:items-center gap-2 sm:gap-3 md:gap-5 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl border border-border bg-card backdrop-blur-md shadow-neon relative overflow-hidden">
@@ -42,6 +60,36 @@ export const Header: React.FC<HeaderProps> = React.memo(({
               <span className="hidden min-[360px]:inline"> abiertos</span>
             </span>
           </Badge>
+
+          {onToggleNotifications && !isUnsupported && (
+            <button
+              type="button"
+              onClick={onToggleNotifications}
+              disabled={isDenied}
+              aria-pressed={isActive}
+              aria-label={bellTitle}
+              title={bellTitle}
+              className={`relative flex items-center gap-1.5 min-h-[32px] sm:min-h-[34px] px-2.5 sm:px-3 py-1 rounded-md border text-xs font-medium transition-colors duration-150 whitespace-nowrap ${
+                isDenied
+                  ? 'border-border bg-white/[0.01] text-zinc-500 cursor-not-allowed opacity-60'
+                  : isActive
+                  ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/15 cursor-pointer'
+                  : 'border-border bg-white/[0.03] hover:border-border-strong hover:bg-white/[0.06] hover:text-white active:bg-white/[0.08] text-zinc-200 cursor-pointer'
+              }`}
+            >
+              {isDenied ? (
+                <BellOff className="w-3.5 h-3.5 text-zinc-500 shrink-0" aria-hidden="true" />
+              ) : isActive ? (
+                <BellRing className="w-3.5 h-3.5 text-emerald-400 shrink-0" aria-hidden="true" />
+              ) : (
+                <Bell className="w-3.5 h-3.5 text-zinc-400 shrink-0" aria-hidden="true" />
+              )}
+              <span className="hidden sm:inline">{isActive ? 'Alertas ON' : 'Alertas'}</span>
+              {isActive && (
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true" />
+              )}
+            </button>
+          )}
 
           {onOpenEvents && (
             <button
