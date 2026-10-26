@@ -356,7 +356,9 @@ export const TradingWindowsRadar: React.FC<TradingWindowsRadarProps> = React.mem
                               key={i}
                               className="text-xs font-mono font-medium text-violet-300 bg-violet-500/10 border border-violet-500/25 px-2 py-0.5 rounded flex items-center gap-1"
                             >
-                              <span className="truncate max-w-[200px]">Feriado {h}</span>
+                              <span className="truncate max-w-[200px]">
+                                {h.includes('Cierre temprano') ? h : `Feriado ${h}`}
+                              </span>
                             </span>
                           ))}
                         </div>

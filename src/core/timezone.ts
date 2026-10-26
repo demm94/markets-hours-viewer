@@ -32,6 +32,7 @@ export function projectMarketToTimeline(
   for (const dayOffset of daysToCheck) {
     const targetDay = refDayStart.plus({ days: dayOffset }).setZone(market.timezone);
     const targetDateStr = targetDay.toFormat('yyyy-MM-dd');
+    const holiday = getMarketHoliday(market.id, targetDateStr);
     const sessions = getEffectiveMarketSessions(market, targetDateStr);
 
     for (const session of sessions) {
@@ -83,7 +84,8 @@ export function projectMarketToTimeline(
           type: session.type,
           startMinute,
           endMinute,
-          label: session.label
+          label: session.label,
+          ...(holiday ? { holiday } : {})
         });
       }
     }

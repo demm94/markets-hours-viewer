@@ -26,6 +26,7 @@ export interface TimelineSegment {
   startMinute: number; // 0-1440 relative to reference day in Chile
   endMinute: number;   // 0-1440 relative to reference day in Chile
   label?: string;
+  holiday?: MarketHoliday;
 }
 
 export interface MarketTransition {
@@ -120,4 +121,3 @@ export interface TradingWindow {
   events: TimelineEventMarkerData[];
   holidayNames?: string[];
 }
-

@@ -131,7 +131,13 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
           const isRowElevated = marketEvents.some((e) => e.id === currentActiveEventId);
           const ev = isChile ? chileScrubberEvaluation : scrubberEvaluations[market.id];
           const holiday = ev?.holiday;
-          const isHoliday = Boolean(holiday && !isChile);
+          const isChileFullHoliday = Boolean(isChile && holiday && !holiday.isEarlyClose);
+          const isAllDayHoliday =
+            !isChile &&
+            segments.length > 0 &&
+            segments.every((s) => Boolean(s.holiday && !s.holiday.isEarlyClose));
+          const isHoliday = isAllDayHoliday;
+          const rowHoliday = isAllDayHoliday ? (segments[0]?.holiday ?? holiday) : holiday;
 
           return (
             <div
@@ -146,7 +152,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
             >
               <div
                 className={`relative w-full h-[22px] sm:h-[26px] md:h-[28px] border rounded-md transition-colors ${
-                  (isHoliday || (isChile && holiday))
+                  (isHoliday || isChileFullHoliday)
                     ? 'border-violet-500/25 bg-violet-950/15'
                     : 'border-border bg-card/70'
                 }`}
@@ -158,7 +164,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                     holiday ? (
                       <div className="w-full h-full flex items-center justify-center bg-violet-500/10">
                         <span className="font-mono text-[10px] sm:text-[11px] font-semibold text-violet-300 tracking-wider uppercase px-2 truncate">
-                          Eje 24h Santiago · Feriado: {holiday.name}
+                          Eje 24h Santiago · {holiday.isEarlyClose ? holiday.name : `Feriado: ${holiday.name}`}
                         </span>
                       </div>
                     ) : (
@@ -174,7 +180,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                   {isHoliday && (
                     <div className="absolute inset-0 flex items-center justify-center bg-violet-950/40 rounded-md z-[3]">
                       <span className="font-mono text-[9px] sm:text-[10px] font-medium text-violet-200 tracking-wider px-2 py-0.5 rounded bg-violet-950/80 border border-violet-500/30 truncate max-w-[180px] sm:max-w-none">
-                        Feriado: {holiday?.name}
+                        Feriado: {rowHoliday?.name}
                       </span>
                     </div>
                   )}
@@ -183,15 +189,19 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                   {segments.map((seg, idx) => {
                     const leftPercent = (seg.startMinute / 1440) * 100;
                     const widthPercent = ((seg.endMinute - seg.startMinute) / 1440) * 100;
-                    const isActive = !isHoliday && scrubberMinutes >= seg.startMinute && scrubberMinutes < seg.endMinute;
-                    const isUpcoming = !isHoliday && scrubberMinutes < seg.startMinute;
+                    const segHoliday = seg.holiday;
+                    const isSegFullHoliday = Boolean(segHoliday && !segHoliday.isEarlyClose);
+                    const isActive = !isSegFullHoliday && scrubberMinutes >= seg.startMinute && scrubberMinutes < seg.endMinute;
+                    const isUpcoming = !isSegFullHoliday && scrubberMinutes < seg.startMinute;
 
                     let blockClasses = '';
                     let statusDescriptor = 'Cerrado';
 
-                    if (isHoliday) {
-                      blockClasses = 'bg-zinc-800/40 border border-white/5 opacity-30';
-                      statusDescriptor = 'Feriado';
+                    if (isSegFullHoliday) {
+                      blockClasses = isAllDayHoliday
+                        ? 'bg-zinc-800/40 border border-white/5 opacity-30'
+                        : 'bg-violet-950/60 border border-violet-500/35 text-violet-200 z-[3]';
+                      statusDescriptor = segHoliday ? `Feriado: ${segHoliday.name}` : 'Feriado';
                     } else if (isActive) {
                       statusDescriptor = 'Abierto ahora';
                       if (seg.type === 'lunch') {
@@ -231,6 +241,13 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                           width: `${widthPercent}%`
                         }}
                         title={`${market.name} - ${seg.label ?? seg.type}: ${(seg.startMinute / 60).toFixed(1)}h - ${(seg.endMinute / 60).toFixed(1)}h (Chile) — [${statusDescriptor}]`}
+                        children={
+                          isSegFullHoliday && !isAllDayHoliday ? (
+                            <span className="font-mono text-[9px] sm:text-[10px] font-medium text-violet-200 tracking-wider px-1.5 truncate">
+                              Feriado: {segHoliday?.name}
+                            </span>
+                          ) : undefined
+                        }
                       />
                     );
                   })}
@@ -324,7 +341,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                   : 'translate(-50%, -50%)';
 
               let statusClasses = 'border-border text-zinc-300';
-              if (ev.holiday) {
+              if (ev.holiday && !ev.holiday.isEarlyClose) {
                 statusClasses = 'border-violet-500/45 text-violet-300';
               } else if (isChile) {
                 statusClasses = 'border-sky-500/45 text-sky-300';
@@ -410,7 +427,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                     : 'translate(-50%, -50%)';
 
                 let statusClasses = 'border-border text-zinc-300';
-                if (ev.holiday) {
+                if (ev.holiday && !ev.holiday.isEarlyClose) {
                   statusClasses = 'border-violet-500/45 text-violet-300';
                 } else if (isChile) {
                   statusClasses = 'border-sky-500/45 text-sky-300';

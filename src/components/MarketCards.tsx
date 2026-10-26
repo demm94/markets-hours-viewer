@@ -50,7 +50,7 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
         {markets.map((market) => {
           const ev = evaluations[market.id];
           const status = ev?.status ?? 'closed';
-          const isHoliday = Boolean(ev?.holiday);
+          const isHoliday = Boolean(ev?.holiday && !ev.holiday.isEarlyClose);
           const hasCatalyst = catalystsMap?.[market.id];
 
           let borderClass = 'border-border bg-card text-zinc-400';
@@ -127,7 +127,7 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
         {markets.map((market) => {
           const ev = evaluations[market.id];
           const status = ev?.status ?? 'closed';
-          const isHoliday = Boolean(ev?.holiday);
+          const isHoliday = Boolean(ev?.holiday && !ev.holiday.isEarlyClose);
 
           const badgeVariant = isHoliday
             ? 'holiday'
@@ -215,10 +215,15 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
                 {/* Holiday Banner if closed for holiday */}
                 {ev?.holiday && (
                   <div
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-violet-500/10 border border-violet-500/25 text-xs text-violet-200 font-medium truncate"
+                    className={cn(
+                      "flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-medium truncate",
+                      ev.holiday.isEarlyClose
+                        ? "bg-amber-500/10 border-amber-500/25 text-amber-200"
+                        : "bg-violet-500/10 border-violet-500/25 text-violet-200"
+                    )}
                     title={`Feriado bursátil: ${ev.holiday.name}`}
                   >
-                    <Calendar className="w-3.5 h-3.5 text-violet-400 shrink-0" />
+                    <Calendar className={cn("w-3.5 h-3.5 shrink-0", ev.holiday.isEarlyClose ? "text-amber-400" : "text-violet-400")} />
                     <span className="truncate">{ev.holiday.name}</span>
                   </div>
                 )}

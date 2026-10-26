@@ -144,4 +144,17 @@ describe('trading-windows engine', () => {
     expect(winterIndiaSolo?.durationFormatted).toBe('2h');
     expect(winterIndiaSolo?.activeMarkets.some((m) => m.id === 'nse')).toBe(true);
   });
+
+  it('keeps early-close markets active in trading windows during shortened sessions (Black Friday)', () => {
+    const blackFriday = DateTime.fromISO('2026-11-27T12:30:00', { zone: CHILE_TZ });
+    const windows = getTradingWindows(blackFriday, MARKETS, 750);
+
+    const usSession = windows.find((w) => w.id === 'us_session');
+    expect(usSession).toBeDefined();
+    expect(usSession?.startMinute).toBe(690);
+    expect(usSession?.endMinute).toBe(900);
+    expect(usSession?.activeMarkets.some((m) => m.id === 'nyse')).toBe(true);
+    expect(usSession?.concurrencyCount).toBe(1);
+    expect(usSession?.liquidityLevel).toBe('high');
+  });
 });

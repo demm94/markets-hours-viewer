@@ -21,8 +21,9 @@ export const TimelineLeftColumn: React.FC<TimelineLeftColumnProps> = React.memo(
 }) => {
   const getStatusBadge = (marketId: string, evaluation: MarketEvaluation) => {
     const holiday = evaluation.holiday;
+    const isFullHoliday = Boolean(holiday && !holiday.isEarlyClose);
     if (marketId === 'chile') {
-      if (holiday) {
+      if (isFullHoliday && holiday) {
         return (
           <Badge
             variant="holiday"
@@ -40,7 +41,7 @@ export const TimelineLeftColumn: React.FC<TimelineLeftColumnProps> = React.memo(
         </Badge>
       );
     }
-    if (holiday) {
+    if (isFullHoliday && holiday) {
       return (
         <Badge
           variant="holiday"
@@ -117,7 +118,7 @@ export const TimelineLeftColumn: React.FC<TimelineLeftColumnProps> = React.memo(
               localDateFormatted: ''
             });
         const holiday = ev.holiday;
-        const isHoliday = Boolean(holiday && !isChile);
+        const isHoliday = Boolean(holiday && !holiday.isEarlyClose && !isChile);
 
         return (
           <motion.div

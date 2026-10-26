@@ -1,7 +1,7 @@
 import { DateTime } from 'luxon';
 import { MarketConfig, TimelineSegment, TradingWindow, LiquidityLevel } from './types';
 import { projectMarketToTimeline, formatMinutes, CHILE_TZ, isWeekend } from './timezone';
-import { getMarketHoliday } from './holidays';
+import { getMarketHoliday, isMarketHoliday } from './holidays';
 import { getEventsForChileDay } from './events';
 
 export interface TradingWindowsOptions {
@@ -134,7 +134,11 @@ export function getTradingWindows(
       if (!tmpl.targetMarketIds.includes(m.id)) return false;
       const segments = marketSegmentsMap[m.id] ?? [];
       const hasOverlap = segments.some(
-        (seg) => seg.startMinute < tmpl.endMinute && seg.endMinute > tmpl.startMinute
+        (seg) =>
+          seg.type !== 'lunch' &&
+          !(seg.holiday && !seg.holiday.isEarlyClose && !options.isSimulation) &&
+          seg.startMinute < tmpl.endMinute &&
+          seg.endMinute > tmpl.startMinute
       );
       if (!hasOverlap) return false;
 
@@ -144,7 +148,7 @@ export function getTradingWindows(
         return false;
       }
       const marketLocalDate = marketInstant.toISODate()!;
-      const isHoliday = !options.isSimulation && Boolean(getMarketHoliday(m.id, marketLocalDate));
+      const isHoliday = !options.isSimulation && isMarketHoliday(m.id, marketLocalDate);
       return !isHoliday;
     });
 

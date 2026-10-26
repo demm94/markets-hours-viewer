@@ -224,6 +224,23 @@ describe('market holidays engine', () => {
       expect(regularSegment).toBeDefined();
       expect(regularSegment?.startMinute).toBe(11 * 60 + 30);
       expect(regularSegment?.endMinute).toBe(15 * 60); // 900 min (ends at 13:00 NY = 15:00 Chile)
+      expect(regularSegment?.holiday?.isEarlyClose).toBe(true);
+    });
+
+    it('isolates segment-level holiday metadata across midnight for Asian markets', () => {
+      // Monday 2026-10-05 in Chile:
+      // - Morning segment (00:00-03:30 Chile) is Monday Oct 5 in Seoul (National Foundation Day holiday)
+      // - Night reopen segment (21:00-24:00 Chile) is Tuesday Oct 6 in Seoul (regular open day)
+      const refDate = DateTime.fromISO('2026-10-05T12:00:00', { zone: 'America/Santiago' });
+      const krxSegments = projectMarketToTimeline(krx, refDate);
+
+      expect(krxSegments).toHaveLength(2);
+      expect(krxSegments[0].startMinute).toBe(0);
+      expect(krxSegments[0].holiday?.date).toBe('2026-10-05');
+      expect(krxSegments[0].holiday?.isEarlyClose).toBeUndefined();
+
+      expect(krxSegments[1].endMinute).toBe(1440);
+      expect(krxSegments[1].holiday).toBeUndefined();
     });
   });
 });
