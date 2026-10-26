@@ -70,6 +70,67 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
   const nowPercent = (currentMinutes / 1440) * 100;
   const isActivelyScrubbing = isHovering && Math.abs(scrubberMinutes - currentMinutes) > 2;
 
+  const renderCollapsedFloatingPills = (linePercent: number) => {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+    const isTablet = typeof window !== 'undefined' && window.innerWidth < 768;
+    // Header uses h-9 (36px) on <640px and sm:h-11 (44px) on >=640px
+    const headerHeight = isMobile ? 36 : 44;
+    const rowHeight = isMobile ? 38 : isTablet ? 46 : 50;
+
+    const edgeTransform =
+      linePercent < 4
+        ? 'translate(6px, -50%)'
+        : linePercent > 96
+        ? 'translate(calc(-100% - 6px), -50%)'
+        : 'translate(-50%, -50%)';
+
+    return (
+      <div className="absolute top-0 left-0 w-0 h-full pointer-events-none">
+        {allMarkets.map((market, idx) => {
+          const isChile = market.id === 'chile';
+          const ev = isChile
+            ? chileScrubberEvaluation
+            : (scrubberEvaluations[market.id] ?? {
+                marketId: market.id,
+                status: 'closed',
+                localTimeFormatted: '--:--',
+                localDateFormatted: ''
+              });
+
+          const topPx = headerHeight + idx * rowHeight + rowHeight / 2;
+
+          let statusClasses = 'border-border text-zinc-300';
+          if (ev.holiday && !ev.holiday.isEarlyClose) {
+            statusClasses = 'border-violet-500/45 text-violet-300';
+          } else if (isChile) {
+            statusClasses = 'border-sky-500/45 text-sky-300';
+          } else if (ev.status === 'open') {
+            statusClasses = 'border-emerald-500/45 text-emerald-300';
+          } else if (ev.status === 'lunch') {
+            statusClasses = 'border-amber-500/45 text-amber-300';
+          } else if (ev.status === 'pre_market') {
+            statusClasses = 'border-sky-500/45 text-sky-300';
+          }
+
+          return (
+            <div
+              key={market.id}
+              className={`absolute left-0 inline-flex items-center gap-1.5 bg-popover/95 border rounded-md px-2 py-0.5 font-mono text-[10px] sm:text-xs font-semibold whitespace-nowrap shadow-md z-10 pointer-events-none tabular-nums ${statusClasses}`}
+              style={{
+                top: `${topPx}px`,
+                transform: edgeTransform
+              }}
+              title={`${market.name}: ${ev.localTimeFormatted}${ev.holiday ? ` (Feriado: ${ev.holiday.name})` : ''}`}
+            >
+              <span className="text-xs leading-none">{market.flag}</span>
+              <span>{ev.localTimeFormatted}</span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
     <div
       className="timeline-bars-container flex-1 w-full min-w-0 relative flex flex-col cursor-crosshair touch-pan-y select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/50"
@@ -241,14 +302,13 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                           width: `${widthPercent}%`
                         }}
                         title={`${market.name} - ${seg.label ?? seg.type}: ${(seg.startMinute / 60).toFixed(1)}h - ${(seg.endMinute / 60).toFixed(1)}h (Chile) — [${statusDescriptor}]`}
-                        children={
-                          isSegFullHoliday && !isAllDayHoliday ? (
-                            <span className="font-mono text-[9px] sm:text-[10px] font-medium text-violet-200 tracking-wider px-1.5 truncate">
-                              Feriado: {segHoliday?.name}
-                            </span>
-                          ) : undefined
-                        }
-                      />
+                      >
+                        {isSegFullHoliday && !isAllDayHoliday && (
+                          <span className="font-mono text-[9px] sm:text-[10px] font-medium text-violet-200 tracking-wider px-1.5 truncate">
+                            Feriado: {segHoliday?.name}
+                          </span>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
@@ -287,89 +347,33 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
           className="absolute top-0 bottom-0 -translate-x-1/2 w-[1.5px] bg-rose-500 z-[5] pointer-events-none"
           style={{ left: `${nowPercent}%` }}
         >
-        <div
-          className="absolute top-1 sm:top-1.5 left-0 inline-flex items-center gap-1 sm:gap-1.5 bg-rose-600 text-white font-mono text-[10px] sm:text-[11px] font-bold px-2 sm:px-2.5 py-0.5 rounded shadow-sm whitespace-nowrap tabular-nums"
-          style={{
-            transform:
-              nowPercent < 4
-                ? 'translate(6px, 0)'
-                : nowPercent > 96
-                ? 'translate(calc(-100% - 6px), 0)'
-                : 'translateX(-50%)'
-          }}
-        >
-          <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-          <span>
-            <span className="hidden sm:inline">
-              {isActivelyScrubbing
-                ? 'AHORA'
-                : `AHORA 🇨🇱 ${formatMinutes(currentMinutes)}`}
-            </span>
-            <span className="sm:hidden text-[9px] font-bold">
-              {isActivelyScrubbing
-                ? 'AHORA'
-                : `${formatMinutes(currentMinutes)}`}
-            </span>
-          </span>
-        </div>
-
-        {/* When left column is collapsed and idle, show current country times on Now line */}
-        {isColumnCollapsed && !isActivelyScrubbing && (
-          <div className="absolute top-0 left-0 w-0 h-full pointer-events-none">
-            {allMarkets.map((market, idx) => {
-              const isChile = market.id === 'chile';
-              const ev = isChile
-                ? chileScrubberEvaluation
-                : (scrubberEvaluations[market.id] ?? {
-                    marketId: market.id,
-                    status: 'closed',
-                    localTimeFormatted: '--:--',
-                    localDateFormatted: ''
-                  });
-
-              const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
-              const isTablet = typeof window !== 'undefined' && window.innerWidth < 768;
-              const headerHeight = isMobile ? 36 : isTablet ? 40 : 44;
-              const rowHeight = isMobile ? 38 : isTablet ? 46 : 50;
-              const topPx = headerHeight + idx * rowHeight + rowHeight / 2;
-
-              const edgeTransform =
+          <div
+            className="absolute top-1 sm:top-1.5 left-0 inline-flex items-center gap-1 sm:gap-1.5 bg-rose-600 text-white font-mono text-[10px] sm:text-[11px] font-bold px-2 sm:px-2.5 py-0.5 rounded shadow-sm whitespace-nowrap tabular-nums"
+            style={{
+              transform:
                 nowPercent < 4
-                  ? 'translate(6px, -50%)'
+                  ? 'translate(6px, 0)'
                   : nowPercent > 96
-                  ? 'translate(calc(-100% - 6px), -50%)'
-                  : 'translate(-50%, -50%)';
-
-              let statusClasses = 'border-border text-zinc-300';
-              if (ev.holiday && !ev.holiday.isEarlyClose) {
-                statusClasses = 'border-violet-500/45 text-violet-300';
-              } else if (isChile) {
-                statusClasses = 'border-sky-500/45 text-sky-300';
-              } else if (ev.status === 'open') {
-                statusClasses = 'border-emerald-500/45 text-emerald-300';
-              } else if (ev.status === 'lunch') {
-                statusClasses = 'border-amber-500/45 text-amber-300';
-              } else if (ev.status === 'pre_market') {
-                statusClasses = 'border-sky-500/45 text-sky-300';
-              }
-
-              return (
-                <div
-                  key={market.id}
-                  className={`absolute left-0 inline-flex items-center gap-1.5 bg-popover/95 border rounded-md px-2 py-0.5 font-mono text-[10px] sm:text-xs font-semibold whitespace-nowrap shadow-md z-10 pointer-events-none tabular-nums ${statusClasses}`}
-                  style={{
-                    top: `${topPx}px`,
-                    transform: edgeTransform
-                  }}
-                  title={`${market.name}: ${ev.localTimeFormatted}${ev.holiday ? ` (Feriado: ${ev.holiday.name})` : ''}`}
-                >
-                  <span className="text-xs leading-none">{market.flag}</span>
-                  <span>{ev.localTimeFormatted}</span>
-                </div>
-              );
-            })}
+                  ? 'translate(calc(-100% - 6px), 0)'
+                  : 'translateX(-50%)'
+            }}
+          >
+            <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+            <span>
+              <span className="hidden sm:inline">
+                {isActivelyScrubbing
+                  ? 'AHORA'
+                  : `AHORA 🇨🇱 ${formatMinutes(currentMinutes)}`}
+              </span>
+              <span className="sm:hidden text-[9px] font-bold">
+                {isActivelyScrubbing
+                  ? 'AHORA'
+                  : `${formatMinutes(currentMinutes)}`}
+              </span>
+            </span>
           </div>
-        )}
+
+          {isColumnCollapsed && !isActivelyScrubbing && renderCollapsedFloatingPills(nowPercent)}
         </div>
       )}
 
@@ -399,63 +403,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
             )}
           </div>
 
-          {/* When left column is collapsed and scrubbing, show projected country times on scrubber line */}
-          {isColumnCollapsed && (
-            <div className="absolute top-0 left-0 w-0 h-full pointer-events-none">
-              {allMarkets.map((market, idx) => {
-                const isChile = market.id === 'chile';
-                const ev = isChile
-                  ? chileScrubberEvaluation
-                  : (scrubberEvaluations[market.id] ?? {
-                      marketId: market.id,
-                      status: 'closed',
-                      localTimeFormatted: '--:--',
-                      localDateFormatted: ''
-                    });
-
-                const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
-                const isTablet = typeof window !== 'undefined' && window.innerWidth < 768;
-                const headerHeight = isMobile ? 36 : isTablet ? 40 : 44;
-                const rowHeight = isMobile ? 38 : isTablet ? 46 : 50;
-                const topPx = headerHeight + idx * rowHeight + rowHeight / 2;
-
-                const edgeTransform =
-                  scrubberPercent < 4
-                    ? 'translate(6px, -50%)'
-                    : scrubberPercent > 96
-                    ? 'translate(calc(-100% - 6px), -50%)'
-                    : 'translate(-50%, -50%)';
-
-                let statusClasses = 'border-border text-zinc-300';
-                if (ev.holiday && !ev.holiday.isEarlyClose) {
-                  statusClasses = 'border-violet-500/45 text-violet-300';
-                } else if (isChile) {
-                  statusClasses = 'border-sky-500/45 text-sky-300';
-                } else if (ev.status === 'open') {
-                  statusClasses = 'border-emerald-500/45 text-emerald-300';
-                } else if (ev.status === 'lunch') {
-                  statusClasses = 'border-amber-500/45 text-amber-300';
-                } else if (ev.status === 'pre_market') {
-                  statusClasses = 'border-sky-500/45 text-sky-300';
-                }
-
-                return (
-                  <div
-                    key={market.id}
-                    className={`absolute left-0 inline-flex items-center gap-1.5 bg-popover/95 border rounded-md px-2 py-0.5 font-mono text-[10px] sm:text-xs font-semibold whitespace-nowrap shadow-md z-10 pointer-events-none tabular-nums ${statusClasses}`}
-                    style={{
-                      top: `${topPx}px`,
-                      transform: edgeTransform
-                    }}
-                    title={`${market.name}: ${ev.localTimeFormatted}`}
-                  >
-                    <span className="text-xs leading-none">{market.flag}</span>
-                    <span>{ev.localTimeFormatted}</span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          {isColumnCollapsed && renderCollapsedFloatingPills(scrubberPercent)}
         </div>
       )}
     </div>

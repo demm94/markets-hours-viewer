@@ -212,7 +212,7 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
                   </div>
                 </div>
 
-                {/* Holiday Banner if closed for holiday */}
+                {/* Holiday / Early-Close Banner */}
                 {ev?.holiday && (
                   <div
                     className={cn(
@@ -228,7 +228,7 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
                   </div>
                 )}
 
-                {/* Row 2: Local Time (prominent) on left, Date & Timezone on right */}
+                {/* Row 2: Local Time & Next Transition Countdown on left, Date & Timezone on right */}
                 <div className="flex items-end justify-between gap-2 pt-2.5 border-t border-border">
                   <div>
                     <span className="text-xs uppercase font-medium text-muted-foreground tracking-wider block leading-none mb-1">
@@ -237,6 +237,11 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
                     <span className="font-mono text-xl sm:text-2xl font-bold text-zinc-100 tabular-nums tracking-tight leading-none">
                       {ev?.localTimeFormatted ?? '--:--'}
                     </span>
+                    {ev?.nextTransition?.formattedCountdown && (
+                      <span className="font-mono text-[11px] font-medium text-muted-foreground tabular-nums block mt-1 leading-none">
+                        {ev.nextTransition.formattedCountdown}
+                      </span>
+                    )}
                   </div>
                   <div className="flex flex-col items-end text-right min-w-0">
                     <span className="font-mono text-xs font-medium text-zinc-300 leading-none">

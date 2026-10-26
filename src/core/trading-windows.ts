@@ -56,6 +56,13 @@ export function getTradingWindows(
   const nseMorningRegular = nseSegments.find((s) => s.type === 'regular' && s.startMinute < 600);
   const nseEnd = nseMorningRegular?.endMinute ?? 420; // 07:00 default
 
+  const sseSegments = marketSegmentsMap['sse'] ?? [];
+  const sseMorningRegular = sseSegments.filter((s) => s.type === 'regular' && s.endMinute <= 360);
+  const asiaNightEnd =
+    sseMorningRegular.length > 0
+      ? Math.max(...sseMorningRegular.map((s) => s.endMinute))
+      : 240; // 04:00 summer / 03:00 winter
+
   const twseSegments = marketSegmentsMap['twse'] ?? [];
   const asiaReopenStart = twseSegments.find((s) => s.startMinute >= 1200)?.startMinute ?? 1320; // 22:00 default
 
@@ -67,7 +74,7 @@ export function getTradingWindows(
       subtitle: 'Solapamiento de Taiwán, China, Corea del Sur e India',
       icon: '🌏',
       startMinute: 0,
-      endMinute: 240, // 00:00 to 04:00
+      endMinute: asiaNightEnd, // 04:00 summer (UTC-3) / 03:00 winter (UTC-4)
       description: 'Pico de liquidez y volatilidad en semiconductores, manufactura tecnológica y materias primas asiáticas.',
       targetMarketIds: ['twse', 'krx', 'sse', 'nse']
     },
@@ -76,7 +83,7 @@ export function getTradingWindows(
       name: 'Rueda Exclusiva India (NSE)',
       subtitle: 'Sesión activa del subcontinente indio',
       icon: '🇮🇳',
-      startMinute: 240,
+      startMinute: asiaNightEnd,
       endMinute: nseEnd, // 04:00 to 07:00
       description: 'Único gran mercado global operando en esta franja previa a la apertura europea y americana.',
       targetMarketIds: ['nse']

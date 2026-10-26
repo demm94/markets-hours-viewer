@@ -34,6 +34,10 @@ export const App: React.FC = () => {
     setIsEventsDrawerOpen(true);
   }, []);
 
+  const handleOpenAllEvents = React.useCallback(() => {
+    handleOpenEvents('all');
+  }, [handleOpenEvents]);
+
   const handleCloseEvents = React.useCallback(() => {
     setIsEventsDrawerOpen(false);
   }, []);
@@ -99,6 +103,10 @@ export const App: React.FC = () => {
   const chileNowMinute = useMemo(() => {
     return now.startOf('minute');
   }, [minuteKey]);
+
+  const santiagoOffsetDescription = useMemo(() => {
+    return getSantiagoOffsetDescription(chileNowMinute);
+  }, [chileNowMinute]);
 
   // Real-time evaluation at minute resolution (stable reference within the same minute)
   const evaluationsNow = useMemo(() => {
@@ -202,7 +210,7 @@ export const App: React.FC = () => {
           dateFormatted={dateFormatted}
           openMarketsCount={openMarketsCount}
           totalMarketsCount={MARKETS.length}
-          onOpenEvents={() => handleOpenEvents('all')}
+          onOpenEvents={handleOpenAllEvents}
           hasUpcomingCatalysts={hasUpcomingCatalysts}
         />
 
@@ -243,7 +251,7 @@ export const App: React.FC = () => {
         <footer className="border-t border-border neon-edge pt-3 pb-4 mt-2 md:pt-8 md:pb-8 md:mt-4">
           <div className="flex justify-between items-center flex-wrap gap-2 md:gap-6 text-[11px] sm:text-xs text-muted-foreground">
             <div className="max-w-2xl leading-relaxed">
-              <strong className="text-foreground">Zonas Horarias Dinámicas IANA:</strong> Cálculos recalculados en vivo para evitar offsets estáticos. Huso horario de referencia: Chile en {getSantiagoOffsetDescription(now)}.
+              <strong className="text-foreground">Zonas Horarias Dinámicas IANA:</strong> Cálculos recalculados en vivo para evitar offsets estáticos. Huso horario de referencia: Chile en {santiagoOffsetDescription}.
             </div>
             <div className="font-mono font-semibold text-foreground/80">
               PWA instalable · Motor IANA en tiempo real · {CHILE_CONFIG.country}

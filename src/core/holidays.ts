@@ -79,22 +79,26 @@ export interface UpcomingHoliday extends MarketHoliday {
   dateFormatted: string;
 }
 
-const MARKET_INFO_MAP: Record<string, { name: string; flag: string }> = {
-  [CHILE_CONFIG.id]: { name: CHILE_CONFIG.name, flag: CHILE_CONFIG.flag },
-  ...Object.fromEntries(MARKETS.map((m) => [m.id, { name: m.name, flag: m.flag }]))
+const MARKET_INFO_MAP: Record<string, { name: string; flag: string; timezone: string }> = {
+  [CHILE_CONFIG.id]: {
+    name: CHILE_CONFIG.name,
+    flag: CHILE_CONFIG.flag,
+    timezone: CHILE_CONFIG.timezone
+  },
+  ...Object.fromEntries(
+    MARKETS.map((m) => [m.id, { name: m.name, flag: m.flag, timezone: m.timezone }])
+  )
 };
 
 /**
- * Retrieves upcoming holidays across markets within a given number of days from chileNow.
+ * Retrieves upcoming holidays across markets within a given number of days from chileNow,
+ * evaluated in each exchange's local IANA timezone.
  */
 export function getUpcomingHolidays(
   chileNow: DateTime,
   options: { marketId?: string; maxDaysAhead?: number } = {}
 ): UpcomingHoliday[] {
   const maxDays = options.maxDaysAhead ?? 120;
-  const chileToday = chileNow.setZone('America/Santiago').startOf('day');
-  const cutoff = chileToday.plus({ days: maxDays });
-
   const result: UpcomingHoliday[] = [];
 
   for (const holiday of MARKET_HOLIDAYS) {
@@ -102,10 +106,18 @@ export function getUpcomingHolidays(
       continue;
     }
 
-    const holDate = DateTime.fromISO(holiday.date, { zone: 'America/Santiago' }).startOf('day');
-    const diffDays = Math.round(holDate.diff(chileToday, 'days').days);
+    const info = MARKET_INFO_MAP[holiday.marketId] || {
+      name: holiday.marketId,
+      flag: '🏛️',
+      timezone: 'America/Santiago'
+    };
 
-    // Only include today or future up to cutoff
+    const marketToday = chileNow.setZone(info.timezone).startOf('day');
+    const cutoff = marketToday.plus({ days: maxDays });
+    const holDate = DateTime.fromISO(holiday.date, { zone: info.timezone }).startOf('day');
+    const diffDays = Math.round(holDate.diff(marketToday, 'days').days);
+
+    // Only include today or future up to cutoff in the exchange's local calendar
     if (diffDays >= 0 && holDate <= cutoff) {
       let relativeDescriptor = '';
       if (diffDays === 0) {
@@ -115,8 +127,6 @@ export function getUpcomingHolidays(
       } else {
         relativeDescriptor = `En ${diffDays} días`;
       }
-
-      const info = MARKET_INFO_MAP[holiday.marketId] || { name: holiday.marketId, flag: '🏛️' };
 
       result.push({
         ...holiday,
@@ -129,6 +139,11 @@ export function getUpcomingHolidays(
     }
   }
 
-  // Sort by date ascending, then by marketId
-  return result.sort((a, b) => a.relativeDays - b.relativeDays || a.marketId.localeCompare(b.marketId));
+  // Sort by relative days ascending, then by date, then by marketId
+  return result.sort(
+    (a, b) =>
+      a.relativeDays - b.relativeDays ||
+      a.date.localeCompare(b.date) ||
+      a.marketId.localeCompare(b.marketId)
+  );
 }

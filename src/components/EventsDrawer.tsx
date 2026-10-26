@@ -114,10 +114,18 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
     if (isOpen) {
       document.body.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = '';
+      requestAnimationFrame(() => {
+        if (!document.querySelector('[role="dialog"]')) {
+          document.body.style.overflow = '';
+        }
+      });
     }
     return () => {
-      document.body.style.overflow = '';
+      requestAnimationFrame(() => {
+        if (!document.querySelector('[role="dialog"]')) {
+          document.body.style.overflow = '';
+        }
+      });
     };
   }, [isOpen]);
 

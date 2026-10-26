@@ -117,8 +117,9 @@ async function syncHolidays(apiKey) {
 
   for (const ex of exchanges) {
     try {
-      const url = `https://finnhub.io/api/v1/stock/market-holiday?exchange=${ex.code}&token=${apiKey}`;
-      const res = await fetch(url);
+      const url = `https://finnhub.io/api/v1/stock/market-holiday?exchange=${ex.code}`;
+      const res = await fetch(url, { headers: { 'X-Finnhub-Token': apiKey } });
+
       if (!res.ok) continue;
       const data = await res.json();
       const items = data.data || [];
@@ -167,11 +168,11 @@ async function syncEvents(apiKey) {
   const fromStr = startDate.toISOString().slice(0, 10);
   const toStr = endDate.toISOString().slice(0, 10);
 
-  const url = `https://finnhub.io/api/v1/calendar/economic?from=${fromStr}&to=${toStr}&token=${apiKey}`;
+  const url = `https://finnhub.io/api/v1/calendar/economic?from=${fromStr}&to=${toStr}`;
 
   console.log(`📡 Fetching economic calendar from Finnhub (${fromStr} to ${toStr})...`);
 
-  const response = await fetch(url);
+  const response = await fetch(url, { headers: { 'X-Finnhub-Token': apiKey } });
   if (!response.ok) {
     throw new Error(`Finnhub API error (${response.status}): ${await response.text()}`);
   }

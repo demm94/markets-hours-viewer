@@ -30,16 +30,17 @@ export function usePullToRefresh({
 
   useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
-      // Only initiate pull-to-refresh if window is at the very top
+      // Only initiate pull-to-refresh if window is at the very top and no modal/drawer is open
       if (window.scrollY > 5) return;
       if (isRefreshingRef.current) return;
+      if (document.body.style.overflow === 'hidden') return;
 
-      // Do not intercept touches starting inside horizontal timeline scrubber or slider
+      // Do not intercept touches starting inside dialogs, drawers, or timeline scrubber
       const target = e.target as HTMLElement | null;
       if (
+        target?.closest('[role="dialog"]') ||
         target?.closest('.timeline-bars-container') ||
-        target?.closest('.timeline-table-wrapper') ||
-        target?.closest('.timeline-slider-bar')
+        target?.closest('.timeline-table-wrapper')
       ) {
         return;
       }

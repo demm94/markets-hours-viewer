@@ -129,7 +129,7 @@ describe('trading-windows engine', () => {
     expect(summerIndiaSolo?.durationFormatted).toBe('3h');
     expect(summerIndiaSolo?.activeMarkets.some((m) => m.id === 'nse')).toBe(true);
 
-    // Chile Winter Time (UTC-4): NSE regular morning segment is 00:00-06:00 (0-360m)
+    // Chile Winter Time (UTC-4): SSE closes at 03:00 (180m) and NSE regular morning segment closes at 06:00 (360m)
     const winterDate = DateTime.fromISO('2026-06-17T05:00:00', { zone: CHILE_TZ });
     const winterWindows = getTradingWindows(winterDate, MARKETS, 300);
 
@@ -138,10 +138,14 @@ describe('trading-windows engine', () => {
       expect(w.durationFormatted).not.toContain('-');
     }
 
+    const winterAsiaNight = winterWindows.find((w) => w.id === 'asia_night');
+    expect(winterAsiaNight?.startMinute).toBe(0);
+    expect(winterAsiaNight?.endMinute).toBe(180); // 03:00 Chile (15:00 CST Shanghai close)
+
     const winterIndiaSolo = winterWindows.find((w) => w.id === 'india_solo');
-    expect(winterIndiaSolo?.startMinute).toBe(240);
+    expect(winterIndiaSolo?.startMinute).toBe(180); // 03:00 Chile (12:30 IST)
     expect(winterIndiaSolo?.endMinute).toBe(360); // 06:00 Chile (15:30 IST)
-    expect(winterIndiaSolo?.durationFormatted).toBe('2h');
+    expect(winterIndiaSolo?.durationFormatted).toBe('3h');
     expect(winterIndiaSolo?.activeMarkets.some((m) => m.id === 'nse')).toBe(true);
   });
 

@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+
 jobs:
   validate:
     name: Test & Build Validation
@@ -36,4 +39,4 @@ jobs:
           test -f dist/manifest.webmanifest || { echo "Missing dist/manifest.webmanifest"; exit 1; }
           test -f dist/pwa-192x192.png || { echo "Missing dist/pwa-192x192.png"; exit 1; }
           test -f dist/pwa-512x512.png || { echo "Missing dist/pwa-512x512.png"; exit 1; }
-          echo "✅ All CI quality checks, unit tests, and PWA assets verified successfully."
+          echo "All CI quality checks, unit tests, and PWA assets verified successfully."

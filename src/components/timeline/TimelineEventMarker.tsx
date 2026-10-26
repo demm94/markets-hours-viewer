@@ -54,10 +54,16 @@ export const TimelineEventMarker: React.FC<TimelineEventMarkerProps> = React.mem
         type="button"
         aria-label={`${event.title} - ${event.chileTimeFormatted} (${isHigh ? 'Impacto Alto' : 'Impacto Medio'})`}
         aria-expanded={isOpen}
+        onFocus={() => onHoverChange(true)}
+        onBlur={() => onHoverChange(false)}
         onClick={(e) => {
           e.stopPropagation();
-          onOpenToggle();
-          onEventClick?.(event);
+          if (onEventClick) {
+            onHoverChange(false);
+            onEventClick(event);
+          } else {
+            onOpenToggle();
+          }
         }}
         className={`group relative flex items-center gap-0.5 sm:gap-1 rounded px-1.5 py-0.5 text-[9px] font-bold font-mono tracking-tight transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-white cursor-pointer before:absolute before:-inset-y-2.5 before:-inset-x-1.5 before:content-[''] ${
           isHigh

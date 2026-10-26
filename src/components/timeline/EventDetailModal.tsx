@@ -30,7 +30,11 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = React.memo(({
 
     document.body.style.overflow = 'hidden';
     return () => {
-      document.body.style.overflow = '';
+      requestAnimationFrame(() => {
+        if (!document.querySelector('[role="dialog"]')) {
+          document.body.style.overflow = '';
+        }
+      });
     };
   }, [event]);
 
