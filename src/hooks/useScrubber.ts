@@ -15,6 +15,60 @@ export interface UseScrubberResult {
   setScrubberMinutes: (minutes: number | null) => void;
 }
 
+/**
+ * Pure helper that converts a pointer X coordinate and container bounding rect into clamped [0, 1440] minutes.
+ */
+export function calculateScrubberMinutesFromBounds(
+  clientX: number,
+  rectLeft: number,
+  rectWidth: number
+): number | null {
+  if (rectWidth <= 0) return null;
+  const relativeX = clientX - rectLeft;
+  const clampedRatio = Math.max(0, Math.min(1, relativeX / rectWidth));
+  return Math.round(clampedRatio * 1440);
+}
+
+export interface ScrubberKeyResolution {
+  handled: boolean;
+  nextMinutes: number | null;
+  isHovering: boolean;
+  isDragging?: boolean;
+}
+
+/**
+ * Pure helper that resolves keyboard navigation keys on the timeline scrubber into state transitions.
+ */
+export function resolveScrubberKeyAction(
+  key: string,
+  currentMinutes: number | null,
+  defaultMinutes: number
+): ScrubberKeyResolution {
+  if (key === 'Home') {
+    return { handled: true, nextMinutes: 0, isHovering: true };
+  }
+  if (key === 'End') {
+    return { handled: true, nextMinutes: 1440, isHovering: true };
+  }
+  if (key === 'Escape') {
+    return { handled: true, nextMinutes: null, isHovering: false, isDragging: false };
+  }
+
+  let step = 0;
+  if (key === 'ArrowLeft') step = -15;
+  else if (key === 'ArrowRight') step = 15;
+  else if (key === 'PageDown') step = -60;
+  else if (key === 'PageUp') step = 60;
+
+  if (step !== 0) {
+    const base = currentMinutes ?? defaultMinutes;
+    const clamped = Math.max(0, Math.min(1440, base + step));
+    return { handled: true, nextMinutes: clamped, isHovering: true };
+  }
+
+  return { handled: false, nextMinutes: currentMinutes, isHovering: false };
+}
+
 export function useScrubber(defaultMinutes: number): UseScrubberResult {
   const [scrubberMinutes, setScrubberMinutes] = useState<number | null>(null);
   const [isHovering, setIsHovering] = useState<boolean>(false);
@@ -24,11 +78,7 @@ export function useScrubber(defaultMinutes: number): UseScrubberResult {
   const calculateMinutesFromEvent = useCallback((clientX: number): number | null => {
     if (!containerRef.current) return null;
     const rect = containerRef.current.getBoundingClientRect();
-    if (rect.width <= 0) return null;
-
-    const relativeX = clientX - rect.left;
-    const clampedRatio = Math.max(0, Math.min(1, relativeX / rect.width));
-    return Math.round(clampedRatio * 1440);
+    return calculateScrubberMinutesFromBounds(clientX, rect.left, rect.width);
   }, []);
 
   const handlePointerDown = useCallback(
@@ -112,35 +162,19 @@ export function useScrubber(defaultMinutes: number): UseScrubberResult {
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
-      let step = 0;
-      if (e.key === 'ArrowLeft') step = -15;
-      else if (e.key === 'ArrowRight') step = 15;
-      else if (e.key === 'PageDown') step = -60;
-      else if (e.key === 'PageUp') step = 60;
-      else if (e.key === 'Home') {
-        e.preventDefault();
-        setScrubberMinutes(0);
-        setIsHovering(true);
-        return;
-      } else if (e.key === 'End') {
-        e.preventDefault();
-        setScrubberMinutes(1440);
-        setIsHovering(true);
-        return;
-      } else if (e.key === 'Escape') {
+      if (e.key === 'Escape') {
         e.preventDefault();
         resetToNow();
         return;
       }
 
-      if (step !== 0) {
+      setScrubberMinutes((prev) => {
+        const res = resolveScrubberKeyAction(e.key, prev, defaultMinutes);
+        if (!res.handled) return prev;
         e.preventDefault();
-        setIsHovering(true);
-        setScrubberMinutes((prev) => {
-          const current = prev ?? defaultMinutes;
-          return Math.max(0, Math.min(1440, current + step));
-        });
-      }
+        setIsHovering(res.isHovering);
+        return res.nextMinutes;
+      });
     },
     [defaultMinutes, resetToNow]
   );

@@ -1,11 +1,20 @@
 import { DateTime } from 'luxon';
-import { MarketConfig, TimelineSegment, TradingWindow, LiquidityLevel } from './types';
+import {
+  MarketConfig,
+  TimelineSegment,
+  TimelineEventMarkerData,
+  TradingWindow,
+  LiquidityLevel
+} from './types';
 import { projectMarketToTimeline, formatMinutes, CHILE_TZ, isWeekend } from './timezone';
 import { getMarketHoliday, isMarketHoliday } from './holidays';
 import { getEventsForChileDay } from './events';
 
 export interface TradingWindowsOptions {
   isSimulation?: boolean;
+  marketSegmentsMap?: Record<string, TimelineSegment[]>;
+  dailyEventsMap?: Record<string, TimelineEventMarkerData[]>;
+  referenceZone?: string;
 }
 
 interface WindowTemplate {
@@ -19,6 +28,8 @@ interface WindowTemplate {
   targetMarketIds: string[];
 }
 
+const BUILT_IN_MARKET_IDS = new Set(['twse', 'krx', 'sse', 'nse', 'nyse']);
+
 function formatDuration(minutes: number): string {
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
@@ -28,7 +39,8 @@ function formatDuration(minutes: number): string {
 }
 
 /**
- * Computes consolidated trading windows and market concurrency for a given day in Chile time.
+ * Computes consolidated trading windows and market concurrency for a given day in the reference timezone (defaults to Chile).
+ * Reuses precomputed `marketSegmentsMap` and `dailyEventsMap` when supplied to avoid redundant O(M * S) projections.
  */
 export function getTradingWindows(
   referenceDate: DateTime,
@@ -36,15 +48,18 @@ export function getTradingWindows(
   currentMinuteInChile?: number,
   options: TradingWindowsOptions = {}
 ): TradingWindow[] {
-  const chileDate = referenceDate.setZone(CHILE_TZ);
-  const dailyEventsMap = getEventsForChileDay(chileDate);
+  const referenceZone = options.referenceZone ?? CHILE_TZ;
+  const chileDate = referenceDate.setZone(referenceZone);
+  const dailyEventsMap =
+    options.dailyEventsMap ?? getEventsForChileDay(chileDate, undefined, referenceZone);
   const allDailyEvents = Object.values(dailyEventsMap).flat();
 
-  // Dynamic discovery of key boundary minutes from actual market projections
+  // Reuse precomputed timeline segments when available; otherwise compute on demand
   const marketSegmentsMap: Record<string, TimelineSegment[]> = {};
 
   for (const m of markets) {
-    marketSegmentsMap[m.id] = projectMarketToTimeline(m, chileDate);
+    marketSegmentsMap[m.id] =
+      options.marketSegmentsMap?.[m.id] ?? projectMarketToTimeline(m, chileDate, referenceZone);
   }
 
   const nyseSegments = marketSegmentsMap['nyse'] ?? [];
@@ -135,10 +150,13 @@ export function getTradingWindows(
     const windowMidpoint = Math.floor((tmpl.startMinute + tmpl.endMinute) / 2);
     const windowInstantInChile = chileDate.startOf('day').plus({ minutes: windowMidpoint });
 
+    // Include built-in target markets plus any custom/extensible market added to `markets`
+    const candidateMarkets = markets.filter(
+      (m) => tmpl.targetMarketIds.includes(m.id) || !BUILT_IN_MARKET_IDS.has(m.id)
+    );
+
     // Determine active markets in this window
-    const activeMarkets = markets.filter((m) => {
-      // Must match window scope and have session segments overlapping
-      if (!tmpl.targetMarketIds.includes(m.id)) return false;
+    const activeMarkets = candidateMarkets.filter((m) => {
       const segments = marketSegmentsMap[m.id] ?? [];
       const hasOverlap = segments.some(
         (seg) =>
@@ -173,18 +191,24 @@ export function getTradingWindows(
     );
 
     const holidayNames: string[] = [];
-    for (const mId of tmpl.targetMarketIds) {
-      const m = markets.find((x) => x.id === mId);
-      if (m) {
-        const marketInstant = windowInstantInChile.setZone(m.timezone);
-        if (!options.isSimulation && isWeekend(marketInstant)) {
-          continue;
-        }
-        const marketLocalDate = marketInstant.toISODate()!;
-        const hol = getMarketHoliday(m.id, marketLocalDate);
-        if (hol) {
-          holidayNames.push(`${m.name}: ${hol.name}`);
-        }
+    for (const m of candidateMarkets) {
+      // For custom markets, only surface holiday badges in windows where their sessions would normally fall
+      if (!tmpl.targetMarketIds.includes(m.id)) {
+        const segments = marketSegmentsMap[m.id] ?? [];
+        const hasScheduledOverlap = segments.some(
+          (seg) => seg.startMinute < tmpl.endMinute && seg.endMinute > tmpl.startMinute
+        );
+        if (!hasScheduledOverlap) continue;
+      }
+
+      const marketInstant = windowInstantInChile.setZone(m.timezone);
+      if (!options.isSimulation && isWeekend(marketInstant)) {
+        continue;
+      }
+      const marketLocalDate = marketInstant.toISODate()!;
+      const hol = getMarketHoliday(m.id, marketLocalDate);
+      if (hol) {
+        holidayNames.push(`${m.name}: ${hol.name}`);
       }
     }
 

@@ -3,11 +3,13 @@ import {
   MarketEvent,
   FormattedMarketEvent,
   EventImportance,
-  EventCategory,
   TimelineEventMarkerData,
   RollingDayInfo
 } from './types';
 import { MARKETS, CHILE_CONFIG } from './markets';
+import { inferCategory } from './event-category';
+
+export { inferCategory };
 
 export const MARKET_TIMEZONE_MAP: Record<string, string> = {
   [CHILE_CONFIG.id]: CHILE_CONFIG.timezone,
@@ -22,18 +24,23 @@ export interface QueryOptions {
   marketId?: string;
   minImportance?: EventImportance;
   maxDaysAhead?: number;
+  referenceZone?: string;
 }
 
-export function formatEventTimes(event: MarketEvent, chileNow: DateTime): FormattedMarketEvent {
+export function formatEventTimes(
+  event: MarketEvent,
+  referenceNow: DateTime,
+  referenceZone: string = CHILE_CONFIG.timezone
+): FormattedMarketEvent {
   const eventUtc = DateTime.fromISO(event.timestampUtc, { zone: 'utc' });
-  const eventInChile = eventUtc.setZone('America/Santiago');
-  const marketZone = MARKET_TIMEZONE_MAP[event.marketId] || 'America/Santiago';
+  const eventInReference = eventUtc.setZone(referenceZone);
+  const marketZone = MARKET_TIMEZONE_MAP[event.marketId] || referenceZone;
   const eventInMarket = eventUtc.setZone(marketZone);
 
-  // Calculate day difference relative to Chilean local day
-  const chileStartToday = chileNow.startOf('day');
-  const eventStartDay = eventInChile.startOf('day');
-  const diffDays = Math.round(eventStartDay.diff(chileStartToday, 'days').days);
+  // Calculate day difference relative to reference local day
+  const refStartToday = referenceNow.setZone(referenceZone).startOf('day');
+  const eventStartDay = eventInReference.startOf('day');
+  const diffDays = Math.round(eventStartDay.diff(refStartToday, 'days').days);
 
   let relativeTimeDescriptor = '';
   if (diffDays === 0) {
@@ -50,7 +57,7 @@ export function formatEventTimes(event: MarketEvent, chileNow: DateTime): Format
 
   return {
     ...event,
-    chileTimeFormatted: `${eventInChile.toFormat('HH:mm')} (${eventInChile.toFormat('d LLL', { locale: 'es' })})`,
+    chileTimeFormatted: `${eventInReference.toFormat('HH:mm')} (${eventInReference.toFormat('d LLL', { locale: 'es' })})`,
     exchangeTimeFormatted: `${eventInMarket.toFormat('HH:mm')} (${eventInMarket.toFormat('d LLL', { locale: 'es' })})`,
     relativeTimeDescriptor
   };
@@ -76,6 +83,7 @@ export function getUpcomingEvents(
   options: QueryOptions = {}
 ): FormattedMarketEvent[] {
   const filtered = filterEvents(MARKET_EVENTS, options);
+  const referenceZone = options.referenceZone ?? CHILE_CONFIG.timezone;
 
   // Filter out events older than 24h prior to chileNow
   const cutoffPast = chileNow.minus({ hours: 24 });
@@ -88,37 +96,42 @@ export function getUpcomingEvents(
       return t >= cutoffPast && t <= cutoffFuture;
     })
     .sort((a, b) => a.timestampUtc.localeCompare(b.timestampUtc))
-    .map((e) => formatEventTimes(e, chileNow));
+    .map((e) => formatEventTimes(e, chileNow, referenceZone));
 }
 
-export function hasHighImpactEventsToday(marketId: string, chileNow: DateTime): boolean {
-  const todayChileStr = chileNow.toFormat('yyyy-MM-dd');
+export function hasHighImpactEventsToday(
+  marketId: string,
+  referenceNow: DateTime,
+  referenceZone: string = CHILE_CONFIG.timezone
+): boolean {
+  const todayRefStr = referenceNow.setZone(referenceZone).toFormat('yyyy-MM-dd');
   return MARKET_EVENTS.some((e) => {
     if (e.marketId !== marketId) return false;
     if (e.importance !== 'high') return false;
-    const eventInChile = DateTime.fromISO(e.timestampUtc, { zone: 'utc' }).setZone('America/Santiago');
-    return eventInChile.toFormat('yyyy-MM-dd') === todayChileStr;
+    const eventInRef = DateTime.fromISO(e.timestampUtc, { zone: 'utc' }).setZone(referenceZone);
+    return eventInRef.toFormat('yyyy-MM-dd') === todayRefStr;
   });
 }
 
 export function getEventsForChileDay(
   referenceDate: DateTime = DateTime.now().setZone(CHILE_CONFIG.timezone),
-  events: MarketEvent[] = MARKET_EVENTS
+  events: MarketEvent[] = MARKET_EVENTS,
+  referenceZone: string = CHILE_CONFIG.timezone
 ): Record<string, TimelineEventMarkerData[]> {
-  const chileDate = referenceDate.setZone(CHILE_CONFIG.timezone);
-  const chileStartToday = chileDate.startOf('day');
-  const chileEndToday = chileStartToday.plus({ days: 1 });
+  const refDate = referenceDate.setZone(referenceZone);
+  const refStartToday = refDate.startOf('day');
+  const refEndToday = refStartToday.plus({ days: 1 });
 
   const result: Record<string, TimelineEventMarkerData[]> = {};
 
   for (const event of events) {
     const eventUtc = DateTime.fromISO(event.timestampUtc, { zone: 'utc' });
-    const eventInChile = eventUtc.setZone(CHILE_CONFIG.timezone);
+    const eventInRef = eventUtc.setZone(referenceZone);
 
-    if (eventInChile >= chileStartToday && eventInChile < chileEndToday) {
-      const minuteInChile = eventInChile.hour * 60 + eventInChile.minute;
+    if (eventInRef >= refStartToday && eventInRef < refEndToday) {
+      const minuteInChile = eventInRef.hour * 60 + eventInRef.minute;
       const leftPercent = (minuteInChile / 1440) * 100;
-      const formatted = formatEventTimes(event, chileDate);
+      const formatted = formatEventTimes(event, refDate, referenceZone);
 
       const markerData: TimelineEventMarkerData = {
         ...formatted,
@@ -143,14 +156,15 @@ export function getEventsForChileDay(
 export function getRollingDaysWindow(
   referenceDate: DateTime = DateTime.now().setZone(CHILE_CONFIG.timezone),
   daysCount: number = 7,
-  events: MarketEvent[] = MARKET_EVENTS
+  events: MarketEvent[] = MARKET_EVENTS,
+  referenceZone: string = CHILE_CONFIG.timezone
 ): RollingDayInfo[] {
-  const chileNow = referenceDate.setZone(CHILE_CONFIG.timezone);
-  const startOfChileToday = chileNow.startOf('day');
+  const refNow = referenceDate.setZone(referenceZone);
+  const startOfRefToday = refNow.startOf('day');
   const result: RollingDayInfo[] = [];
 
   for (let i = 0; i < daysCount; i++) {
-    const targetDay = startOfChileToday.plus({ days: i });
+    const targetDay = startOfRefToday.plus({ days: i });
     const nextDay = targetDay.plus({ days: 1 });
     const isoDate = targetDay.toFormat('yyyy-MM-dd');
 
@@ -167,8 +181,8 @@ export function getRollingDaysWindow(
     }
 
     const dayEvents = events.filter((e) => {
-      const eventInChile = DateTime.fromISO(e.timestampUtc, { zone: 'utc' }).setZone(CHILE_CONFIG.timezone);
-      return eventInChile >= targetDay && eventInChile < nextDay;
+      const eventInRef = DateTime.fromISO(e.timestampUtc, { zone: 'utc' }).setZone(referenceZone);
+      return eventInRef >= targetDay && eventInRef < nextDay;
     });
 
     const eventCount = dayEvents.length;
@@ -191,58 +205,6 @@ export function getRollingDaysWindow(
   return result;
 }
 
-/**
- * Accurately infers the macroeconomic category for an event title using word boundaries and domain precedence.
- */
-export function inferCategory(eventTitle: string): EventCategory {
-  const text = (eventTitle || '').toLowerCase();
-
-  // 1. Employment (higher specificity: unemployment, nonfarm payrolls, jobless claims)
-  if (
-    /\b(unemployment|payroll|payrolls|jobless|employment|desempleo|empleo|labor force|labor market|non-?farm|adp|jolts)\b/.test(
-      text
-    )
-  ) {
-    return 'employment';
-  }
-
-  // 2. Inflation (cpi, ppi, pce, inflation, price index, ipc, deflator)
-  // Ensure "shipping" or "clipping" does not trigger "ppi"
-  if (
-    /\b(cpi|ipc|inflation|inflaci[oó]n|price index|\bppi\b|\bpce\b|deflator|cost of living)\b/.test(
-      text
-    )
-  ) {
-    return 'inflation';
-  }
-
-  // 3. Central Bank (rates, FOMC, Fed meetings, monetary policy, repo rate)
-  // Ensure "confederation" does not trigger "fed"
-  if (
-    /\b(interest rate|policy rate|loan prime rate|fomc|federal reserve|\bfed\b|\bpboc\b|central bank|banco central|monetary policy|pol[ií]tica monetaria|\brpm\b|\blpr\b|repo rate|tasa de inter[eé]s|discount rate|target rate|rate decision|decisi[oó]n de tasa|decisi[oó]n tasa)\b/.test(
-      text
-    )
-  ) {
-    return 'central_bank';
-  }
-
-  // 4. Growth, Output & Trade (GDP, PIB, PMI, Retail, Industrial Production, Trade Balance)
-  if (
-    /\b(gdp|pib|growth|trade balance|balanza comercial|industrial production|producci[oó]n industrial|retail sales|ventas minoristas|pmi|ism|manufacturing|servicios|current account)\b/.test(
-      text
-    )
-  ) {
-    return 'gdp';
-  }
-
-  // 5. Holidays
-  if (/\b(holiday|feriado|closure|festivo)\b/.test(text)) {
-    return 'holidays';
-  }
-
-  return 'gdp';
-}
-
 export interface DataFreshnessStatus {
   latestEventDateStr: string;
   isStale: boolean;
@@ -254,7 +216,8 @@ export interface DataFreshnessStatus {
  * Computes calendar data coverage horizon and warns when data needs a sync or is expired.
  */
 export function getDataFreshnessStatus(
-  chileNow: DateTime = DateTime.now().setZone(CHILE_CONFIG.timezone)
+  referenceNow: DateTime = DateTime.now().setZone(CHILE_CONFIG.timezone),
+  referenceZone: string = CHILE_CONFIG.timezone
 ): DataFreshnessStatus {
   const latestEventUtc =
     MARKET_EVENTS.length > 0
@@ -264,8 +227,8 @@ export function getDataFreshnessStatus(
         )
       : '2026-01-01';
 
-  const latestEventDate = DateTime.fromISO(latestEventUtc, { zone: 'America/Santiago' });
-  const daysUntilExpiry = Math.round(latestEventDate.diff(chileNow, 'days').days);
+  const latestEventDate = DateTime.fromISO(latestEventUtc, { zone: referenceZone });
+  const daysUntilExpiry = Math.round(latestEventDate.diff(referenceNow.setZone(referenceZone), 'days').days);
   const isStale = daysUntilExpiry <= 14;
 
   return {

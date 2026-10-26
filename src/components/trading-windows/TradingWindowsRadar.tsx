@@ -50,6 +50,8 @@ interface TradingWindowsRadarProps {
 export const TradingWindowsRadar: React.FC<TradingWindowsRadarProps> = React.memo((props) => {
   const {
     markets,
+    marketSegments,
+    dailyEvents,
     currentMinutes,
     rollingDays,
     selectedIsoDate,
@@ -66,15 +68,19 @@ export const TradingWindowsRadar: React.FC<TradingWindowsRadarProps> = React.mem
     return rollingDays?.find((d) => d.isoDate === selectedIsoDate) ?? rollingDays?.[0];
   }, [rollingDays, selectedIsoDate]);
 
-  // Compute trading windows for the active date
+  // Compute trading windows for the active date, reusing precomputed segments & events from App
   const windows: TradingWindow[] = useMemo(() => {
     if (!activeDay) return [];
     return getTradingWindows(
       activeDay.date,
       markets,
-      isToday ? currentMinutes : undefined
+      isToday ? currentMinutes : undefined,
+      {
+        marketSegmentsMap: marketSegments,
+        dailyEventsMap: dailyEvents
+      }
     );
-  }, [activeDay, markets, currentMinutes, isToday]);
+  }, [activeDay, markets, marketSegments, dailyEvents, currentMinutes, isToday]);
 
   // Current active window (if viewing today)
   const currentWindow = useMemo(() => {

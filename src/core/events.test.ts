@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { DateTime } from 'luxon';
 import {
   MARKET_EVENTS,
+  MARKET_TIMEZONE_MAP,
   formatEventTimes,
   filterEvents,
   getUpcomingEvents,
@@ -11,6 +12,7 @@ import {
   inferCategory,
   getDataFreshnessStatus
 } from './events';
+import { MARKET_HOLIDAYS } from './holidays';
 import { MarketEvent } from './types';
 
 describe('events engine', () => {
@@ -34,6 +36,22 @@ describe('events engine', () => {
     expect(formatted.chileTimeFormatted).toContain('15:00');
     expect(formatted.exchangeTimeFormatted).toContain('14:00');
     expect(formatted.relativeTimeDescriptor).toBe('Hoy');
+  });
+
+  it('should support parameterized referenceZone for non-Chile reference clocks', () => {
+    // 2026-09-16 18:00:00 UTC -> 13:00 in America/Lima (UTC-5)
+    const fomcEvent: MarketEvent = {
+      id: 'test-fomc-lima',
+      marketId: 'nyse',
+      title: 'FOMC Rate Decision',
+      category: 'central_bank',
+      importance: 'high',
+      timestampUtc: '2026-09-16T18:00:00Z'
+    };
+
+    const formattedLima = formatEventTimes(fomcEvent, referenceChileNow, 'America/Lima');
+    expect(formattedLima.chileTimeFormatted).toContain('13:00');
+    expect(formattedLima.exchangeTimeFormatted).toContain('14:00');
   });
 
   it('should compute relative day descriptors accurately', () => {
@@ -227,5 +245,36 @@ describe('events engine', () => {
       expect(status.message).toContain('requiere actualización');
     });
   });
-});
 
+  describe('JSON dataset schema & referential integrity', () => {
+    it('validates all committed events in events.json conform to schema and valid marketIds', () => {
+      const validCategories = new Set(['employment', 'inflation', 'central_bank', 'gdp', 'holidays']);
+      const validImportance = new Set(['high', 'medium']);
+
+      expect(MARKET_EVENTS.length).toBeGreaterThan(0);
+      for (const evt of MARKET_EVENTS) {
+        expect(evt.id.trim().length).toBeGreaterThan(0);
+        expect(MARKET_TIMEZONE_MAP[evt.marketId]).toBeDefined();
+        expect(evt.title.trim().length).toBeGreaterThan(0);
+        expect(validCategories.has(evt.category)).toBe(true);
+        expect(validImportance.has(evt.importance)).toBe(true);
+        expect(DateTime.fromISO(evt.timestampUtc, { zone: 'utc' }).isValid).toBe(true);
+      }
+    });
+
+    it('validates all committed holidays in holidays.json conform to schema and valid early-close format', () => {
+      const hhMmRe = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+      expect(MARKET_HOLIDAYS.length).toBeGreaterThan(0);
+      for (const hol of MARKET_HOLIDAYS) {
+        expect(MARKET_TIMEZONE_MAP[hol.marketId]).toBeDefined();
+        expect(DateTime.fromFormat(hol.date, 'yyyy-MM-dd').isValid).toBe(true);
+        expect(hol.name.trim().length).toBeGreaterThan(0);
+        if (hol.isEarlyClose) {
+          expect(hol.closeTime).toBeDefined();
+          expect(hhMmRe.test(hol.closeTime!)).toBe(true);
+        }
+      }
+    });
+  });
+});

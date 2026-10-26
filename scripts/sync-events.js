@@ -7,11 +7,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { inferCategory } from '../src/core/event-category.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const EVENTS_FILE = path.resolve(__dirname, '../src/data/events.json');
 const HOLIDAYS_FILE = path.resolve(__dirname, '../src/data/holidays.json');
+
+// Retain up to 365 days of historical events/holidays to prevent unbounded bundle growth across years
+const RETENTION_DAYS = 365;
 
 const COUNTRY_TO_MARKET = {
   US: 'nyse',
@@ -22,51 +26,33 @@ const COUNTRY_TO_MARKET = {
   CL: 'chile'
 };
 
-function inferCategory(eventTitle) {
-  const text = (eventTitle || '').toLowerCase();
+const VALID_MARKET_IDS = new Set(Object.values(COUNTRY_TO_MARKET));
+const VALID_CATEGORIES = new Set(['employment', 'inflation', 'central_bank', 'gdp', 'holidays']);
+const VALID_IMPORTANCE = new Set(['high', 'medium']);
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const HH_MM_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
-  // 1. Employment (unemployment, nonfarm payrolls, jobless claims)
-  if (
-    /\b(unemployment|payroll|payrolls|jobless|employment|desempleo|empleo|labor force|labor market|non-?farm|adp|jolts)\b/.test(
-      text
-    )
-  ) {
-    return 'employment';
+export function isValidHolidayRecord(record) {
+  if (!record || typeof record !== 'object') return false;
+  if (!VALID_MARKET_IDS.has(record.marketId)) return false;
+  if (typeof record.date !== 'string' || !ISO_DATE_RE.test(record.date)) return false;
+  if (typeof record.name !== 'string' || record.name.trim().length === 0) return false;
+  if (record.isEarlyClose !== undefined && typeof record.isEarlyClose !== 'boolean') return false;
+  if (record.isEarlyClose && (typeof record.closeTime !== 'string' || !HH_MM_RE.test(record.closeTime))) {
+    return false;
   }
+  return true;
+}
 
-  // 2. Inflation (cpi, ppi, pce, inflation, price index, ipc, deflator)
-  if (
-    /\b(cpi|ipc|inflation|inflaci[oó]n|price index|\bppi\b|\bpce\b|deflator|cost of living)\b/.test(
-      text
-    )
-  ) {
-    return 'inflation';
-  }
-
-  // 3. Central Bank (rates, FOMC, Fed meetings, monetary policy, repo rate)
-  if (
-    /\b(interest rate|policy rate|loan prime rate|fomc|federal reserve|\bfed\b|\bpboc\b|central bank|banco central|monetary policy|pol[ií]tica monetaria|\brpm\b|\blpr\b|repo rate|tasa de inter[eé]s|discount rate|target rate|rate decision|decisi[oó]n de tasa|decisi[oó]n tasa)\b/.test(
-      text
-    )
-  ) {
-    return 'central_bank';
-  }
-
-  // 4. Growth, Output & Trade (GDP, PIB, PMI, Retail, Industrial Production, Trade Balance)
-  if (
-    /\b(gdp|pib|growth|trade balance|balanza comercial|industrial production|producci[oó]n industrial|retail sales|ventas minoristas|pmi|ism|manufacturing|servicios|current account)\b/.test(
-      text
-    )
-  ) {
-    return 'gdp';
-  }
-
-  // 5. Holidays
-  if (/\b(holiday|feriado|closure|festivo)\b/.test(text)) {
-    return 'holidays';
-  }
-
-  return 'gdp';
+export function isValidEventRecord(record) {
+  if (!record || typeof record !== 'object') return false;
+  if (typeof record.id !== 'string' || record.id.trim().length === 0) return false;
+  if (!VALID_MARKET_IDS.has(record.marketId)) return false;
+  if (typeof record.title !== 'string' || record.title.trim().length === 0) return false;
+  if (!VALID_CATEGORIES.has(record.category)) return false;
+  if (!VALID_IMPORTANCE.has(record.importance)) return false;
+  if (typeof record.timestampUtc !== 'string' || isNaN(Date.parse(record.timestampUtc))) return false;
+  return true;
 }
 
 function parseUtcTimestamp(timeStr) {
@@ -103,7 +89,11 @@ async function syncHolidays(apiKey) {
     }
   }
 
-  const holidayMap = new Map(existingHolidays.map((h) => [`${h.marketId}:${h.date}`, h]));
+  const holidayMap = new Map(
+    existingHolidays
+      .filter(isValidHolidayRecord)
+      .map((h) => [`${h.marketId}:${h.date}`, h])
+  );
 
   const exchanges = [
     { code: 'US', marketId: 'nyse' },
@@ -138,12 +128,15 @@ async function syncHolidays(apiKey) {
 
         // Preserve existing curated holiday names; only insert newly discovered future closures
         if (!holidayMap.has(key)) {
-          holidayMap.set(key, {
+          const candidate = {
             marketId: ex.marketId,
             date: item.atDate,
             name: item.eventName || (isEarlyClose ? 'Cierre temprano' : 'Feriado bursátil'),
             ...(isEarlyClose && closeTime ? { isEarlyClose: true, closeTime } : {})
-          });
+          };
+          if (isValidHolidayRecord(candidate)) {
+            holidayMap.set(key, candidate);
+          }
         }
       }
     } catch (err) {
@@ -151,9 +144,13 @@ async function syncHolidays(apiKey) {
     }
   }
 
-  const mergedHolidays = Array.from(holidayMap.values()).sort((a, b) =>
-    a.date.localeCompare(b.date) || a.marketId.localeCompare(b.marketId)
-  );
+  const cutoffDateStr = new Date(Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+
+  const mergedHolidays = Array.from(holidayMap.values())
+    .filter((h) => h.date >= cutoffDateStr && isValidHolidayRecord(h))
+    .sort((a, b) => a.date.localeCompare(b.date) || a.marketId.localeCompare(b.marketId));
 
   fs.writeFileSync(HOLIDAYS_FILE, JSON.stringify(mergedHolidays, null, 2) + '\n', 'utf-8');
   console.log(`✅ Successfully updated ${HOLIDAYS_FILE} (${mergedHolidays.length} total holidays).`);
@@ -202,7 +199,11 @@ async function syncEvents(apiKey) {
     }
   }
 
-  const existingMap = new Map(existingEvents.map((e) => [e.id, e]));
+  const existingMap = new Map(
+    existingEvents
+      .filter(isValidEventRecord)
+      .map((e) => [e.id, e])
+  );
 
   // Normalize and merge
   for (const item of relevantEvents) {
@@ -223,12 +224,17 @@ async function syncEvents(apiKey) {
       previous: item.prev != null ? String(item.prev) : undefined
     };
 
-    existingMap.set(id, { ...existingMap.get(id), ...normalized });
+    const mergedCandidate = { ...existingMap.get(id), ...normalized };
+    if (isValidEventRecord(mergedCandidate)) {
+      existingMap.set(id, mergedCandidate);
+    }
   }
 
-  const merged = Array.from(existingMap.values()).sort((a, b) =>
-    a.timestampUtc.localeCompare(b.timestampUtc)
-  );
+  const cutoffTimestampMs = now.getTime() - RETENTION_DAYS * 24 * 60 * 60 * 1000;
+
+  const merged = Array.from(existingMap.values())
+    .filter((e) => isValidEventRecord(e) && Date.parse(e.timestampUtc) >= cutoffTimestampMs)
+    .sort((a, b) => a.timestampUtc.localeCompare(b.timestampUtc));
 
   fs.writeFileSync(EVENTS_FILE, JSON.stringify(merged, null, 2) + '\n', 'utf-8');
   console.log(`✅ Successfully updated ${EVENTS_FILE} (${merged.length} total events).`);
@@ -261,7 +267,12 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error('❌ Pipeline run failed:', err);
-  process.exit(1);
-});
+const isDirectExecution =
+  process.argv[1] && path.resolve(process.argv[1]) === path.resolve(__filename);
+
+if (isDirectExecution) {
+  main().catch((err) => {
+    console.error('❌ Pipeline run failed:', err);
+    process.exit(1);
+  });
+}

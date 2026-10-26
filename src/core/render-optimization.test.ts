@@ -8,6 +8,10 @@ import { TimelineLeftColumn } from '../components/timeline/TimelineLeftColumn';
 import { TimelineBars } from '../components/timeline/TimelineBars';
 import { TimelineLegend } from '../components/timeline/TimelineLegend';
 import { TradingWindowsRadar } from '../components/trading-windows/TradingWindowsRadar';
+import {
+  calculateScrubberMinutesFromBounds,
+  resolveScrubberKeyAction
+} from '../hooks/useScrubber';
 import { evaluateMarketAt } from './timezone';
 import { MARKETS } from './markets';
 
@@ -74,5 +78,61 @@ describe('React memoization & render optimization verification', () => {
       timelineSliderExists = false;
     }
     expect(timelineSliderExists).toBe(false);
+  });
+
+  describe('useScrubber behavioral interaction logic', () => {
+    it('maps pointer clientX coordinates accurately into clamped [0, 1440] minutes', () => {
+      // Container from x=100 to x=900 (width 800)
+      expect(calculateScrubberMinutesFromBounds(100, 100, 800)).toBe(0);
+      expect(calculateScrubberMinutesFromBounds(500, 100, 800)).toBe(720);
+      expect(calculateScrubberMinutesFromBounds(900, 100, 800)).toBe(1440);
+
+      // Out-of-bounds pointer clamping
+      expect(calculateScrubberMinutesFromBounds(20, 100, 800)).toBe(0);
+      expect(calculateScrubberMinutesFromBounds(1200, 100, 800)).toBe(1440);
+
+      // Degenerate zero-width container
+      expect(calculateScrubberMinutesFromBounds(300, 100, 0)).toBeNull();
+    });
+
+    it('resolves keyboard scrubber navigation steps and clamping', () => {
+      expect(resolveScrubberKeyAction('ArrowRight', null, 720)).toEqual({
+        handled: true,
+        nextMinutes: 735,
+        isHovering: true
+      });
+      expect(resolveScrubberKeyAction('ArrowLeft', 10, 720)).toEqual({
+        handled: true,
+        nextMinutes: 0,
+        isHovering: true
+      });
+      expect(resolveScrubberKeyAction('PageUp', 1400, 720)).toEqual({
+        handled: true,
+        nextMinutes: 1440,
+        isHovering: true
+      });
+      expect(resolveScrubberKeyAction('PageDown', 120, 720)).toEqual({
+        handled: true,
+        nextMinutes: 60,
+        isHovering: true
+      });
+      expect(resolveScrubberKeyAction('Home', 720, 720)).toEqual({
+        handled: true,
+        nextMinutes: 0,
+        isHovering: true
+      });
+      expect(resolveScrubberKeyAction('End', 720, 720)).toEqual({
+        handled: true,
+        nextMinutes: 1440,
+        isHovering: true
+      });
+      expect(resolveScrubberKeyAction('Escape', 800, 720)).toEqual({
+        handled: true,
+        nextMinutes: null,
+        isHovering: false,
+        isDragging: false
+      });
+      expect(resolveScrubberKeyAction('Tab', 800, 720).handled).toBe(false);
+    });
   });
 });

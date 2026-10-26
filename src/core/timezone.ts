@@ -14,19 +14,20 @@ export function parseTime(timeStr: string): { hour: number; minute: number } {
 }
 
 /**
- * Projects a market's trading sessions onto a 24-hour reference timeline for Chile.
+ * Projects a market's trading sessions onto a 24-hour reference timeline for the reference timezone (defaults to Chile).
  * Examines surrounding calendar days in the market's timezone to handle day-wrap effects.
  */
 export function projectMarketToTimeline(
   market: MarketConfig,
-  referenceDate: DateTime = DateTime.now().setZone(CHILE_TZ)
+  referenceDate: DateTime = DateTime.now().setZone(CHILE_TZ),
+  referenceZone: string = CHILE_TZ
 ): TimelineSegment[] {
-  const refDayStart = referenceDate.setZone(CHILE_TZ).startOf('day');
+  const refDayStart = referenceDate.setZone(referenceZone).startOf('day');
   const refDayEnd = refDayStart.plus({ days: 1 });
 
   const segments: TimelineSegment[] = [];
 
-  // Inspect days around the reference day to capture sessions that cross midnight in Chile
+  // Inspect days around the reference day to capture sessions that cross midnight in the reference zone
   const daysToCheck = [-1, 0, 1];
 
   for (const dayOffset of daysToCheck) {
@@ -63,21 +64,21 @@ export function projectMarketToTimeline(
         { zone: market.timezone }
       );
 
-      // Convert session to Chile reference time
-      const sessionStartChile = sessionStartMarket.setZone(CHILE_TZ);
-      const sessionEndChile = sessionEndMarket.setZone(CHILE_TZ);
+      // Convert session to reference time
+      const sessionStartRef = sessionStartMarket.setZone(referenceZone);
+      const sessionEndRef = sessionEndMarket.setZone(referenceZone);
 
       // Check overlap with reference day [refDayStart, refDayEnd)
-      if (sessionEndChile <= refDayStart || sessionStartChile >= refDayEnd) {
+      if (sessionEndRef <= refDayStart || sessionStartRef >= refDayEnd) {
         continue;
       }
 
       // Clip to reference day boundaries
-      const clippedStart = sessionStartChile < refDayStart ? refDayStart : sessionStartChile;
-      const clippedEnd = sessionEndChile > refDayEnd ? refDayEnd : sessionEndChile;
+      const clippedStart = sessionStartRef < refDayStart ? refDayStart : sessionStartRef;
+      const clippedEnd = sessionEndRef > refDayEnd ? refDayEnd : sessionEndRef;
 
-      const startMinute = dateTimeToWallClockMinutes(clippedStart, referenceDate);
-      const endMinute = dateTimeToWallClockMinutes(clippedEnd, referenceDate);
+      const startMinute = dateTimeToWallClockMinutes(clippedStart, referenceDate, referenceZone);
+      const endMinute = dateTimeToWallClockMinutes(clippedEnd, referenceDate, referenceZone);
 
       if (endMinute > startMinute) {
         segments.push({
@@ -355,33 +356,36 @@ export function evaluateMarketAt(
 }
 
 /**
- * Converts a DateTime in Santiago to wall-clock minutes (0-1440) on the reference day.
+ * Converts a DateTime in the reference zone to wall-clock minutes (0-1440) on the reference day.
  * Uses the clock face (hour * 60 + minute) rather than elapsed physical duration,
  * preventing timeline distortion on DST transition days (23h or 25h).
  */
 export function dateTimeToWallClockMinutes(
   dt: DateTime,
-  referenceDate: DateTime = DateTime.now().setZone(CHILE_TZ)
+  referenceDate: DateTime = DateTime.now().setZone(CHILE_TZ),
+  referenceZone: string = CHILE_TZ
 ): number {
-  const refDayStart = referenceDate.setZone(CHILE_TZ).startOf('day');
+  const refDayStart = referenceDate.setZone(referenceZone).startOf('day');
   const refDayEnd = refDayStart.plus({ days: 1 });
+  const dtInRef = dt.setZone(referenceZone);
 
-  if (dt <= refDayStart) return 0;
-  if (dt >= refDayEnd) return 1440;
-  return dt.hour * 60 + dt.minute;
+  if (dtInRef <= refDayStart) return 0;
+  if (dtInRef >= refDayEnd) return 1440;
+  return dtInRef.hour * 60 + dtInRef.minute;
 }
 
 /**
- * Converts a minute offset (0-1440) on the reference day to a DateTime in Santiago.
+ * Converts a minute offset (0-1440) on the reference day to a DateTime in the reference zone.
  * Maps directly to wall-clock time (hour and minute on the reference date)
  * ensuring minute 720 always corresponds to 12:00, even during DST changeover days.
  */
 export function minuteOffsetToDateTime(
   minuteOffset: number,
-  referenceDate: DateTime = DateTime.now().setZone(CHILE_TZ)
+  referenceDate: DateTime = DateTime.now().setZone(CHILE_TZ),
+  referenceZone: string = CHILE_TZ
 ): DateTime {
   const clamped = Math.max(0, Math.min(1440, minuteOffset));
-  const refDayStart = referenceDate.setZone(CHILE_TZ).startOf('day');
+  const refDayStart = referenceDate.setZone(referenceZone).startOf('day');
 
   if (clamped >= 1440) {
     return refDayStart.plus({ days: 1 });
@@ -409,13 +413,16 @@ export function formatMinutes(minuteOffset: number): string {
 }
 
 /**
- * Returns human-readable Santiago UTC offset string.
+ * Returns human-readable UTC offset string for the reference timezone (defaults to Santiago).
  */
-export function getSantiagoOffsetDescription(date: DateTime = DateTime.now().setZone(CHILE_TZ)): string {
-  const santiago = date.setZone(CHILE_TZ);
-  const offsetHours = santiago.offset / 60;
+export function getSantiagoOffsetDescription(
+  date: DateTime = DateTime.now().setZone(CHILE_TZ),
+  referenceZone: string = CHILE_TZ
+): string {
+  const zoned = date.setZone(referenceZone);
+  const offsetHours = zoned.offset / 60;
   const sign = offsetHours >= 0 ? '+' : '';
-  const isDst = santiago.isInDST;
+  const isDst = zoned.isInDST;
   const name = isDst ? 'Horario de Verano' : 'Horario Estándar';
   return `UTC${sign}${offsetHours} (${name})`;
 }
