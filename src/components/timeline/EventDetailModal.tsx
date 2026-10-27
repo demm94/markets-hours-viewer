@@ -74,7 +74,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = React.memo(({
           aria-modal="true"
           aria-labelledby="event-modal-title"
           aria-describedby={event.description ? 'event-modal-desc' : undefined}
-          className="relative z-10 w-full max-w-lg rounded-t-2xl sm:rounded-xl border border-border-strong bg-popover p-4 sm:p-5 shadow-neon-lg flex flex-col gap-4 text-left max-h-[90dvh] overflow-y-auto"
+          className="relative z-10 w-full max-w-lg rounded-t-2xl sm:rounded-xl border border-border-strong bg-popover p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-5 shadow-neon-lg flex flex-col gap-4 text-left max-h-[90dvh] overflow-y-auto"
         >
           {/* Mobile Drag Indicator */}
           <div className="sm:hidden flex justify-center -mt-1 -mb-1">
@@ -109,7 +109,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = React.memo(({
               ref={closeButtonRef}
               type="button"
               onClick={onClose}
-              className="flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-white hover:bg-white/[0.06] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 cursor-pointer"
+              className="relative flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:text-white hover:bg-white/[0.06] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 cursor-pointer before:absolute before:-inset-1.5 before:content-['']"
               aria-label="Cerrar modal de evento"
             >
               <X className="w-4 h-4" aria-hidden="true" />
@@ -183,7 +183,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = React.memo(({
                   onClose();
                   onOpenMarketDrawer(event.marketId);
                 }}
-                className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg bg-white/[0.06] hover:bg-white/[0.10] text-zinc-100 border border-border-strong text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 cursor-pointer"
+                className="flex-1 inline-flex items-center justify-center gap-2 min-h-[40px] py-2.5 px-3 rounded-lg bg-white/[0.06] hover:bg-white/[0.10] text-zinc-100 border border-border-strong text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 cursor-pointer"
               >
                 <Calendar className="w-3.5 h-3.5" />
                 <span>Ver panel de eventos</span>
@@ -194,7 +194,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = React.memo(({
             <button
               type="button"
               onClick={onClose}
-              className="py-2.5 px-4 rounded-lg bg-muted hover:bg-white/[0.05] text-muted-foreground hover:text-zinc-100 text-xs font-semibold border border-border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white cursor-pointer"
+              className="min-h-[40px] py-2.5 px-4 rounded-lg bg-muted hover:bg-white/[0.05] text-muted-foreground hover:text-zinc-100 text-xs font-semibold border border-border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white cursor-pointer"
             >
               Cerrar
             </button>

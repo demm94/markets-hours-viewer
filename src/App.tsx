@@ -280,6 +280,9 @@ export const App: React.FC = () => {
         selectedMarketId={selectedEventMarket}
         onSelectMarketId={setSelectedEventMarket}
         chileNow={chileNowMinute}
+        notificationsEnabled={notificationPreferences.enabled && notificationPermission === 'granted'}
+        subscribedMarketIds={notificationPreferences.subscribedMarketIds}
+        onToggleMarketAlert={toggleMarketSubscription}
       />
 
       <EventDetailModal

@@ -68,6 +68,23 @@
 
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Responsive timeline row geometry for floating pills alignment */
+  --timeline-header-h: 36px;
+  --timeline-row-h: 38px;
+}
+
+@media (min-width: 640px) {
+  .timeline-bars-container {
+    --timeline-header-h: 44px;
+    --timeline-row-h: 46px;
+  }
+}
+
+@media (min-width: 768px) {
+  .timeline-bars-container {
+    --timeline-row-h: 50px;
+  }
 }
 
 @theme {

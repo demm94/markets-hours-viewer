@@ -31,6 +31,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
   onToggleNotifications
 }) => {
   const santiagoOffset = getSantiagoOffsetDescription(now);
+  const compactOffset = santiagoOffset.split(' ')[0];
   const isDenied = notificationPermission === 'denied';
   const isUnsupported = notificationPermission === 'unsupported';
   const isActive = notificationsEnabled && notificationPermission === 'granted';
@@ -53,7 +54,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
           </h1>
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <Badge variant="open" showDot={false} className="min-h-[32px] sm:min-h-[34px] gap-1.5 px-2.5 py-1 text-xs font-medium whitespace-nowrap">
+          <Badge variant="open" showDot={false} className="min-h-[32px] sm:min-h-[34px] gap-1.5 px-2 sm:px-2.5 py-1 text-xs font-medium whitespace-nowrap">
             <Activity size={12} className="text-emerald-400 shrink-0" />
             <span>
               <strong className="text-emerald-300 font-semibold tabular-nums">{openMarketsCount}</strong>/{totalMarketsCount}
@@ -95,13 +96,14 @@ export const Header: React.FC<HeaderProps> = React.memo(({
             <button
               type="button"
               onClick={onOpenEvents}
+              aria-label="Ver próximos eventos y catalizadores"
               className="relative flex items-center gap-1.5 min-h-[32px] sm:min-h-[34px] px-2.5 sm:px-3 py-1 rounded-md border border-border bg-white/[0.03] hover:border-border-strong hover:bg-white/[0.06] hover:text-white active:bg-white/[0.08] text-xs font-medium text-zinc-200 transition-colors duration-150 cursor-pointer whitespace-nowrap"
               title="Ver próximos eventos y catalizadores"
             >
-              <Calendar className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-              <span>Eventos</span>
+              <Calendar className="w-3.5 h-3.5 text-zinc-400 shrink-0" aria-hidden="true" />
+              <span className="hidden min-[360px]:inline">Eventos</span>
               {hasUpcomingCatalysts && (
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" aria-hidden="true" />
               )}
             </button>
           )}
@@ -118,8 +120,12 @@ export const Header: React.FC<HeaderProps> = React.memo(({
           <span className="font-mono text-sm sm:text-base font-bold text-zinc-100 tracking-tight tabular-nums">
             {timeFormatted}
           </span>
-          <span className="font-mono text-xs font-medium text-zinc-300 bg-white/[0.04] border border-border px-2 py-0.5 rounded whitespace-nowrap leading-none">
-            {santiagoOffset}
+          <span
+            className="font-mono text-xs font-medium text-zinc-300 bg-white/[0.04] border border-border px-2 py-0.5 rounded whitespace-nowrap leading-none"
+            title={santiagoOffset}
+          >
+            <span className="hidden min-[400px]:inline">{santiagoOffset}</span>
+            <span className="min-[400px]:hidden">{compactOffset}</span>
           </span>
         </div>
 

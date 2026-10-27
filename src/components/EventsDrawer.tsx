@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DateTime } from 'luxon';
-import { X, Calendar, Flame, AlertCircle, Building2, TrendingUp, DollarSign } from 'lucide-react';
+import { X, Calendar, Flame, AlertCircle, Building2, TrendingUp, DollarSign, Bell, BellOff } from 'lucide-react';
 import { EventCategory } from '../core/types';
 import { MARKETS, CHILE_CONFIG } from '../core/markets';
 import { getUpcomingEvents, getDataFreshnessStatus } from '../core/events';
@@ -15,6 +15,9 @@ interface EventsDrawerProps {
   selectedMarketId: string;
   onSelectMarketId: (marketId: string) => void;
   chileNow: DateTime;
+  notificationsEnabled?: boolean;
+  subscribedMarketIds?: string[];
+  onToggleMarketAlert?: (marketId: string) => void;
 }
 
 const CATEGORY_LABELS: Record<EventCategory, { label: string; icon: React.ComponentType<{ className?: string }> }> = {
@@ -30,7 +33,10 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
   onClose,
   selectedMarketId,
   onSelectMarketId,
-  chileNow
+  chileNow,
+  notificationsEnabled = false,
+  subscribedMarketIds,
+  onToggleMarketAlert
 }) => {
   const [viewMode, setViewMode] = useState<'events' | 'holidays'>('events');
   const [onlyHighImportance, setOnlyHighImportance] = useState(false);
@@ -156,6 +162,16 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
     ];
   }, []);
 
+  const selectedMarketConfig = useMemo(() => {
+    if (selectedMarketId === 'all' || selectedMarketId === 'chile') return null;
+    return MARKETS.find((m) => m.id === selectedMarketId) ?? null;
+  }, [selectedMarketId]);
+
+  const isSelectedMarketSubscribed = useMemo(() => {
+    if (!selectedMarketConfig) return false;
+    return subscribedMarketIds ? subscribedMarketIds.includes(selectedMarketConfig.id) : true;
+  }, [selectedMarketConfig, subscribedMarketIds]);
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -203,7 +219,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                 ref={closeButtonRef}
                 type="button"
                 onClick={onClose}
-                className="flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-white hover:bg-white/[0.06] transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 cursor-pointer"
+                className="relative flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:text-white hover:bg-white/[0.06] transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 cursor-pointer before:absolute before:-inset-1.5 before:content-['']"
                 aria-label="Cerrar panel de eventos"
               >
                 <X className="w-4 h-4" aria-hidden="true" />
@@ -219,7 +235,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                   onClick={() => setViewMode('events')}
                   aria-pressed={viewMode === 'events'}
                   className={cn(
-                    'py-1.5 px-2 rounded-md text-center transition-colors duration-150 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
+                    'min-h-[34px] py-1.5 px-2 rounded-md text-center transition-colors duration-150 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
                     viewMode === 'events'
                       ? 'bg-card text-zinc-100 border border-border-strong font-semibold'
                       : 'text-muted-foreground hover:text-zinc-200 border border-transparent'
@@ -232,7 +248,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                   onClick={() => setViewMode('holidays')}
                   aria-pressed={viewMode === 'holidays'}
                   className={cn(
-                    'py-1.5 px-2 rounded-md text-center transition-colors duration-150 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
+                    'min-h-[34px] py-1.5 px-2 rounded-md text-center transition-colors duration-150 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
                     viewMode === 'holidays'
                       ? 'bg-card text-zinc-100 border border-border-strong font-semibold'
                       : 'text-muted-foreground hover:text-zinc-200 border border-transparent'
@@ -267,7 +283,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                         }}
                         aria-pressed={isActive}
                         className={cn(
-                          'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md font-medium whitespace-nowrap transition-colors duration-150 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 shrink-0',
+                          'flex items-center gap-1.5 min-h-[34px] px-2.5 py-1.5 rounded-md font-medium whitespace-nowrap transition-colors duration-150 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 shrink-0',
                           isActive
                             ? 'bg-white/[0.08] text-zinc-100 border border-border-strong font-semibold'
                             : 'bg-muted/50 text-muted-foreground border border-border hover:bg-muted hover:text-zinc-200'
@@ -297,6 +313,38 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                 )}
               </div>
 
+              {/* Per-market Bell Alert Toggle (accessible on mobile & desktop when a specific market is selected) */}
+              {notificationsEnabled && onToggleMarketAlert && selectedMarketConfig && (
+                <div className="flex items-center justify-between gap-2 pt-0.5 border-t border-border/60">
+                  <span className="text-xs text-muted-foreground truncate">
+                    Campana de {selectedMarketConfig.flag} {selectedMarketConfig.name}:
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => onToggleMarketAlert(selectedMarketConfig.id)}
+                    aria-pressed={isSelectedMarketSubscribed}
+                    className={cn(
+                      'flex items-center gap-1.5 min-h-[34px] px-2.5 py-1 rounded-md text-xs font-medium border transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 shrink-0',
+                      isSelectedMarketSubscribed
+                        ? 'bg-emerald-500/15 border-emerald-500/35 text-emerald-300'
+                        : 'bg-muted/50 border-border text-muted-foreground hover:text-zinc-200'
+                    )}
+                  >
+                    {isSelectedMarketSubscribed ? (
+                      <>
+                        <Bell className="w-3.5 h-3.5 text-emerald-400" aria-hidden="true" />
+                        <span>Alertas Activas</span>
+                      </>
+                    ) : (
+                      <>
+                        <BellOff className="w-3.5 h-3.5" aria-hidden="true" />
+                        <span>Silenciado</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+
               {/* Secondary filter info */}
               {viewMode === 'events' ? (
                 <div className="flex items-center justify-between pt-0.5">
@@ -309,7 +357,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                     onClick={() => setOnlyHighImportance((prev) => !prev)}
                     aria-pressed={onlyHighImportance}
                     className={cn(
-                      'flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
+                      'flex items-center gap-1.5 min-h-[34px] px-2.5 py-1 rounded-md text-xs font-medium border transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
                       onlyHighImportance
                         ? 'bg-rose-500/15 border-rose-500/35 text-rose-300'
                         : 'bg-muted/50 border-border text-muted-foreground hover:text-zinc-200'
@@ -521,8 +569,8 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
             </div>
           )}
 
-            {/* Footer */}
-            <div className="px-4 py-2.5 border-t border-border bg-popover/90 text-xs text-muted-foreground flex items-center justify-between">
+            {/* Footer with iOS PWA safe-area-inset-bottom support */}
+            <div className="px-4 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] border-t border-border bg-popover/90 text-xs text-muted-foreground flex items-center justify-between">
               <span>Sincronizado con IANA America/Santiago</span>
               <span className="font-mono">PWA Offline ready</span>
             </div>

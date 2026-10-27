@@ -152,4 +152,21 @@ describe('timeline-visualizer & pwa-shell compliance', () => {
     expect(normalChileEvaluation.holiday).toBeUndefined();
     expect(normalChileEvaluation.activeSegmentLabel).toBeUndefined();
   });
+
+  it('uses CSS custom properties for floating timeline pills and safe-area-inset-bottom on fixed overlays', () => {
+    const css = readRepoFile('src/index.css');
+    expect(css).toContain('--timeline-header-h');
+    expect(css).toContain('--timeline-row-h');
+
+    const timelineBars = readRepoFile('src/components/timeline/TimelineBars.tsx');
+    expect(timelineBars).toContain('var(--timeline-header-h');
+    expect(timelineBars).toContain('var(--timeline-row-h');
+    expect(timelineBars).not.toContain('window.innerWidth');
+
+    const drawer = readRepoFile('src/components/EventsDrawer.tsx');
+    expect(drawer).toContain('env(safe-area-inset-bottom)');
+
+    const modal = readRepoFile('src/components/timeline/EventDetailModal.tsx');
+    expect(modal).toContain('env(safe-area-inset-bottom)');
+  });
 });

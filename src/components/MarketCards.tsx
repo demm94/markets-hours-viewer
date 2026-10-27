@@ -58,6 +58,7 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
           const status = ev?.status ?? 'closed';
           const isHoliday = Boolean(ev?.holiday && !ev.holiday.isEarlyClose);
           const hasCatalyst = catalystsMap?.[market.id];
+          const isSubscribed = subscribedMarketIds ? subscribedMarketIds.includes(market.id) : true;
 
           let borderClass = 'border-border bg-card text-zinc-400';
           let dotColor = 'bg-zinc-600';
@@ -93,6 +94,17 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
               title={`${market.name} (${market.code}) - ${isHoliday ? `Feriado: ${ev?.holiday?.name}` : statusLabel} - ${ev?.localTimeFormatted ?? '--:--'} (${ev?.timezoneOffset ?? ''})${hasCatalyst ? ' (Evento hoy)' : ''}`}
               aria-label={`${market.name} (${market.code}), ${isHoliday ? `Feriado: ${ev?.holiday?.name}` : statusLabel}, hora local ${ev?.localTimeFormatted ?? '--:--'} ${ev?.timezoneOffset ?? ''}${hasCatalyst ? ', tiene evento hoy' : ''}`}
             >
+              {notificationsEnabled && (
+                <span
+                  className={cn(
+                    "absolute top-1 left-1 leading-none",
+                    isSubscribed ? "text-emerald-400/80" : "text-zinc-600"
+                  )}
+                  aria-hidden="true"
+                >
+                  {isSubscribed ? <Bell className="w-2.5 h-2.5" /> : <BellOff className="w-2.5 h-2.5" />}
+                </span>
+              )}
               {hasCatalyst && (
                 <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-rose-500" aria-hidden="true" />
               )}

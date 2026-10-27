@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { MarketConfig, MarketEvaluation, TimelineSegment, TimelineEventMarkerData, RollingDayInfo } from '../core/types';
 import { CHILE_CONFIG } from '../core/markets';
 import { TimelineHeader } from './timeline/TimelineHeader';
@@ -57,6 +57,8 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
   onResetScrubber,
   isToday = true
 }) => {
+  const userToggledRef = useRef(false);
+
   // Default to collapsed on mobile viewports (<= 768px) to maximize timeline space
   const [isColumnCollapsed, setIsColumnCollapsed] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
@@ -65,7 +67,23 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
     return false;
   });
 
-  const toggleColumn = useCallback(() => setIsColumnCollapsed((prev) => !prev), []);
+  // Sync collapsed state across viewport orientation/resize transitions unless manually overridden
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    const mql = window.matchMedia('(max-width: 768px)');
+    const handleMediaChange = (e: MediaQueryListEvent) => {
+      if (!userToggledRef.current) {
+        setIsColumnCollapsed(e.matches);
+      }
+    };
+    mql.addEventListener('change', handleMediaChange);
+    return () => mql.removeEventListener('change', handleMediaChange);
+  }, []);
+
+  const toggleColumn = useCallback(() => {
+    userToggledRef.current = true;
+    setIsColumnCollapsed((prev) => !prev);
+  }, []);
 
   const allMarkets = useMemo(() => [CHILE_MARKET, ...markets], [markets]);
 

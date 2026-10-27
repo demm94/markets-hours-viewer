@@ -71,12 +71,6 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
   const isActivelyScrubbing = isHovering && Math.abs(scrubberMinutes - currentMinutes) > 2;
 
   const renderCollapsedFloatingPills = (linePercent: number) => {
-    const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
-    const isTablet = typeof window !== 'undefined' && window.innerWidth < 768;
-    // Header uses h-9 (36px) on <640px and sm:h-11 (44px) on >=640px
-    const headerHeight = isMobile ? 36 : 44;
-    const rowHeight = isMobile ? 38 : isTablet ? 46 : 50;
-
     const edgeTransform =
       linePercent < 4
         ? 'translate(6px, -50%)'
@@ -97,7 +91,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                 localDateFormatted: ''
               });
 
-          const topPx = headerHeight + idx * rowHeight + rowHeight / 2;
+          const topCalc = `calc(var(--timeline-header-h, 36px) + ${idx + 0.5} * var(--timeline-row-h, 38px))`;
 
           let statusClasses = 'border-border text-zinc-300';
           if (ev.holiday && !ev.holiday.isEarlyClose) {
@@ -117,7 +111,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
               key={market.id}
               className={`absolute left-0 inline-flex items-center gap-1.5 bg-popover/95 border rounded-md px-2 py-0.5 font-mono text-[10px] sm:text-xs font-semibold whitespace-nowrap shadow-md z-10 pointer-events-none tabular-nums ${statusClasses}`}
               style={{
-                top: `${topPx}px`,
+                top: topCalc,
                 transform: edgeTransform
               }}
               title={`${market.name}: ${ev.localTimeFormatted}${ev.holiday ? ` (Feriado: ${ev.holiday.name})` : ''}`}
