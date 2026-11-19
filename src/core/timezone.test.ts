@@ -9,7 +9,8 @@ import {
   isWeekend,
   minuteOffsetToDateTime,
   dateTimeToWallClockMinutes,
-  formatMinutesCountdown
+  formatMinutesCountdown,
+  formatMarketChileSchedule
 } from './timezone';
 import { MARKETS } from './markets';
 
@@ -205,5 +206,117 @@ describe('timezone engine', () => {
     const dtWeekend = DateTime.fromISO('2026-09-19T10:00:00', { zone: 'America/New_York' });
     const evalWeekend = evaluateMarketAt(nyse, dtWeekend);
     expect(evalWeekend.timezoneOffset).toBe('UTC-4');
+  });
+
+  it('omits exchange weekend sessions in projectMarketToTimeline unless isSimulation is enabled', () => {
+    // Saturday 2026-10-17 in Chile: every market is closed on Saturday
+    const saturdayChile = DateTime.fromISO('2026-10-17T12:00:00', { zone: CHILE_TZ });
+    expect(projectMarketToTimeline(nyse, saturdayChile)).toHaveLength(0);
+    expect(projectMarketToTimeline(twse, saturdayChile)).toHaveLength(0);
+
+    // Simulation mode projects weekday reference sessions on Saturday
+    expect(projectMarketToTimeline(nyse, saturdayChile, CHILE_TZ, { isSimulation: true }).length).toBeGreaterThan(0);
+
+    // Friday 2026-10-16 in Chile: TWSE morning (00:00-02:30 CL = Fri TST) is present,
+    // but Friday night reopen (22:00-24:00 CL = Sat morning TST) is omitted because Asia is closed Saturday
+    const fridayChile = DateTime.fromISO('2026-10-16T12:00:00', { zone: CHILE_TZ });
+    const twseFriday = projectMarketToTimeline(twse, fridayChile);
+    expect(twseFriday).toHaveLength(1);
+    expect(twseFriday[0].endMinute).toBe(150);
+
+    // Sunday 2026-10-18 in Chile: NYSE has no segments, while TWSE opens Sunday 22:00 CL (Monday morning TST)
+    const sundayChile = DateTime.fromISO('2026-10-18T12:00:00', { zone: CHILE_TZ });
+    expect(projectMarketToTimeline(nyse, sundayChile)).toHaveLength(0);
+    const twseSunday = projectMarketToTimeline(twse, sundayChile);
+    expect(twseSunday).toHaveLength(1);
+    expect(twseSunday[0].startMinute).toBe(1320);
+    expect(twseSunday[0].endMinute).toBe(1440);
+  });
+
+  it('formats weekend next-open transitions in Chile time with explicit CL suffix', () => {
+    // Saturday 2026-10-17 12:00 Chile (UTC-3)
+    const satChile = DateTime.fromISO('2026-10-17T12:00:00', { zone: CHILE_TZ });
+
+    // NYSE opens Mon 09:30 EDT (UTC-4) -> Mon 10:30 CL
+    const evalNy = evaluateMarketAt(nyse, satChile);
+    expect(evalNy.nextTransition?.formattedCountdown).toBe('Abre lun 10:30 CL');
+    expect(evalNy.nextTransition?.atChileFormatted).toBe('lun 10:30 CL');
+
+    // TWSE opens Mon 09:00 TST (UTC+8) -> Sun 22:00 CL
+    const evalTw = evaluateMarketAt(twse, satChile);
+    expect(evalTw.nextTransition?.formattedCountdown).toBe('Abre dom 22:00 CL');
+    expect(evalTw.nextTransition?.atChileFormatted).toBe('dom 22:00 CL');
+
+    // Same-day regular close transition exposes HH:mm CL
+    const tueOpen = DateTime.fromISO('2026-09-15T14:30:00', { zone: 'America/New_York' });
+    const evalOpen = evaluateMarketAt(nyse, tueOpen);
+    expect(evalOpen.nextTransition?.atChileFormatted).toBe('17:00 CL');
+  });
+
+  it('formats each market trading schedule in Chile reference time', () => {
+    // Sep 15, 2026 (Chile UTC-3, NY EDT UTC-4, Taipei/Shanghai UTC+8)
+    const sepTue = DateTime.fromISO('2026-09-15T12:00:00', { zone: CHILE_TZ });
+
+    const nySchedule = formatMarketChileSchedule(nyse, sepTue);
+    expect(nySchedule.summary).toBe('10:30–17:00 CL');
+    expect(nySchedule.isOvernight).toBe(false);
+    expect(nySchedule.isEarlyClose).toBe(false);
+    expect(nySchedule.isHoliday).toBe(false);
+
+    const twSchedule = formatMarketChileSchedule(twse, sepTue);
+    expect(twSchedule.summary).toBe('22:00–02:30 CL');
+    expect(twSchedule.isOvernight).toBe(true);
+
+    const sseSchedule = formatMarketChileSchedule(sse, sepTue);
+    expect(sseSchedule.summary).toBe('22:30–00:30 · 02:00–04:00 CL');
+    expect(sseSchedule.isOvernight).toBe(true);
+
+    // Early close on Black Friday (2026-11-27): NY 09:30-13:00 EST -> 11:30-15:00 CL
+    const blackFriday = DateTime.fromISO('2026-11-27T12:00:00', { zone: CHILE_TZ });
+    const bfSchedule = formatMarketChileSchedule(nyse, blackFriday);
+    expect(bfSchedule.summary).toBe('11:30–15:00 CL');
+    expect(bfSchedule.isEarlyClose).toBe(true);
+
+    // Full holiday on Thanksgiving (2026-11-26)
+    const thanksgiving = DateTime.fromISO('2026-11-26T12:00:00', { zone: CHILE_TZ });
+    const tgSchedule = formatMarketChileSchedule(nyse, thanksgiving);
+    expect(tgSchedule.isHoliday).toBe(true);
+  });
+
+  it('formats multi-day next-open transitions from regular weekdays in Chile time with CL suffix', () => {
+    // Regular Friday post-close (NYSE Fri 18:00 CL -> Mon 10:30 CL)
+    const friEve = DateTime.fromISO('2026-10-16T18:00:00', { zone: CHILE_TZ });
+    const evalNyFri = evaluateMarketAt(nyse, friEve);
+    expect(evalNyFri.nextTransition?.formattedCountdown).toBe('Abre lun 10:30 CL');
+    expect(evalNyFri.nextTransition?.atChileFormatted).toBe('lun 10:30 CL');
+
+    // Regular Wednesday post-close before Thanksgiving (NYSE Wed 18:30 CL -> Fri 11:30 CL)
+    const wedBeforeTg = DateTime.fromISO('2026-11-25T18:30:00', { zone: CHILE_TZ });
+    const evalNyWed = evaluateMarketAt(nyse, wedBeforeTg);
+    expect(evalNyWed.nextTransition?.formattedCountdown).toBe('Abre vie 11:30 CL');
+
+    // Regular weekday post-close before China Golden Week (SSE Wed 05:00 CL -> Wed Oct 7 22:30 CL)
+    const wedBeforeGw = DateTime.fromISO('2026-09-30T05:00:00', { zone: CHILE_TZ });
+    const evalSseGw = evaluateMarketAt(sse, wedBeforeGw);
+    expect(evalSseGw.nextTransition?.formattedCountdown).toBe('Abre mié 22:30 CL');
+
+    // Same-week next-day (<24h) retains relative countdown
+    const tueEve = DateTime.fromISO('2026-09-15T18:00:00', { zone: CHILE_TZ });
+    expect(evaluateMarketAt(nyse, tueEve).nextTransition?.formattedCountdown).toBe('Abre en 16h 30m');
+  });
+
+  it('does not leak Monday Asian sessions onto Chile spring-forward DST Sunday (2026-09-06)', () => {
+    const nse = MARKETS.find((m) => m.id === 'nse')!;
+    const dstSunday = DateTime.fromISO('2026-09-06T12:00:00', { zone: CHILE_TZ });
+
+    // India does not open until Mon 00:30 CL -> 0 segments on Sunday
+    expect(projectMarketToTimeline(nse, dstSunday)).toHaveLength(0);
+
+    // SSE opens Sunday 22:30 CL (Mon 09:30 CST) -> single regular segment [1350, 1440], no phantom lunch
+    const sseSegs = projectMarketToTimeline(sse, dstSunday);
+    expect(sseSegs).toHaveLength(1);
+    expect(sseSegs[0].type).toBe('regular');
+    expect(sseSegs[0].startMinute).toBe(1350);
+    expect(sseSegs[0].endMinute).toBe(1440);
   });
 });

@@ -59,7 +59,8 @@ export function getTradingWindows(
 
   for (const m of markets) {
     marketSegmentsMap[m.id] =
-      options.marketSegmentsMap?.[m.id] ?? projectMarketToTimeline(m, chileDate, referenceZone);
+      options.marketSegmentsMap?.[m.id] ??
+      projectMarketToTimeline(m, chileDate, referenceZone, { isSimulation: options.isSimulation });
   }
 
   const nyseSegments = marketSegmentsMap['nyse'] ?? [];

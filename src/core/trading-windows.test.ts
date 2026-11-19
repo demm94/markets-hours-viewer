@@ -185,4 +185,20 @@ describe('trading-windows engine', () => {
     expect(usSession?.activeMarkets.some((m) => m.id === 'bcs')).toBe(true);
     expect(usSession?.concurrencyCount).toBe(2); // NYSE + BCS
   });
+
+  it('maintains strictly positive continuous windows on Chile spring-forward DST Sunday (2026-09-06)', () => {
+    const dstSunday = DateTime.fromISO('2026-09-06T12:00:00', { zone: CHILE_TZ });
+    const windows = getTradingWindows(dstSunday, MARKETS, 720);
+
+    expect(windows).toHaveLength(6);
+    expect(windows[0].startMinute).toBe(0);
+    expect(windows[5].endMinute).toBe(1440);
+    for (let i = 0; i < windows.length; i++) {
+      expect(windows[i].endMinute).toBeGreaterThan(windows[i].startMinute);
+      expect(windows[i].durationFormatted).not.toContain('-');
+      if (i < windows.length - 1) {
+        expect(windows[i].endMinute).toBe(windows[i + 1].startMinute);
+      }
+    }
+  });
 });

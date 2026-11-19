@@ -215,7 +215,8 @@ describe('market holidays engine', () => {
       expect(evaluation.holiday?.isEarlyClose).toBe(true);
       expect(evaluation.nextTransition).toBeDefined();
       expect(evaluation.nextTransition?.type).toBe('open');
-      expect(evaluation.nextTransition?.formattedCountdown).toContain('Abre lun 09:30');
+      expect(evaluation.nextTransition?.formattedCountdown).toBe('Abre lun 11:30 CL');
+      expect(evaluation.nextTransition?.atChileFormatted).toBe('lun 11:30 CL');
     });
 
     it('projects shortened session to timeline on early close days', () => {
