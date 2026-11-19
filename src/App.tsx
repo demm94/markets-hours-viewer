@@ -70,6 +70,7 @@ export const App: React.FC = () => {
   } = useScrubber(currentMinutes);
 
   const referenceDayKey = `${now.year}-${now.month}-${now.day}`;
+  const referenceHourKey = `${referenceDayKey}-${now.hour}`;
 
   const rollingDays = useMemo(() => {
     return getRollingDaysWindow(now, 7);
@@ -83,10 +84,20 @@ export const App: React.FC = () => {
     return rollingDays.find((d) => d.isoDate === selectedDayIso) ?? rollingDays[0];
   }, [rollingDays, selectedDayIso]);
 
-  const handleSelectDay = React.useCallback((day: RollingDayInfo) => {
-    setSelectedDayIso(day.isoDate);
+  const handleSelectDay = React.useCallback(
+    (day: RollingDayInfo) => {
+      setSelectedDayIso(day.isoDate);
+      setSimulateWeekday(false);
+      resetToNow();
+    },
+    [resetToNow]
+  );
+
+  const handleResetToNow = React.useCallback(() => {
+    resetToNow();
+    setSelectedDayIso(rollingDays[0].isoDate);
     setSimulateWeekday(false);
-  }, []);
+  }, [resetToNow, rollingDays]);
 
   const isViewingToday = activeDay.isToday;
   const activeDate = activeDay.date;
@@ -127,7 +138,7 @@ export const App: React.FC = () => {
 
   const todayAgenda = useMemo(
     () => getTodayAgenda(MARKETS, chileNowMinute),
-    [referenceDayKey]
+    [referenceHourKey]
   );
 
   const {
@@ -181,13 +192,30 @@ export const App: React.FC = () => {
   }, [catalystsMap]);
 
   const nextReopenLabel = useMemo(() => {
-    const bell = liveStatusSummary.nextBell;
-    if (!bell) return undefined;
-    return `${bell.market.flag} ${bell.market.name} (${bell.atChileFormatted || bell.formattedCountdown})`;
-  }, [liveStatusSummary]);
+    if (!isSelectedDayWeekend) return undefined;
+    const evalInstant = isViewingToday
+      ? chileNowMinute
+      : activeDate.set({ hour: 12, minute: 0, second: 0, millisecond: 0 });
+    let bestBell:
+      | { market: (typeof MARKETS)[number]; transition: NonNullable<MarketEvaluation['nextTransition']> }
+      | undefined;
+
+    for (const market of MARKETS) {
+      const ev = isViewingToday ? evaluationsNow[market.id] : evaluateMarketAt(market, evalInstant);
+      const transition = ev?.nextTransition;
+      if (!transition || transition.type !== 'open') continue;
+      if (!bestBell || transition.inMinutes < bestBell.transition.inMinutes) {
+        bestBell = { market, transition };
+      }
+    }
+
+    if (!bestBell) return undefined;
+    const label = bestBell.transition.atChileFormatted ?? bestBell.transition.formattedCountdown;
+    return `${bestBell.market.flag} ${bestBell.market.name} (${label})`;
+  }, [isSelectedDayWeekend, isViewingToday, chileNowMinute, activeDayKey, evaluationsNow]);
 
   return (
-    <div className="relative min-h-screen min-h-[100dvh] bg-background text-foreground safe-area-container px-2.5 py-2 sm:px-5 sm:py-4 md:px-8 md:py-5 lg:px-10 overflow-x-hidden">
+    <div className="relative min-h-screen min-h-[100dvh] bg-background text-foreground safe-area-container overflow-x-hidden">
       <AmbientBackground openMarketsCount={openMarketsCount} />
 
       <div className="relative z-10 max-w-[1480px] w-full mx-auto flex flex-col gap-3 sm:gap-4 md:gap-5 overflow-x-hidden">
@@ -237,7 +265,7 @@ export const App: React.FC = () => {
             onPointerCancel={handlePointerCancel}
             onPointerLeave={handlePointerLeave}
             onKeyDown={handleKeyDown}
-            onResetScrubber={resetToNow}
+            onResetScrubber={handleResetToNow}
             rollingDays={rollingDays}
             selectedIsoDate={activeDay.isoDate}
             onSelectDay={handleSelectDay}
@@ -249,7 +277,7 @@ export const App: React.FC = () => {
           />
 
           <section aria-label="Resumen de bolsas en hora de Chile" className="flex flex-col gap-2">
-            <div className="flex items-center justify-between px-0.5">
+            <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 px-0.5">
               <h2 className="text-xs sm:text-sm font-semibold text-zinc-200 tracking-tight">
                 Horarios por bolsa (Hora Chile)
               </h2>

@@ -15,13 +15,12 @@ interface EventsDrawerProps {
   selectedMarketId: string;
   onSelectMarketId: (marketId: string) => void;
   chileNow: DateTime;
-  // Optional compatibility props kept until App.tsx cleanup (T4)
-  notificationsEnabled?: boolean;
-  subscribedMarketIds?: string[];
-  onToggleMarketAlert?: (marketId: string) => void;
 }
 
-const CATEGORY_LABELS: Record<EventCategory, { label: string; icon: React.ComponentType<{ className?: string }> }> = {
+const CATEGORY_LABELS: Record<
+  EventCategory,
+  { label: string; icon: React.ComponentType<{ className?: string; 'aria-hidden'?: boolean | 'true' | 'false' }> }
+> = {
   central_bank: { label: 'Banco Central', icon: Building2 },
   inflation: { label: 'Inflación / IPC', icon: TrendingUp },
   gdp: { label: 'Actividad / PIB', icon: DollarSign },
@@ -83,6 +82,9 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
 
   const handleMouseUpOrLeave = () => {
     isDraggingRef.current = false;
+    setTimeout(() => {
+      hasDraggedRef.current = false;
+    }, 0);
   };
 
   // Check scrollability on mount, drawer open, and resize
@@ -114,7 +116,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
   });
 
   const restoreBodyScrollIfNoDialogs = useCallback(() => {
-    if (!document.querySelector('[role="dialog"]')) {
+    if (!document.querySelector('[role="dialog"][aria-modal="true"]')) {
       document.body.style.overflow = '';
     }
   }, []);
@@ -221,7 +223,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                   onClick={() => setViewMode('events')}
                   aria-pressed={viewMode === 'events'}
                   className={cn(
-                    'min-h-[34px] py-1.5 px-2 rounded-md text-center transition-colors duration-150 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
+                    'min-h-[40px] py-1.5 px-2 rounded-md text-center transition-colors duration-150 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
                     viewMode === 'events'
                       ? 'bg-card text-zinc-100 border border-border-strong font-semibold'
                       : 'text-muted-foreground hover:text-zinc-200 border border-transparent'
@@ -234,7 +236,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                   onClick={() => setViewMode('holidays')}
                   aria-pressed={viewMode === 'holidays'}
                   className={cn(
-                    'min-h-[34px] py-1.5 px-2 rounded-md text-center transition-colors duration-150 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
+                    'min-h-[40px] py-1.5 px-2 rounded-md text-center transition-colors duration-150 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
                     viewMode === 'holidays'
                       ? 'bg-card text-zinc-100 border border-border-strong font-semibold'
                       : 'text-muted-foreground hover:text-zinc-200 border border-transparent'
@@ -254,7 +256,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                   onMouseUp={handleMouseUpOrLeave}
                   onMouseLeave={handleMouseUpOrLeave}
                   onScroll={checkScrollability}
-                  className="flex items-center gap-1.5 overflow-x-auto pb-1 pr-6 scrollbar-none text-xs cursor-grab active:cursor-grabbing select-none"
+                  className="flex items-center gap-1.5 overflow-x-auto pb-1 pr-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden text-xs cursor-grab active:cursor-grabbing select-none"
                 >
                   {marketTabs.map((tab) => {
                     const isActive = selectedMarketId === tab.id;
@@ -269,7 +271,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                         }}
                         aria-pressed={isActive}
                         className={cn(
-                          'flex items-center gap-1.5 min-h-[34px] px-2.5 py-1.5 rounded-md font-medium whitespace-nowrap transition-colors duration-150 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 shrink-0',
+                          'flex items-center gap-1.5 min-h-[40px] px-2.5 py-1.5 rounded-md font-medium whitespace-nowrap transition-colors duration-150 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 shrink-0',
                           isActive
                             ? 'bg-white/[0.08] text-zinc-100 border border-border-strong font-semibold'
                             : 'bg-muted/50 text-muted-foreground border border-border hover:bg-muted hover:text-zinc-200'
@@ -311,7 +313,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                     onClick={() => setOnlyHighImportance((prev) => !prev)}
                     aria-pressed={onlyHighImportance}
                     className={cn(
-                      'flex items-center gap-1.5 min-h-[34px] px-2.5 py-1 rounded-md text-xs font-medium border transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
+                      'flex items-center gap-1.5 min-h-[40px] px-2.5 py-1 rounded-md text-xs font-medium border transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
                       onlyHighImportance
                         ? 'bg-rose-500/15 border-rose-500/35 text-rose-300'
                         : 'bg-muted/50 border-border text-muted-foreground hover:text-zinc-200'
@@ -347,13 +349,13 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
               <div className="flex-1 overflow-y-auto p-3 space-y-2">
                 {upcomingHolidays.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-secondary text-muted-foreground/70 mb-3">
+                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-secondary text-muted-foreground mb-3">
                       <Calendar className="w-6 h-6" aria-hidden="true" />
                     </div>
                     <p className="text-sm font-medium text-foreground/80">
                       No hay feriados bursátiles programados
                     </p>
-                    <p className="text-xs text-muted-foreground/70 mt-1 max-w-xs">
+                    <p className="text-xs text-muted-foreground mt-1 max-w-xs">
                       No se registran feriados para el mercado seleccionado en los próximos 120 días.
                     </p>
                   </div>
@@ -388,7 +390,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                         </h3>
                       </div>
 
-                      <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground pt-1.5 border-t border-border">
+                      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-xs text-muted-foreground pt-1.5 border-t border-border">
                         <span className="font-mono text-zinc-300">{holiday.dateFormatted} ({holiday.date})</span>
                         <span
                           className={cn(
@@ -397,7 +399,9 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                           )}
                         >
                           {holiday.isEarlyClose
-                            ? `Cierre temprano (${holiday.closeTime})`
+                            ? holiday.closeTimeChile
+                              ? `Cierre temprano (${holiday.closeTime} local · ${holiday.closeTimeChile})`
+                              : `Cierre temprano (${holiday.closeTime} local)`
                             : 'Mercado cerrado'}
                         </span>
                       </div>
@@ -409,13 +413,13 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
               <div className="flex-1 overflow-y-auto p-3 space-y-2">
                 {upcomingEvents.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-secondary text-muted-foreground/70 mb-3">
+                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-secondary text-muted-foreground mb-3">
                       <Calendar className="w-6 h-6" aria-hidden="true" />
                     </div>
                     <p className="text-sm font-medium text-foreground/80">
                       No hay eventos programados
                     </p>
-                    <p className="text-xs text-muted-foreground/70 mt-1 max-w-xs">
+                    <p className="text-xs text-muted-foreground mt-1 max-w-xs">
                       No hay eventos con los filtros actuales en los próximos 120 días.
                     </p>
                   </div>
@@ -430,7 +434,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
 
                     const market =
                       MARKETS.find((m) => m.id === ev.marketId) ||
-                      (ev.marketId === 'chile' ? CHILE_CONFIG : null);
+                      (ev.marketId === 'chile' ? { ...CHILE_CONFIG, name: CHILE_CONFIG.country } : null);
 
                     return (
                       <div
@@ -446,7 +450,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                             </span>
 
                             <span className="flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-white/[0.03] text-muted-foreground">
-                              <CatIcon className="w-3.5 h-3.5" />
+                              <CatIcon className="w-3.5 h-3.5" aria-hidden="true" />
                               <span>{catInfo.label}</span>
                             </span>
                           </div>
@@ -502,7 +506,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
 
                         {/* Forecast / Previous metrics if available */}
                         {(ev.forecast || ev.previous) && (
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground pt-0.5 px-0.5">
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground pt-0.5 px-0.5">
                             {ev.forecast && (
                               <span>
                                 <strong className="text-foreground/80">Pronóstico:</strong> {ev.forecast}

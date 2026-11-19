@@ -83,7 +83,7 @@ export const TimelineWeekSelector: React.FC<TimelineWeekSelectorProps> = React.m
 
         <div
           ref={scrollRef}
-          role="tablist"
+          role="group"
           aria-label="Selector de día para la línea de tiempo"
           className="flex items-center gap-1.5 overflow-x-auto select-none py-0.5 px-0.5 w-full [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x"
         >
@@ -92,23 +92,27 @@ export const TimelineWeekSelector: React.FC<TimelineWeekSelectorProps> = React.m
             const eventSummary = day.hasEvents
               ? ` — ${day.eventCount} evento${day.eventCount > 1 ? 's' : ''}${day.hasHighImpact ? ' (impacto alto)' : ''}`
               : '';
+            const dayDescriptor =
+              day.isToday || day.label === 'Mañana'
+                ? `${day.label}, ${day.dayOfWeekShort} ${day.dayOfMonth}`
+                : day.label;
 
             return (
               <button
                 key={day.isoDate}
                 ref={isSelected ? (el) => { activeItemRef.current = el; } : undefined}
                 type="button"
-                role="tab"
-                aria-selected={isSelected}
+                aria-pressed={isSelected}
+                aria-label={`${dayDescriptor}${eventSummary}`}
                 onClick={() => onSelectDay(day)}
-                className={`group relative flex items-center gap-1.5 min-h-[36px] px-3 py-1 rounded-lg border text-xs font-medium transition-colors duration-150 cursor-pointer whitespace-nowrap outline-none focus-visible:ring-1 focus-visible:ring-sky-400 ${
+                className={`group relative flex items-center gap-1.5 min-h-[40px] px-3 py-1 rounded-lg border text-xs font-medium transition-colors duration-150 cursor-pointer whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
                   isSelected
                     ? 'border-sky-500/45 bg-sky-500/12 text-zinc-50 font-semibold'
                     : day.isToday
                     ? 'border-emerald-500/30 bg-emerald-500/[0.06] text-emerald-200 hover:bg-emerald-500/12'
                     : 'border-border bg-muted/40 text-muted-foreground hover:text-zinc-200 hover:bg-muted/80 hover:border-border-strong'
                 }`}
-                title={`${day.label}, ${day.dayOfWeekShort} ${day.dayOfMonth}${eventSummary}`}
+                title={`${dayDescriptor}${eventSummary}`}
               >
                 <span>{day.label}</span>
 
@@ -117,7 +121,7 @@ export const TimelineWeekSelector: React.FC<TimelineWeekSelectorProps> = React.m
                     className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                       day.hasHighImpact ? 'bg-rose-500' : 'bg-amber-400'
                     }`}
-                    aria-label={`${day.eventCount} evento${day.eventCount > 1 ? 's' : ''}${day.hasHighImpact ? ', impacto alto' : ''}`}
+                    aria-hidden="true"
                   />
                 )}
               </button>

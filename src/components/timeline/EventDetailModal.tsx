@@ -25,7 +25,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = React.memo(({
   });
 
   const restoreBodyScrollIfNoDialogs = useCallback(() => {
-    if (!document.querySelector('[role="dialog"]')) {
+    if (!document.querySelector('[role="dialog"][aria-modal="true"]')) {
       document.body.style.overflow = '';
     }
   }, []);
@@ -121,9 +121,9 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = React.memo(({
 
             {/* Title and Description */}
             <div className="flex flex-col gap-1.5">
-              <h3 id="event-modal-title" className="text-base sm:text-lg font-bold text-zinc-100 leading-snug">
+              <h2 id="event-modal-title" className="text-base sm:text-lg font-bold text-zinc-100 leading-snug">
                 {event.title}
-              </h3>
+              </h2>
               {event.description && (
                 <p id="event-modal-desc" className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                   {event.description}

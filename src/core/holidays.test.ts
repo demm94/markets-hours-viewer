@@ -120,6 +120,14 @@ describe('market holidays engine', () => {
     const chileOnly = getUpcomingHolidays(refDate, { marketId: 'chile', maxDaysAhead: 60 });
     expect(chileOnly.every((h) => h.marketId === 'chile')).toBe(true);
     expect(chileOnly.some((h) => h.name === 'Fiestas Patrias')).toBe(true);
+    const fiestasPatrias = chileOnly.find((h) => h.date === '2026-09-18');
+    expect(fiestasPatrias?.marketName).toBe('Chile');
+
+    // Early close upcoming holidays include Chile close time
+    const novRefDate = DateTime.fromISO('2026-11-20T12:00:00', { zone: 'America/Santiago' });
+    const novUpcoming = getUpcomingHolidays(novRefDate, { marketId: 'nyse', maxDaysAhead: 15 });
+    const blackFridayUpcoming = novUpcoming.find((h) => h.date === '2026-11-27');
+    expect(blackFridayUpcoming?.closeTimeChile).toBe('15:00 CL');
 
     const sundayNightChile = DateTime.fromISO('2026-10-04T22:00:00', { zone: 'America/Santiago' });
     const krxUpcoming = getUpcomingHolidays(sundayNightChile, { marketId: 'krx', maxDaysAhead: 10 });

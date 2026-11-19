@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { AlertCircle, Bell, BellOff, BellRing, ShieldAlert, X } from 'lucide-react';
 import { MarketConfig } from '../core/types';
 import { NotificationPermissionState } from '../hooks/useMarketNotifications';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 export interface AlertsPopoverProps {
   markets: MarketConfig[];
@@ -41,9 +42,32 @@ export const AlertsPopover: React.FC<AlertsPopoverProps> = React.memo(({
   });
 
   const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const popoverId = useId();
   const titleId = useId();
+
+  const handleCloseWithFocus = useCallback(() => {
+    setIsOpen(false);
+    requestAnimationFrame(() => {
+      triggerRef.current?.focus();
+    });
+  }, []);
+
+  const focusTrapRef = useFocusTrap<HTMLDivElement>({
+    isOpen,
+    onClose: handleCloseWithFocus,
+    initialFocusRef: closeButtonRef,
+    returnFocus: false
+  });
+
+  const setPanelRefs = useCallback(
+    (node: HTMLDivElement | null) => {
+      panelRef.current = node;
+      focusTrapRef.current = node;
+    },
+    [focusTrapRef]
+  );
 
   const isUnsupported = notificationPermission === 'unsupported';
   const isDenied = notificationPermission === 'denied';
@@ -57,7 +81,7 @@ export const AlertsPopover: React.FC<AlertsPopoverProps> = React.memo(({
     const width = Math.min(POPOVER_MAX_WIDTH, Math.max(240, viewportW - VIEWPORT_MARGIN * 2));
     const rawLeft = rect.right - width;
     const left = Math.max(VIEWPORT_MARGIN, Math.min(rawLeft, viewportW - width - VIEWPORT_MARGIN));
-    const top = Math.min(rect.bottom + 8, Math.max(VIEWPORT_MARGIN, viewportH - 160));
+    const top = Math.max(VIEWPORT_MARGIN, Math.min(rect.bottom + 8, Math.max(VIEWPORT_MARGIN, viewportH - 160)));
     const maxHeight = Math.max(160, viewportH - top - VIEWPORT_MARGIN);
 
     setCoords({ top, left, width, maxHeight });
@@ -70,14 +94,6 @@ export const AlertsPopover: React.FC<AlertsPopoverProps> = React.memo(({
 
   useEffect(() => {
     if (!isOpen) return;
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        setIsOpen(false);
-        triggerRef.current?.focus();
-      }
-    };
 
     const handlePointerDown = (event: PointerEvent) => {
       const target = event.target as Node | null;
@@ -92,13 +108,11 @@ export const AlertsPopover: React.FC<AlertsPopoverProps> = React.memo(({
       updatePosition();
     };
 
-    document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('pointerdown', handlePointerDown);
     window.addEventListener('resize', handleViewportChange, { passive: true });
     window.addEventListener('scroll', handleViewportChange, { passive: true, capture: true });
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('pointerdown', handlePointerDown);
       window.removeEventListener('resize', handleViewportChange);
       window.removeEventListener('scroll', handleViewportChange, true);
@@ -117,7 +131,7 @@ export const AlertsPopover: React.FC<AlertsPopoverProps> = React.memo(({
     isOpen && typeof document !== 'undefined'
       ? createPortal(
           <div
-            ref={panelRef}
+            ref={setPanelRefs}
             id={popoverId}
             role="dialog"
             aria-labelledby={titleId}
@@ -139,13 +153,11 @@ export const AlertsPopover: React.FC<AlertsPopoverProps> = React.memo(({
                 <span>Alertas</span>
               </h2>
               <button
+                ref={closeButtonRef}
                 type="button"
-                onClick={() => {
-                  setIsOpen(false);
-                  triggerRef.current?.focus();
-                }}
+                onClick={handleCloseWithFocus}
                 aria-label="Cerrar panel de alertas"
-                className="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-transparent text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.06] transition-colors cursor-pointer"
+                className="relative inline-flex items-center justify-center w-9 h-9 rounded-lg border border-transparent text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.06] transition-colors cursor-pointer before:absolute before:-inset-1.5 before:content-['']"
               >
                 <X className="w-4 h-4" aria-hidden="true" />
               </button>
@@ -305,7 +317,7 @@ export const AlertsPopover: React.FC<AlertsPopoverProps> = React.memo(({
         ) : (
           <Bell className="w-3.5 h-3.5 text-zinc-400 shrink-0" aria-hidden="true" />
         )}
-        <span className="hidden min-[380px]:inline">Alertas</span>
+        <span className="hidden min-[460px]:inline">Alertas</span>
         {isActive && (
           <span
             className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0"

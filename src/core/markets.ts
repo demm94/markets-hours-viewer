@@ -20,7 +20,7 @@ export const MARKETS: MarketConfig[] = [
     sessions: [
       { type: 'regular', start: '09:00', end: '13:30', label: 'Sesión continua' }
     ],
-    notes: 'UTC+8 sin DST. Sin corte de almuerzo.'
+    notes: 'UTC+8 sin cambio de hora. Sin pausa de almuerzo.'
   },
   {
     id: 'krx',
@@ -32,7 +32,7 @@ export const MARKETS: MarketConfig[] = [
     sessions: [
       { type: 'regular', start: '09:00', end: '15:30', label: 'Sesión continua' }
     ],
-    notes: 'UTC+9 sin DST. Eliminó el almuerzo en el año 2000.'
+    notes: 'UTC+9 sin cambio de hora. Sin pausa de almuerzo.'
   },
   {
     id: 'sse',
@@ -46,7 +46,7 @@ export const MARKETS: MarketConfig[] = [
       { type: 'lunch', start: '11:30', end: '13:00', label: 'Almuerzo' },
       { type: 'regular', start: '13:00', end: '15:00', label: 'Sesión tarde' }
     ],
-    notes: 'UTC+8 sin DST. Pausa de almuerzo 11:30 a 13:00.'
+    notes: 'UTC+8 sin cambio de hora. Pausa de almuerzo de 11:30 a 13:00 (hora local).'
   },
   {
     id: 'nse',
@@ -59,7 +59,7 @@ export const MARKETS: MarketConfig[] = [
       { type: 'pre_market', start: '09:00', end: '09:15', label: 'Pre-apertura' },
       { type: 'regular', start: '09:15', end: '15:30', label: 'Sesión continua' }
     ],
-    notes: 'UTC+5:30 sin DST. Pre-mercado 09:00 a 09:15.'
+    notes: 'UTC+5:30 sin cambio de hora. Pre-apertura de 09:00 a 09:15 (hora local).'
   },
   {
     id: 'nyse',
@@ -71,6 +71,6 @@ export const MARKETS: MarketConfig[] = [
     sessions: [
       { type: 'regular', start: '09:30', end: '16:00', label: 'Sesión regular' }
     ],
-    notes: 'UTC-5 (invierno) / UTC-4 (verano, EDT). Cruce de DST opuesto a Chile.'
+    notes: 'Cambio de hora estacional opuesto al de Chile.'
   }
 ];

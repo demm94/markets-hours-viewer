@@ -61,7 +61,7 @@ export const TodayAgendaStrip: React.FC<TodayAgendaStripProps> = React.memo(({
           onClick={() => onOpenDrawer('all')}
           className="inline-flex items-center gap-1 min-h-[36px] px-2.5 py-1 rounded-lg text-xs font-medium text-neon-sky hover:text-sky-300 hover:bg-white/[0.04] transition-colors cursor-pointer whitespace-nowrap shrink-0"
         >
-          <span>Ver calendario</span>
+          <span>Ver agenda</span>
           <ChevronRight className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
         </button>
       </div>
@@ -88,14 +88,14 @@ export const TodayAgendaStrip: React.FC<TodayAgendaStripProps> = React.memo(({
             key={`early-${item.marketId}-${item.holiday.date}`}
             type="button"
             onClick={() => onOpenDrawer(item.marketId)}
-            title={`Cierre anticipado en ${item.marketName}: ${item.holiday.name}${
+            title={`Cierre temprano en ${item.marketName}: ${item.holiday.name}${
               item.holiday.closeTime ? ` (${item.holiday.closeTime} local)` : ''
             }`}
             className="inline-flex items-center gap-1.5 min-h-[36px] max-w-full px-2.5 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/15 text-xs text-amber-200 transition-colors cursor-pointer text-left"
           >
             <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" aria-hidden="true" />
             <span className="shrink-0" aria-hidden="true">{item.flag}</span>
-            <span className="font-semibold text-amber-300 shrink-0">Cierre anticipado</span>
+            <span className="font-semibold text-amber-300 shrink-0">Cierre temprano</span>
             <span className="text-amber-200/90 truncate">
               {item.marketName} · {item.holiday.name}
             </span>

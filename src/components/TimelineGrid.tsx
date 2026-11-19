@@ -10,6 +10,8 @@ import { Button } from './ui/button';
 
 const CHILE_MARKET: MarketConfig = {
   ...CHILE_CONFIG,
+  name: CHILE_CONFIG.country,
+  code: 'Santiago',
   sessions: []
 };
 
@@ -112,8 +114,8 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
       <TimelineHeader
         isColumnCollapsed={isColumnCollapsed}
         onToggleColumn={toggleColumn}
-        isScrubbing={isHovering}
         isPinned={isPinned}
+        isToday={isToday}
         onResetScrubber={onResetScrubber}
         days={rollingDays}
         selectedIsoDate={selectedIsoDate}
@@ -146,7 +148,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
                 </>
               ) : (
                 <>
-                  <strong>Fin de semana:</strong> mercados cerrados hoy.
+                  <strong>Fin de semana:</strong> {isToday ? 'mercados cerrados hoy.' : 'mercados cerrados este día.'}
                   {nextReopenLabel && (
                     <span className="text-zinc-400"> Próxima apertura: {nextReopenLabel}.</span>
                   )}
@@ -159,7 +161,8 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
             variant="outline"
             size="sm"
             onClick={onToggleSimulateWeekday}
-            className="gap-1.5 min-h-[34px] px-3 text-xs font-medium shrink-0 self-start sm:self-auto cursor-pointer"
+            aria-pressed={simulateWeekday}
+            className="gap-1.5 min-h-[40px] px-3 text-xs font-medium shrink-0 self-start sm:self-auto cursor-pointer"
           >
             {simulateWeekday ? (
               <>

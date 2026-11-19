@@ -77,11 +77,12 @@ export interface UpcomingHoliday extends MarketHoliday {
   relativeDays: number;
   relativeDescriptor: string;
   dateFormatted: string;
+  closeTimeChile?: string;
 }
 
 const MARKET_INFO_MAP: Record<string, { name: string; flag: string; timezone: string }> = {
   [CHILE_CONFIG.id]: {
-    name: CHILE_CONFIG.name,
+    name: CHILE_CONFIG.country,
     flag: CHILE_CONFIG.flag,
     timezone: CHILE_CONFIG.timezone
   },
@@ -128,13 +129,23 @@ export function getUpcomingHolidays(
         relativeDescriptor = `En ${diffDays} días`;
       }
 
+      let closeTimeChile: string | undefined;
+      if (holiday.isEarlyClose && holiday.closeTime) {
+        const [closeH, closeM] = holiday.closeTime.split(':').map(Number);
+        if (Number.isFinite(closeH) && Number.isFinite(closeM)) {
+          const dtChile = holDate.set({ hour: closeH, minute: closeM }).setZone(CHILE_CONFIG.timezone);
+          closeTimeChile = `${dtChile.toFormat('HH:mm')} CL`;
+        }
+      }
+
       result.push({
         ...holiday,
         marketName: info.name,
         marketFlag: info.flag,
         relativeDays: diffDays,
         relativeDescriptor,
-        dateFormatted: holDate.toFormat('ccc d LLL', { locale: 'es' })
+        dateFormatted: holDate.toFormat('ccc d LLL', { locale: 'es' }),
+        ...(closeTimeChile ? { closeTimeChile } : {})
       });
     }
   }

@@ -13,10 +13,6 @@ interface MarketCardsProps {
   onSelectMarketEvents: (marketId: string) => void;
   catalystsMap?: Record<string, boolean>;
   referenceDate?: DateTime;
-  // Optional compatibility props kept until App.tsx cleanup (T4)
-  notificationsEnabled?: boolean;
-  subscribedMarketIds?: string[];
-  onToggleMarketAlert?: (marketId: string) => void;
 }
 
 const containerVariants: Variants = {
@@ -45,8 +41,8 @@ const cardVariants: Variants = {
 
 function formatTransitionLine(transition?: MarketTransition): string | null {
   if (!transition?.formattedCountdown) return null;
-  const countdown = transition.formattedCountdown;
-  const atChile = transition.atChileFormatted?.trim();
+  const countdown = transition.formattedCountdown.replace(/ CL/g, '\u00A0CL');
+  const atChile = transition.atChileFormatted?.trim().replace(/ CL/g, '\u00A0CL');
 
   if (atChile && !countdown.includes(atChile)) {
     return `${countdown} · ${atChile}`;
@@ -253,11 +249,19 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
                     </span>
                     <span
                       className={cn(
-                        'font-mono text-xs sm:text-sm font-bold tabular-nums tracking-tight leading-snug',
+                        'inline-flex flex-wrap justify-end gap-x-1 font-mono text-xs sm:text-sm font-bold tabular-nums tracking-tight leading-snug',
                         schedule.isHoliday ? 'text-violet-200' : 'text-zinc-100'
                       )}
                     >
-                      {schedule.summary}
+                      {schedule.summary
+                        .replace(/ CL/g, '\u00A0CL')
+                        .split(' · ')
+                        .map((seg, idx) => (
+                          <span key={idx} className="whitespace-nowrap">
+                            {idx > 0 ? '·\u00A0' : ''}
+                            {seg}
+                          </span>
+                        ))}
                     </span>
                     {transitionLine && (
                       <span className="font-mono text-[11px] font-medium text-zinc-300 tabular-nums leading-snug">
@@ -266,12 +270,12 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
                     )}
                     <span className="font-mono text-[10px] text-muted-foreground tabular-nums leading-tight">
                       Local {ev?.localTimeFormatted ?? '--:--'}
-                      {ev?.localDateFormatted ? ` · ${ev.localDateFormatted}` : ''}
+                      {ev?.localDateFormatted ? ` · ${ev.localDateFormatted.replace(/ /g, '\u00A0')}` : ''}
                     </span>
                   </span>
 
                   <ChevronRight
-                    className="w-4 h-4 text-muted-foreground/70 group-hover:text-zinc-200 group-hover:translate-x-0.5 transition-all shrink-0"
+                    className="w-4 h-4 text-muted-foreground group-hover:text-zinc-200 group-hover:translate-x-0.5 transition-all shrink-0"
                     aria-hidden="true"
                   />
                 </span>
@@ -283,7 +287,7 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
 
       {/* Desktop Spacious Clickable Cards (md+) */}
       <motion.div
-        className="hidden md:grid md:grid-cols-3 lg:grid-cols-5 gap-3 lg:gap-3.5"
+        className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 lg:gap-3.5"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -376,12 +380,20 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
                     </span>
                     <span
                       className={cn(
-                        'font-mono font-bold tabular-nums tracking-tight leading-snug',
+                        'inline-flex flex-wrap gap-x-1 font-mono font-bold tabular-nums tracking-tight leading-snug',
                         isSplitSchedule ? 'text-xs xl:text-sm' : 'text-base xl:text-[17px]',
                         schedule.isHoliday ? 'text-violet-200' : 'text-zinc-100'
                       )}
                     >
-                      {schedule.summary}
+                      {schedule.summary
+                        .replace(/ CL/g, '\u00A0CL')
+                        .split(' · ')
+                        .map((seg, idx) => (
+                          <span key={idx} className="whitespace-nowrap">
+                            {idx > 0 ? '·\u00A0' : ''}
+                            {seg}
+                          </span>
+                        ))}
                     </span>
                     {transitionLine && (
                       <span className="font-mono text-xs font-medium text-zinc-300 tabular-nums leading-snug">
@@ -390,7 +402,7 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
                     )}
                     <span className="font-mono text-[11px] text-muted-foreground tabular-nums leading-tight pt-0.5">
                       Local {ev?.localTimeFormatted ?? '--:--'}
-                      {ev?.localDateFormatted ? ` · ${ev.localDateFormatted}` : ''}
+                      {ev?.localDateFormatted ? ` · ${ev.localDateFormatted.replace(/ /g, '\u00A0')}` : ''}
                     </span>
                   </span>
 

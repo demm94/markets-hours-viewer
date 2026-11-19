@@ -53,7 +53,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
           <div className="flex items-center gap-2 min-w-0">
             <img
               src="/favicon.svg"
-              alt="Horarios Bursátiles"
+              alt=""
               className="w-5 h-5 rounded shrink-0"
               width="20"
               height="20"
@@ -107,7 +107,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
               className="relative inline-flex items-center justify-center gap-1.5 min-h-[36px] sm:min-h-[38px] min-w-[36px] px-2.5 sm:px-3 py-1.5 rounded-lg border border-border bg-white/[0.03] hover:border-border-strong hover:bg-white/[0.06] hover:text-white active:bg-white/[0.08] text-xs font-medium text-zinc-200 transition-colors duration-150 cursor-pointer whitespace-nowrap"
             >
               <Calendar className="w-3.5 h-3.5 text-zinc-400 shrink-0" aria-hidden="true" />
-              <span className="hidden min-[380px]:inline">Agenda</span>
+              <span className="hidden min-[460px]:inline">Agenda</span>
               {hasUpcomingCatalysts && (
                 <span
                   className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0"
@@ -138,8 +138,8 @@ export const Header: React.FC<HeaderProps> = React.memo(({
           </span>
         </div>
 
-        <span className="text-xs font-medium text-muted-foreground capitalize whitespace-nowrap">
-          {dateFormatted}
+        <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+          {dateFormatted ? dateFormatted.charAt(0).toUpperCase() + dateFormatted.slice(1) : ''}
         </span>
       </div>
     </header>

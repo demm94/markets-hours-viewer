@@ -13,7 +13,8 @@ import { TimelineLegend } from '../components/timeline/TimelineLegend';
 import {
   calculateScrubberMinutesFromBounds,
   resolveScrubberKeyAction,
-  shouldClearScrubberOnLeave
+  shouldClearScrubberOnLeave,
+  resolveScrubberCancelState
 } from '../hooks/useScrubber';
 import { evaluateMarketAt } from './timezone';
 import { MARKETS } from './markets';
@@ -131,6 +132,26 @@ describe('React memoization & render optimization verification', () => {
         nextMinutes: 0,
         isHovering: true
       });
+      expect(resolveScrubberKeyAction('ArrowUp', 720, 720)).toEqual({
+        handled: true,
+        nextMinutes: 735,
+        isHovering: true
+      });
+      expect(resolveScrubberKeyAction('ArrowDown', 720, 720)).toEqual({
+        handled: true,
+        nextMinutes: 705,
+        isHovering: true
+      });
+      expect(resolveScrubberKeyAction('ArrowDown', 5, 720)).toEqual({
+        handled: true,
+        nextMinutes: 0,
+        isHovering: true
+      });
+      expect(resolveScrubberKeyAction('ArrowUp', 1435, 720)).toEqual({
+        handled: true,
+        nextMinutes: 1440,
+        isHovering: true
+      });
       expect(resolveScrubberKeyAction('PageUp', 1400, 720)).toEqual({
         handled: true,
         nextMinutes: 1440,
@@ -170,6 +191,19 @@ describe('React memoization & render optimization verification', () => {
       // Touch/pen pointer leave preserves scrubbed position
       expect(shouldClearScrubberOnLeave('touch', false, false)).toBe(false);
       expect(shouldClearScrubberOnLeave('pen', false, false)).toBe(false);
+    });
+
+    it('restores prior pin state on pointercancel so vertical scrolling does not accidentally pin', () => {
+      expect(resolveScrubberCancelState(false, null)).toEqual({
+        isPinned: false,
+        scrubberMinutes: null,
+        isHovering: false
+      });
+      expect(resolveScrubberCancelState(true, 600)).toEqual({
+        isPinned: true,
+        scrubberMinutes: 600,
+        isHovering: true
+      });
     });
   });
 });
