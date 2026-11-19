@@ -1,19 +1,18 @@
 import React from 'react';
 import { motion, type Variants } from 'framer-motion';
-import { Bell, BellOff, Calendar } from 'lucide-react';
-import { MarketConfig, MarketEvaluation } from '../core/types';
-import { Card } from './ui/card';
-import { Badge } from './ui/badge';
+import { DateTime } from 'luxon';
+import { Calendar, ChevronRight } from 'lucide-react';
+import { MarketConfig, MarketEvaluation, MarketTransition } from '../core/types';
+import { CHILE_TZ, formatMarketChileSchedule } from '../core/timezone';
+import { badgeVariants } from './ui/badge';
 import { cn } from '../lib/utils';
 
 interface MarketCardsProps {
   markets: MarketConfig[];
   evaluations: Record<string, MarketEvaluation>;
-  onSelectMarketEvents?: (marketId: string) => void;
+  onSelectMarketEvents: (marketId: string) => void;
   catalystsMap?: Record<string, boolean>;
-  notificationsEnabled?: boolean;
-  subscribedMarketIds?: string[];
-  onToggleMarketAlert?: (marketId: string) => void;
+  referenceDate?: DateTime;
 }
 
 const containerVariants: Variants = {
@@ -21,13 +20,13 @@ const containerVariants: Variants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.05
+      staggerChildren: 0.04
     }
   }
 };
 
 const cardVariants: Variants = {
-  hidden: { opacity: 0, y: 12, scale: 0.98 },
+  hidden: { opacity: 0, y: 10, scale: 0.99 },
   visible: {
     opacity: 1,
     y: 0,
@@ -35,278 +34,414 @@ const cardVariants: Variants = {
     transition: {
       type: 'spring',
       stiffness: 350,
-      damping: 25
+      damping: 26
     }
   }
 };
+
+function formatTransitionLine(transition?: MarketTransition): string | null {
+  if (!transition?.formattedCountdown) return null;
+  const countdown = transition.formattedCountdown.replace(/ CL/g, '\u00A0CL');
+  const atChile = transition.atChileFormatted?.trim().replace(/ CL/g, '\u00A0CL');
+
+  if (atChile && !countdown.includes(atChile)) {
+    return `${countdown} · ${atChile}`;
+  }
+
+  return countdown;
+}
+
+function getMarketVisualState(ev?: MarketEvaluation) {
+  const status = ev?.status ?? 'closed';
+  const isFullHoliday = Boolean(ev?.holiday && !ev.holiday.isEarlyClose);
+
+  if (isFullHoliday) {
+    return {
+      badgeVariant: 'holiday' as const,
+      statusText: 'Feriado',
+      cardStateClass:
+        'border-violet-500/30 bg-gradient-to-b from-violet-500/[0.05] to-card hover:border-violet-500/50'
+    };
+  }
+
+  if (status === 'open') {
+    return {
+      badgeVariant: 'open' as const,
+      statusText: 'Abierto',
+      cardStateClass:
+        'border-emerald-500/30 bg-gradient-to-b from-emerald-500/[0.05] to-card hover:border-emerald-500/50'
+    };
+  }
+
+  if (status === 'lunch') {
+    return {
+      badgeVariant: 'lunch' as const,
+      statusText: 'Almuerzo',
+      cardStateClass:
+        'border-amber-500/30 bg-gradient-to-b from-amber-500/[0.05] to-card hover:border-amber-500/50'
+    };
+  }
+
+  if (status === 'pre_market') {
+    return {
+      badgeVariant: 'pre' as const,
+      statusText: 'Pre-apertura',
+      cardStateClass:
+        'border-sky-500/30 bg-gradient-to-b from-sky-500/[0.05] to-card hover:border-sky-500/50'
+    };
+  }
+
+  return {
+    badgeVariant: 'closed' as const,
+    statusText: 'Cerrado',
+    cardStateClass: 'border-border bg-card hover:border-border-strong'
+  };
+}
 
 export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
   markets,
   evaluations,
   onSelectMarketEvents,
   catalystsMap,
-  notificationsEnabled = false,
-  subscribedMarketIds,
-  onToggleMarketAlert
+  referenceDate
 }) => {
+  const effectiveReferenceDate = referenceDate ?? DateTime.now().setZone(CHILE_TZ);
+
+  const items = markets.map((market) => {
+    const ev = evaluations[market.id];
+    const schedule = formatMarketChileSchedule(market, effectiveReferenceDate);
+    const transitionLine = formatTransitionLine(ev?.nextTransition);
+    const hasCatalyst = Boolean(catalystsMap?.[market.id]);
+    const visual = getMarketVisualState(ev);
+    const holidayLabel = ev?.holiday
+      ? ev.holiday.isEarlyClose
+        ? `Cierre temprano · ${ev.holiday.name}`
+        : ev.holiday.name
+      : null;
+
+    const ariaParts = [
+      `${market.name} (${market.code})`,
+      visual.statusText,
+      holidayLabel,
+      `Horario Chile ${schedule.summary}`,
+      transitionLine,
+      ev?.localTimeFormatted
+        ? `Hora local ${ev.localTimeFormatted}${ev.localDateFormatted ? ` ${ev.localDateFormatted}` : ''}`
+        : null,
+      hasCatalyst ? 'Evento hoy' : null,
+      'Abrir agenda del mercado'
+    ].filter(Boolean);
+
+    return {
+      market,
+      ev,
+      schedule,
+      transitionLine,
+      hasCatalyst,
+      holidayLabel,
+      ariaLabel: ariaParts.join(', '),
+      ...visual
+    };
+  });
+
   return (
     <>
-      {/* Mobile Condensed Strip (All 5 markets visible at a glance) */}
-      <div className="grid grid-cols-5 gap-1.5 md:hidden">
-        {markets.map((market) => {
-          const ev = evaluations[market.id];
-          const status = ev?.status ?? 'closed';
-          const isHoliday = Boolean(ev?.holiday && !ev.holiday.isEarlyClose);
-          const hasCatalyst = catalystsMap?.[market.id];
-          const isSubscribed = subscribedMarketIds ? subscribedMarketIds.includes(market.id) : true;
+      {/* Mobile Scannable Vertical Rows (<md) */}
+      <div className="flex flex-col gap-1.5 md:hidden">
+        {items.map(
+          ({
+            market,
+            ev,
+            schedule,
+            transitionLine,
+            hasCatalyst,
+            holidayLabel,
+            badgeVariant,
+            statusText,
+            cardStateClass,
+            ariaLabel
+          }) => {
+            const shortCode = market.code.split(' ')[0];
 
-          let borderClass = 'border-border bg-card text-zinc-400';
-          let dotColor = 'bg-zinc-600';
-          let statusLabel = 'Cerrado';
-
-          if (isHoliday) {
-            borderClass = 'border-violet-500/35 bg-violet-500/[0.05] text-violet-300';
-            dotColor = 'bg-violet-400';
-            statusLabel = 'Feriado';
-          } else if (status === 'open') {
-            borderClass = 'border-emerald-500/35 bg-emerald-500/[0.05] text-emerald-400';
-            dotColor = 'bg-emerald-400 animate-pulse';
-            statusLabel = 'Abierto';
-          } else if (status === 'lunch') {
-            borderClass = 'border-amber-500/35 bg-amber-500/[0.05] text-amber-400';
-            dotColor = 'bg-amber-400';
-            statusLabel = 'Almuerzo';
-          } else if (status === 'pre_market') {
-            borderClass = 'border-sky-500/35 bg-sky-500/[0.05] text-sky-400';
-            dotColor = 'bg-sky-400';
-            statusLabel = 'Pre';
-          }
-
-          return (
-            <button
-              type="button"
-              key={market.id}
-              onClick={() => onSelectMarketEvents?.(market.id)}
-              className={cn(
-                "relative flex flex-col items-center justify-between p-1.5 rounded-lg border transition-colors duration-150 min-h-[60px] w-full text-center cursor-pointer hover:border-border-strong active:scale-98 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400",
-                borderClass
-              )}
-              title={`${market.name} (${market.code}) - ${isHoliday ? `Feriado: ${ev?.holiday?.name}` : statusLabel} - ${ev?.localTimeFormatted ?? '--:--'} (${ev?.timezoneOffset ?? ''})${hasCatalyst ? ' (Evento hoy)' : ''}`}
-              aria-label={`${market.name} (${market.code}), ${isHoliday ? `Feriado: ${ev?.holiday?.name}` : statusLabel}, hora local ${ev?.localTimeFormatted ?? '--:--'} ${ev?.timezoneOffset ?? ''}${hasCatalyst ? ', tiene evento hoy' : ''}`}
-            >
-              {notificationsEnabled && (
-                <span
-                  className={cn(
-                    "absolute top-1 left-1 leading-none",
-                    isSubscribed ? "text-emerald-400/80" : "text-zinc-600"
-                  )}
-                  aria-hidden="true"
-                >
-                  {isSubscribed ? <Bell className="w-2.5 h-2.5" /> : <BellOff className="w-2.5 h-2.5" />}
-                </span>
-              )}
-              {hasCatalyst && (
-                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-rose-500" aria-hidden="true" />
-              )}
-              <div className="flex items-center gap-1 leading-none">
-                <span className="text-xs select-none" aria-hidden="true">{market.flag}</span>
-                <span className="text-xs font-mono font-semibold tracking-tight text-zinc-300">
-                  {market.code.split(' ')[0]}
-                </span>
-              </div>
-              <div className="flex flex-col items-center leading-none my-0.5 gap-0.5">
-                <span className="font-mono text-xs font-bold text-zinc-100 tabular-nums tracking-tight">
-                  {ev?.localTimeFormatted ?? '--:--'}
-                </span>
-                {ev?.timezoneOffset && (
-                  <span className="font-mono text-[10px] font-medium text-muted-foreground leading-none">
-                    {ev.timezoneOffset}
-                  </span>
+            return (
+              <button
+                type="button"
+                key={market.id}
+                onClick={() => onSelectMarketEvents(market.id)}
+                title={market.notes}
+                aria-label={ariaLabel}
+                className={cn(
+                  'group relative flex items-center justify-between gap-2.5 w-full rounded-xl border px-3 py-2.5 text-left backdrop-blur-md text-card-foreground shadow-neon transition-colors duration-150 cursor-pointer active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
+                  cardStateClass
                 )}
-              </div>
-              <div className="flex items-center gap-1 leading-none">
-                <span className={cn("w-1.5 h-1.5 rounded-full", dotColor)} aria-hidden="true" />
-                <span className="text-[11px] font-medium leading-none truncate max-w-[56px]">
-                  {statusLabel}
+              >
+                {/* Left: Identity, status, holiday/early-close tag & catalyst cue */}
+                <span className="flex flex-col gap-1.5 min-w-0 flex-1">
+                  <span className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-base leading-none select-none shrink-0" aria-hidden="true">
+                      {market.flag}
+                    </span>
+                    <span className="text-sm font-semibold text-zinc-100 tracking-tight leading-tight">
+                      {market.name}
+                    </span>
+                    <span className="text-[11px] font-mono font-medium text-muted-foreground uppercase tracking-wider leading-none sm:hidden">
+                      {shortCode}
+                    </span>
+                    <span className="hidden sm:inline text-[11px] font-mono font-medium text-muted-foreground uppercase tracking-wider leading-none">
+                      {market.code}
+                    </span>
+                  </span>
+
+                  <span className="flex items-center gap-1.5 flex-wrap">
+                    <span
+                      className={cn(
+                        badgeVariants({ variant: badgeVariant }),
+                        'px-2 py-0.5 text-[11px]'
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          'h-1.5 w-1.5 rounded-full bg-current',
+                          badgeVariant === 'open' && 'animate-pulse'
+                        )}
+                        aria-hidden="true"
+                      />
+                      {statusText}
+                    </span>
+
+                    {ev?.holiday && holidayLabel && (
+                      <span
+                        className={cn(
+                          'inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[11px] font-medium leading-snug',
+                          ev.holiday.isEarlyClose
+                            ? 'bg-amber-500/10 border-amber-500/30 text-amber-200'
+                            : 'bg-violet-500/10 border-violet-500/30 text-violet-200'
+                        )}
+                      >
+                        <Calendar
+                          className={cn(
+                            'w-3 h-3 shrink-0',
+                            ev.holiday.isEarlyClose ? 'text-amber-400' : 'text-violet-400'
+                          )}
+                          aria-hidden="true"
+                        />
+                        <span>{holidayLabel}</span>
+                      </span>
+                    )}
+
+                    {hasCatalyst && (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-rose-500/10 border border-rose-500/25 text-[10px] font-medium text-rose-300 leading-none">
+                        <span
+                          className="w-1.5 h-1.5 rounded-full bg-rose-400 shrink-0"
+                          aria-hidden="true"
+                        />
+                        <span>Evento hoy</span>
+                      </span>
+                    )}
+                  </span>
                 </span>
-              </div>
-            </button>
-          );
-        })}
+
+                {/* Right: Primary Chile schedule, countdown, subtle local clock & affordance */}
+                <span className="flex items-center gap-2 shrink-0 text-right max-w-[54%]">
+                  <span className="flex flex-col items-end gap-0.5 min-w-0">
+                    <span className="text-[10px] uppercase tracking-wider font-medium text-muted-foreground leading-none">
+                      Horario Chile
+                    </span>
+                    <span
+                      className={cn(
+                        'inline-flex flex-wrap justify-end gap-x-1 font-mono text-xs sm:text-sm font-bold tabular-nums tracking-tight leading-snug',
+                        schedule.isHoliday ? 'text-violet-200' : 'text-zinc-100'
+                      )}
+                    >
+                      {schedule.summary
+                        .replace(/ CL/g, '\u00A0CL')
+                        .split(' · ')
+                        .map((seg, idx) => (
+                          <span key={idx} className="whitespace-nowrap">
+                            {idx > 0 ? '·\u00A0' : ''}
+                            {seg}
+                          </span>
+                        ))}
+                    </span>
+                    {transitionLine && (
+                      <span className="font-mono text-[11px] font-medium text-zinc-300 tabular-nums leading-snug">
+                        {transitionLine}
+                      </span>
+                    )}
+                    <span className="font-mono text-[10px] text-muted-foreground tabular-nums leading-tight">
+                      Local {ev?.localTimeFormatted ?? '--:--'}
+                      {ev?.localDateFormatted ? ` · ${ev.localDateFormatted.replace(/ /g, '\u00A0')}` : ''}
+                    </span>
+                  </span>
+
+                  <ChevronRight
+                    className="w-4 h-4 text-muted-foreground group-hover:text-zinc-200 group-hover:translate-x-0.5 transition-all shrink-0"
+                    aria-hidden="true"
+                  />
+                </span>
+              </button>
+            );
+          }
+        )}
       </div>
 
-      {/* Desktop Rich Cards */}
+      {/* Desktop Spacious Clickable Cards (md+) */}
       <motion.div
-        className="hidden md:grid md:grid-cols-3 lg:grid-cols-5 gap-3 lg:gap-3.5"
+        className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 lg:gap-3.5"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        {markets.map((market) => {
-          const ev = evaluations[market.id];
-          const status = ev?.status ?? 'closed';
-          const isHoliday = Boolean(ev?.holiday && !ev.holiday.isEarlyClose);
-          const isSubscribed = subscribedMarketIds ? subscribedMarketIds.includes(market.id) : true;
+        {items.map(
+          ({
+            market,
+            ev,
+            schedule,
+            transitionLine,
+            hasCatalyst,
+            holidayLabel,
+            badgeVariant,
+            statusText,
+            cardStateClass,
+            ariaLabel
+          }) => {
+            const isSplitSchedule = schedule.summary.includes(' · ') && !schedule.isHoliday;
 
-          const badgeVariant = isHoliday
-            ? 'holiday'
-            : status === 'open'
-            ? 'open'
-            : status === 'lunch'
-            ? 'lunch'
-            : status === 'pre_market'
-            ? 'pre'
-            : 'closed';
+            return (
+              <motion.div key={market.id} variants={cardVariants} layout className="h-full">
+                <button
+                  type="button"
+                  onClick={() => onSelectMarketEvents(market.id)}
+                  title={market.notes}
+                  aria-label={ariaLabel}
+                  className={cn(
+                    'group relative w-full h-full rounded-xl border p-3.5 sm:p-4 flex flex-col justify-between gap-3 text-left backdrop-blur-md text-card-foreground shadow-neon transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
+                    cardStateClass
+                  )}
+                >
+                  {/* Row 1: Identity on left, status badge on right */}
+                  <span className="flex items-start justify-between gap-2 w-full">
+                    <span className="flex items-center gap-2 min-w-0">
+                      <span className="text-lg leading-none select-none shrink-0" aria-hidden="true">
+                        {market.flag}
+                      </span>
+                      <span className="min-w-0 block">
+                        <span className="block text-sm font-semibold text-zinc-100 tracking-tight leading-tight truncate">
+                          {market.name}
+                        </span>
+                        <span className="block text-[11px] font-mono font-medium text-muted-foreground tracking-wider uppercase mt-0.5 truncate">
+                          {market.code}
+                        </span>
+                      </span>
+                    </span>
 
-          const statusText = isHoliday
-            ? 'Feriado'
-            : status === 'open'
-            ? 'Abierto'
-            : status === 'lunch'
-            ? 'Almuerzo'
-            : status === 'pre_market'
-            ? 'Pre-apertura'
-            : 'Cerrado';
-
-          let cardStateClass = 'border-border bg-card hover:border-border-strong';
-
-          if (isHoliday) {
-            cardStateClass = 'border-violet-500/30 bg-gradient-to-b from-violet-500/[0.04] to-transparent hover:border-violet-500/45';
-          } else if (status === 'open') {
-            cardStateClass = 'border-emerald-500/30 bg-gradient-to-b from-emerald-500/[0.04] to-transparent hover:border-emerald-500/45';
-          } else if (status === 'lunch') {
-            cardStateClass = 'border-amber-500/30 bg-gradient-to-b from-amber-500/[0.04] to-transparent hover:border-amber-500/45';
-          } else if (status === 'pre_market') {
-            cardStateClass = 'border-sky-500/30 bg-gradient-to-b from-sky-500/[0.04] to-transparent hover:border-sky-500/45';
-          }
-
-          return (
-            <motion.div 
-              key={market.id}
-              variants={cardVariants}
-              layout
-            >
-              <Card
-                className={cn(
-                  "p-3.5 sm:p-4 flex flex-col justify-between gap-3.5 overflow-hidden h-full",
-                  cardStateClass
-                )}
-                title={`${market.name} (${market.code}) - ${statusText} - ${ev?.localTimeFormatted ?? '--:--'}`}
-              >
-                {/* Row 1: Flag + Country Name + Exchange on left, Status Badge on right */}
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-lg leading-none select-none shrink-0">{market.flag}</span>
-                    <div className="min-w-0">
-                      <div className="text-sm font-semibold text-zinc-100 tracking-tight leading-tight truncate">
-                        {market.name}
-                      </div>
-                      <div className="text-xs font-mono font-medium text-muted-foreground tracking-wider uppercase mt-0.5">
-                        {market.code}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    {notificationsEnabled && onToggleMarketAlert && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onToggleMarketAlert(market.id);
-                        }}
-                        aria-pressed={isSubscribed}
-                        aria-label={
-                          isSubscribed
-                            ? `Silenciar alertas de apertura para ${market.name}`
-                            : `Activar alertas de apertura para ${market.name}`
-                        }
-                        title={
-                          isSubscribed
-                            ? `Alertas activas para ${market.name} (clic para silenciar)`
-                            : `Alertas silenciadas para ${market.name} (clic para activar)`
-                        }
+                    <span
+                      className={cn(
+                        badgeVariants({ variant: badgeVariant }),
+                        'px-2 py-0.5 text-xs shrink-0'
+                      )}
+                    >
+                      <span
                         className={cn(
-                          "flex items-center justify-center min-h-[26px] min-w-[26px] p-1 rounded-md border transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400",
-                          isSubscribed
-                            ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/20"
-                            : "text-zinc-500 bg-transparent border-transparent hover:text-zinc-300 hover:bg-white/[0.05] hover:border-border"
+                          'h-1.5 w-1.5 rounded-full bg-current',
+                          badgeVariant === 'open' && 'animate-pulse'
                         )}
-                      >
-                        {isSubscribed ? (
-                          <Bell className="w-3.5 h-3.5" aria-hidden="true" />
-                        ) : (
-                          <BellOff className="w-3.5 h-3.5" aria-hidden="true" />
-                        )}
-                      </button>
-                    )}
-                    {onSelectMarketEvents && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onSelectMarketEvents(market.id);
-                        }}
-                        className="relative flex items-center gap-1 min-h-[26px] px-2 py-0.5 rounded-md text-xs font-medium text-muted-foreground hover:text-zinc-100 hover:bg-white/[0.05] border border-transparent hover:border-border transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
-                        title="Ver eventos de este mercado"
-                        aria-label={`Ver eventos y catalizadores de ${market.name}`}
-                      >
-                        <Calendar className="w-3.5 h-3.5" aria-hidden="true" />
-                        <span className="hidden xl:inline">Eventos</span>
-                        {catalystsMap?.[market.id] && (
-                           <span className="w-1.5 h-1.5 rounded-full bg-rose-500" aria-hidden="true" />
-                        )}
-                      </button>
-                    )}
-                    <Badge variant={badgeVariant} className="px-2 py-0.5 text-xs font-medium shrink-0">
+                        aria-hidden="true"
+                      />
                       {statusText}
-                    </Badge>
-                  </div>
-                </div>
-
-                {/* Holiday / Early-Close Banner */}
-                {ev?.holiday && (
-                  <div
-                    className={cn(
-                      "flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-medium truncate",
-                      ev.holiday.isEarlyClose
-                        ? "bg-amber-500/10 border-amber-500/25 text-amber-200"
-                        : "bg-violet-500/10 border-violet-500/25 text-violet-200"
-                    )}
-                    title={`Feriado bursátil: ${ev.holiday.name}`}
-                  >
-                    <Calendar className={cn("w-3.5 h-3.5 shrink-0", ev.holiday.isEarlyClose ? "text-amber-400" : "text-violet-400")} />
-                    <span className="truncate">{ev.holiday.name}</span>
-                  </div>
-                )}
-
-                {/* Row 2: Local Time & Next Transition Countdown on left, Date & Timezone on right */}
-                <div className="flex items-end justify-between gap-2 pt-2.5 border-t border-border">
-                  <div>
-                    <span className="text-xs uppercase font-medium text-muted-foreground tracking-wider block leading-none mb-1">
-                      Hora local
                     </span>
-                    <span className="font-mono text-xl sm:text-2xl font-bold text-zinc-100 tabular-nums tracking-tight leading-none">
-                      {ev?.localTimeFormatted ?? '--:--'}
+                  </span>
+
+                  {/* Holiday / Early-Close Pill */}
+                  {ev?.holiday && holidayLabel && (
+                    <span
+                      className={cn(
+                        'flex items-start gap-1.5 px-2.5 py-1.5 rounded-md border text-xs font-medium leading-snug w-full',
+                        ev.holiday.isEarlyClose
+                          ? 'bg-amber-500/10 border-amber-500/25 text-amber-200'
+                          : 'bg-violet-500/10 border-violet-500/25 text-violet-200'
+                      )}
+                    >
+                      <Calendar
+                        className={cn(
+                          'w-3.5 h-3.5 shrink-0 mt-0.5',
+                          ev.holiday.isEarlyClose ? 'text-amber-400' : 'text-violet-400'
+                        )}
+                        aria-hidden="true"
+                      />
+                      <span>{holidayLabel}</span>
                     </span>
-                    {ev?.nextTransition?.formattedCountdown && (
-                      <span className="font-mono text-[11px] font-medium text-muted-foreground tabular-nums block mt-1 leading-none">
-                        {ev.nextTransition.formattedCountdown}
+                  )}
+
+                  {/* Row 2: Chile-first primary schedule + countdown + subtle local clock */}
+                  <span className="flex flex-col gap-1.5 pt-2.5 border-t border-border w-full mt-auto">
+                    <span className="text-[11px] uppercase font-medium text-muted-foreground tracking-wider leading-none">
+                      Horario Chile
+                    </span>
+                    <span
+                      className={cn(
+                        'inline-flex flex-wrap gap-x-1 font-mono font-bold tabular-nums tracking-tight leading-snug',
+                        isSplitSchedule ? 'text-xs xl:text-sm' : 'text-base xl:text-[17px]',
+                        schedule.isHoliday ? 'text-violet-200' : 'text-zinc-100'
+                      )}
+                    >
+                      {schedule.summary
+                        .replace(/ CL/g, '\u00A0CL')
+                        .split(' · ')
+                        .map((seg, idx) => (
+                          <span key={idx} className="whitespace-nowrap">
+                            {idx > 0 ? '·\u00A0' : ''}
+                            {seg}
+                          </span>
+                        ))}
+                    </span>
+                    {transitionLine && (
+                      <span className="font-mono text-xs font-medium text-zinc-300 tabular-nums leading-snug">
+                        {transitionLine}
                       </span>
                     )}
-                  </div>
-                  <div className="flex flex-col items-end text-right min-w-0">
-                    <span className="font-mono text-xs font-medium text-zinc-300 leading-none">
-                      {ev?.localDateFormatted}
+                    <span className="font-mono text-[11px] text-muted-foreground tabular-nums leading-tight pt-0.5">
+                      Local {ev?.localTimeFormatted ?? '--:--'}
+                      {ev?.localDateFormatted ? ` · ${ev.localDateFormatted.replace(/ /g, '\u00A0')}` : ''}
                     </span>
-                    <span className="font-mono text-xs text-muted-foreground truncate max-w-[140px] mt-1 leading-none" title={`${market.timezone} (${ev?.timezoneOffset ?? ''})`}>
-                      {market.timezone.replace('_', ' ')} · {ev?.timezoneOffset ?? ''}
-                    </span>
-                  </div>
-                </div>
-              </Card>
-            </motion.div>
-          );
-        })}
+                  </span>
+
+                  {/* Row 3: Subtle agenda / catalyst footer indicator */}
+                  <span className="flex items-center justify-between gap-2 pt-2 border-t border-border/60 w-full">
+                    {hasCatalyst ? (
+                      <>
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-rose-300 leading-none">
+                          <span
+                            className="w-1.5 h-1.5 rounded-full bg-rose-400 shrink-0"
+                            aria-hidden="true"
+                          />
+                          <span>Evento hoy</span>
+                        </span>
+                        <span className="inline-flex items-center gap-0.5 text-[11px] font-medium text-muted-foreground group-hover:text-zinc-200 transition-colors leading-none">
+                          <span>Agenda</span>
+                          <ChevronRight
+                            className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform"
+                            aria-hidden="true"
+                          />
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-[11px] font-medium text-muted-foreground group-hover:text-zinc-200 transition-colors leading-none">
+                          Agenda
+                        </span>
+                        <ChevronRight
+                          className="w-3.5 h-3.5 text-muted-foreground group-hover:text-zinc-200 group-hover:translate-x-0.5 transition-all"
+                          aria-hidden="true"
+                        />
+                      </>
+                    )}
+                  </span>
+                </button>
+              </motion.div>
+            );
+          }
+        )}
       </motion.div>
     </>
   );

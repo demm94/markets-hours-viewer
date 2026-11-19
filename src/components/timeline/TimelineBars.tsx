@@ -14,10 +14,10 @@ interface TimelineBarsProps {
   scrubberMinutes: number;
   currentMinutes: number;
   isHovering: boolean;
+  isPinned?: boolean;
   isColumnCollapsed: boolean;
   containerRef: React.RefObject<HTMLDivElement | null>;
   dailyEvents?: Record<string, TimelineEventMarkerData[]>;
-  onSelectEvent?: (marketId: string) => void;
   onEventClick?: (event: TimelineEventMarkerData) => void;
   onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => void;
   onPointerMove: (e: React.PointerEvent<HTMLDivElement>) => void;
@@ -26,6 +26,8 @@ interface TimelineBarsProps {
   onPointerLeave: (e: React.PointerEvent<HTMLDivElement>) => void;
   onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
   isToday?: boolean;
+  isWeekendDay?: boolean;
+  simulateWeekday?: boolean;
 }
 
 export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
@@ -36,6 +38,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
   scrubberMinutes,
   currentMinutes,
   isHovering,
+  isPinned = false,
   isColumnCollapsed,
   containerRef,
   onPointerDown,
@@ -45,36 +48,25 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
   onPointerLeave,
   onKeyDown,
   dailyEvents = {},
-  onSelectEvent,
   onEventClick,
-  isToday = true
+  isToday = true,
+  isWeekendDay = false,
+  simulateWeekday = false
 }) => {
-  const [activeEventId, setActiveEventId] = React.useState<string | null>(null);
   const [hoveredEventId, setHoveredEventId] = React.useState<string | null>(null);
-
-  const currentActiveEventId = activeEventId || hoveredEventId;
-
-  React.useEffect(() => {
-    if (!activeEventId) return;
-    const handleGlobalPointerDown = (e: PointerEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (!target?.closest('[data-timeline-marker]')) {
-        setActiveEventId(null);
-      }
-    };
-    document.addEventListener('pointerdown', handleGlobalPointerDown);
-    return () => document.removeEventListener('pointerdown', handleGlobalPointerDown);
-  }, [activeEventId]);
 
   const scrubberPercent = (scrubberMinutes / 1440) * 100;
   const nowPercent = (currentMinutes / 1440) * 100;
-  const isActivelyScrubbing = isHovering && Math.abs(scrubberMinutes - currentMinutes) > 2;
+  const isActivelyScrubbing = isPinned || (isHovering && Math.abs(scrubberMinutes - currentMinutes) > 2);
+  const showNowLine = isToday;
+  const showScrubberLine = isActivelyScrubbing || !isToday || isHovering;
+  const scrubberTimeLabel = scrubberMinutes === 1440 ? '24:00' : formatMinutes(scrubberMinutes);
 
   const renderCollapsedFloatingPills = (linePercent: number) => {
     const edgeTransform =
-      linePercent < 4
+      linePercent < 12
         ? 'translate(6px, -50%)'
-        : linePercent > 96
+        : linePercent > 88
         ? 'translate(calc(-100% - 6px), -50%)'
         : 'translate(-50%, -50%)';
 
@@ -82,6 +74,11 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
       <div className="absolute top-0 left-0 w-0 h-full pointer-events-none">
         {allMarkets.map((market, idx) => {
           const isChile = market.id === 'chile';
+          const rowEvents = dailyEvents[market.id] ?? [];
+          if (rowEvents.some((evt) => Math.abs(evt.leftPercent - linePercent) < 14)) {
+            return null;
+          }
+
           const ev = isChile
             ? chileScrubberEvaluation
             : (scrubberEvaluations[market.id] ?? {
@@ -116,7 +113,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
               }}
               title={`${market.name}: ${ev.localTimeFormatted}${ev.holiday ? ` (Feriado: ${ev.holiday.name})` : ''}`}
             >
-              <span className="text-xs leading-none">{market.flag}</span>
+              <span className="text-xs leading-none" aria-hidden="true">{market.flag}</span>
               <span>{ev.localTimeFormatted}</span>
             </div>
           );
@@ -127,25 +124,34 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
 
   return (
     <div
-      className="timeline-bars-container flex-1 w-full min-w-0 relative flex flex-col cursor-crosshair touch-pan-y select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/50"
+      className="timeline-bars-container flex-1 w-full min-w-[460px] sm:min-w-[600px] lg:min-w-0 relative flex flex-col cursor-crosshair touch-pan-y select-none"
       ref={containerRef}
-      tabIndex={0}
-      role="slider"
-      aria-label="Cursor interactivo de línea de tiempo"
-      aria-valuemin={0}
-      aria-valuemax={1440}
-      aria-valuenow={scrubberMinutes}
-      aria-valuetext={`Hora de Chile ${formatMinutes(scrubberMinutes)}`}
+      role="region"
+      aria-label="Grilla horaria de 24 horas en hora de Chile"
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerCancel}
       onPointerLeave={onPointerLeave}
-      onKeyDown={onKeyDown}
     >
-      {/* Hour Labels at Top */}
-      <div className="h-9 sm:h-11 relative border-b border-border bg-muted">
+      {/* Hour Labels & Accessible Keyboard Scrubber Slider (sibling to event buttons to preserve valid ARIA) */}
+      <div
+        tabIndex={0}
+        role="slider"
+        aria-label="Cursor interactivo de línea de tiempo (usa flechas izquierda, derecha, arriba o abajo para mover, Escape para volver a ahora)"
+        aria-valuemin={0}
+        aria-valuemax={1440}
+        aria-valuenow={scrubberMinutes}
+        aria-valuetext={`Hora de Chile ${scrubberTimeLabel}`}
+        onKeyDown={onKeyDown}
+        className="h-9 sm:h-11 relative border-b border-border bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-400/70"
+      >
         {HOURS.map((h) => {
+          const tickPct = (h / 24) * 100;
+          const nearNow = showNowLine && Math.abs(tickPct - nowPercent) < 11;
+          const nearScrubber = showScrubberLine && Math.abs(tickPct - scrubberPercent) < 11;
+          const isTickHidden = nearNow || nearScrubber;
+
           const transform =
             h === 0
               ? 'translate(4px, -50%)'
@@ -156,8 +162,11 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
           return (
             <div
               key={h}
-              className="absolute top-1/2 font-mono text-[9px] sm:text-xs font-semibold text-muted-foreground tabular-nums select-none"
-              style={{ left: `${(h / 24) * 100}%`, transform }}
+              aria-hidden={isTickHidden || undefined}
+              className={`absolute top-1/2 font-mono text-[10px] sm:text-xs font-semibold text-muted-foreground tabular-nums select-none transition-opacity duration-150 ${
+                isTickHidden ? 'opacity-0' : 'opacity-100'
+              }`}
+              style={{ left: `${tickPct}%`, transform }}
             >
               <span className="hidden sm:inline">{h.toString().padStart(2, '0')}:00</span>
               <span className="sm:hidden">{h.toString().padStart(2, '0')}h</span>
@@ -183,7 +192,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
           const isChile = market.id === 'chile';
           const segments = isChile ? [] : (marketSegments[market.id] ?? []);
           const marketEvents = dailyEvents[market.id] ?? [];
-          const isRowElevated = marketEvents.some((e) => e.id === currentActiveEventId);
+          const isRowElevated = marketEvents.some((e) => e.id === hoveredEventId);
           const ev = isChile ? chileScrubberEvaluation : scrubberEvaluations[market.id];
           const holiday = ev?.holiday;
           const isChileFullHoliday = Boolean(isChile && holiday && !holiday.isEarlyClose);
@@ -193,28 +202,29 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
             segments.every((s) => Boolean(s.holiday && !s.holiday.isEarlyClose));
           const isHoliday = isAllDayHoliday;
           const rowHoliday = isAllDayHoliday ? (segments[0]?.holiday ?? holiday) : holiday;
+          const isEmptyWeekendTrack = !isChile && segments.length === 0 && isWeekendDay && !simulateWeekday;
+          const isFuturePreview = !isToday && !isHovering && !isPinned;
 
           return (
             <div
               key={market.id}
-              className={`relative h-[38px] sm:h-[46px] md:h-[50px] px-1.5 sm:px-2 flex items-center border-b border-border transition-colors ${
-                isRowElevated ? 'z-40' : 'hover:z-30 focus-within:z-40'
+              className={`relative h-[38px] sm:h-[46px] md:h-[50px] px-0 flex items-center border-b border-border transition-colors ${
+                isRowElevated ? 'z-40' : ''
               } ${
                 isChile
                   ? 'bg-white/[0.015]'
                   : 'hover:bg-white/[0.015]'
-              } ${isHoliday ? 'opacity-45 hover:opacity-75 transition-opacity' : ''}`}
+              } ${isHoliday ? 'opacity-75 hover:opacity-90 transition-opacity' : ''}`}
             >
               <div
-                className={`relative w-full h-[22px] sm:h-[26px] md:h-[28px] border rounded-md transition-colors ${
+                className={`relative w-full h-[22px] sm:h-[26px] md:h-[28px] border-y rounded-none transition-colors ${
                   (isHoliday || isChileFullHoliday)
                     ? 'border-violet-500/25 bg-violet-950/15'
                     : 'border-border bg-card/70'
                 }`}
               >
-                {/* Session blocks container (clipped to rounded track) */}
-                <div className="absolute inset-0 rounded-md overflow-hidden pointer-events-none z-[2]">
-                  {/* Chile reference track */}
+                {/* Session blocks container */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none z-[2]">
                   {isChile && (
                     holiday ? (
                       <div className="w-full h-full flex items-center justify-center bg-violet-500/10">
@@ -225,40 +235,48 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-white/[0.02]">
                         <span className="font-mono text-[10px] sm:text-[11px] font-medium text-zinc-400 tracking-widest uppercase">
-                          Eje 24h Santiago de Chile
+                          Eje 24h Santiago · Chile
                         </span>
                       </div>
                     )
                   )}
 
-                  {/* Holiday track overlay */}
+                  {isEmptyWeekendTrack && (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <span className="font-mono text-[10px] text-zinc-400">
+                        Cerrado · Fin de semana
+                      </span>
+                    </div>
+                  )}
+
                   {isHoliday && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-violet-950/40 rounded-md z-[3]">
-                      <span className="font-mono text-[9px] sm:text-[10px] font-medium text-violet-200 tracking-wider px-2 py-0.5 rounded bg-violet-950/80 border border-violet-500/30 truncate max-w-[180px] sm:max-w-none">
+                    <div className="absolute inset-0 flex items-center justify-center bg-violet-950/40 z-[3]">
+                      <span className="font-mono text-[10px] font-medium text-violet-200 tracking-wider px-2 py-0.5 rounded bg-violet-950/80 border border-violet-500/30 truncate max-w-[180px] sm:max-w-none">
                         Feriado: {rowHoliday?.name}
                       </span>
                     </div>
                   )}
 
-                  {/* Session blocks */}
                   {segments.map((seg, idx) => {
                     const leftPercent = (seg.startMinute / 1440) * 100;
                     const widthPercent = ((seg.endMinute - seg.startMinute) / 1440) * 100;
                     const segHoliday = seg.holiday;
                     const isSegFullHoliday = Boolean(segHoliday && !segHoliday.isEarlyClose);
-                    const isActive = !isSegFullHoliday && scrubberMinutes >= seg.startMinute && scrubberMinutes < seg.endMinute;
-                    const isUpcoming = !isSegFullHoliday && scrubberMinutes < seg.startMinute;
+                    const isActive =
+                      !isSegFullHoliday &&
+                      !isFuturePreview &&
+                      scrubberMinutes >= seg.startMinute &&
+                      scrubberMinutes < seg.endMinute;
+                    const isUpcoming =
+                      !isSegFullHoliday && (isFuturePreview || scrubberMinutes < seg.startMinute);
 
                     let blockClasses = '';
-                    let statusDescriptor = 'Cerrado';
 
                     if (isSegFullHoliday) {
                       blockClasses = isAllDayHoliday
                         ? 'bg-zinc-800/40 border border-white/5 opacity-30'
                         : 'bg-violet-950/60 border border-violet-500/35 text-violet-200 z-[3]';
-                      statusDescriptor = segHoliday ? `Feriado: ${segHoliday.name}` : 'Feriado';
                     } else if (isActive) {
-                      statusDescriptor = 'Abierto ahora';
                       if (seg.type === 'lunch') {
                         blockClasses = 'bg-amber-500 ring-1 ring-amber-300/80 z-10 text-zinc-950';
                       } else if (seg.type === 'pre_market') {
@@ -267,7 +285,6 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                         blockClasses = 'bg-emerald-500 ring-1 ring-emerald-300/80 z-10 text-zinc-950';
                       }
                     } else if (isUpcoming) {
-                      statusDescriptor = 'Aún no abre';
                       if (seg.type === 'lunch') {
                         blockClasses = 'bg-amber-500/20 border border-amber-500/45 text-amber-300';
                       } else if (seg.type === 'pre_market') {
@@ -276,8 +293,6 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                         blockClasses = 'bg-emerald-500/20 border border-emerald-500/45 text-emerald-300';
                       }
                     } else {
-                      // isPast
-                      statusDescriptor = 'Ya cerró';
                       if (seg.type === 'lunch') {
                         blockClasses = 'bg-amber-500/[0.08] border border-amber-500/20 text-amber-500/40';
                       } else if (seg.type === 'pre_market') {
@@ -295,10 +310,9 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                           left: `${leftPercent}%`,
                           width: `${widthPercent}%`
                         }}
-                        title={`${market.name} - ${seg.label ?? seg.type}: ${(seg.startMinute / 60).toFixed(1)}h - ${(seg.endMinute / 60).toFixed(1)}h (Chile) — [${statusDescriptor}]`}
                       >
                         {isSegFullHoliday && !isAllDayHoliday && (
-                          <span className="font-mono text-[9px] sm:text-[10px] font-medium text-violet-200 tracking-wider px-1.5 truncate">
+                          <span className="font-mono text-[10px] font-medium text-violet-200 tracking-wider px-1.5 truncate">
                             Feriado: {segHoliday?.name}
                           </span>
                         )}
@@ -307,26 +321,34 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                   })}
                 </div>
 
-                {/* Event markers layer (unclipped for popover/tooltip) */}
+                {/* Event markers layer (sibling to slider, elevated above vertical lines) */}
                 {marketEvents.length > 0 && (
-                  <div className="absolute inset-0 pointer-events-none z-[4]">
-                    {marketEvents.map((evt) => (
-                      <TimelineEventMarker
-                        key={evt.id}
-                        event={evt}
-                        marketFlag={market.flag}
-                        isTopRow={marketIdx <= 1}
-                        isOpen={currentActiveEventId === evt.id}
-                        onOpenToggle={() =>
-                          setActiveEventId((prev) => (prev === evt.id ? null : evt.id))
-                        }
-                        onHoverChange={(isHovered) =>
-                          setHoveredEventId(isHovered ? evt.id : null)
-                        }
-                        onSelectEvent={onSelectEvent}
-                        onEventClick={onEventClick}
-                      />
-                    ))}
+                  <div className="absolute inset-0 pointer-events-none z-[15]">
+                    {marketEvents.map((evt, evtIdx) => {
+                      const prevEvt = evtIdx > 0 ? marketEvents[evtIdx - 1] : undefined;
+                      const nextEvt = evtIdx < marketEvents.length - 1 ? marketEvents[evtIdx + 1] : undefined;
+                      const nearPrev = Boolean(prevEvt && Math.abs(evt.leftPercent - prevEvt.leftPercent) <= 2.5);
+                      const nearNext = Boolean(nextEvt && Math.abs(nextEvt.leftPercent - evt.leftPercent) <= 2.5);
+                      const positionClass =
+                        nearPrev || nearNext
+                          ? evtIdx % 2 === 0
+                            ? '-translate-y-[85%]'
+                            : '-translate-y-[15%]'
+                          : undefined;
+
+                      return (
+                        <TimelineEventMarker
+                          key={evt.id}
+                          event={evt}
+                          marketFlag={market.flag}
+                          isTopRow={marketIdx <= 2}
+                          isHovered={hoveredEventId === evt.id}
+                          onHoverChange={(hovered) => setHoveredEventId(hovered ? evt.id : null)}
+                          onEventClick={onEventClick}
+                          positionClass={positionClass}
+                        />
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -335,19 +357,19 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
         })}
       </div>
 
-      {/* Persistent "Now" Line (only active when viewing current day) */}
-      {isToday && (
+      {/* Persistent "Now" Line (only when viewing today) */}
+      {showNowLine && (
         <div
-          className="absolute top-0 bottom-0 -translate-x-1/2 w-[1.5px] bg-rose-500 z-[5] pointer-events-none"
+          className="absolute top-0 bottom-0 -translate-x-1/2 w-[1.5px] bg-rose-500 z-[12] pointer-events-none"
           style={{ left: `${nowPercent}%` }}
         >
           <div
             className="absolute top-1 sm:top-1.5 left-0 inline-flex items-center gap-1 sm:gap-1.5 bg-rose-600 text-white font-mono text-[10px] sm:text-[11px] font-bold px-2 sm:px-2.5 py-0.5 rounded shadow-sm whitespace-nowrap tabular-nums"
             style={{
               transform:
-                nowPercent < 4
+                nowPercent < 12
                   ? 'translate(6px, 0)'
-                  : nowPercent > 96
+                  : nowPercent > 88
                   ? 'translate(calc(-100% - 6px), 0)'
                   : 'translateX(-50%)'
             }}
@@ -357,9 +379,9 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
               <span className="hidden sm:inline">
                 {isActivelyScrubbing
                   ? 'AHORA'
-                  : `AHORA 🇨🇱 ${formatMinutes(currentMinutes)}`}
+                  : <>AHORA <span aria-hidden="true">🇨🇱</span> {formatMinutes(currentMinutes)}</>}
               </span>
-              <span className="sm:hidden text-[9px] font-bold">
+              <span className="sm:hidden text-[10px] font-bold">
                 {isActivelyScrubbing
                   ? 'AHORA'
                   : `${formatMinutes(currentMinutes)}`}
@@ -372,27 +394,32 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
       )}
 
       {/* Interactive Scrubber Line */}
-      {(isActivelyScrubbing || !isToday || isHovering) && (
+      {showScrubberLine && (
         <div
-          className="absolute top-0 bottom-0 -translate-x-1/2 w-[2px] bg-sky-400 z-[6] pointer-events-none"
+          className="absolute top-0 bottom-0 -translate-x-1/2 w-[2px] bg-sky-400 z-[14] pointer-events-none"
           style={{ left: `${scrubberPercent}%` }}
         >
           <div
-            className="absolute top-1 sm:top-1.5 left-0 bg-sky-500 text-zinc-950 font-mono text-[10px] sm:text-[11px] font-bold px-2 sm:px-2.5 py-0.5 rounded shadow-sm whitespace-nowrap tabular-nums"
+            className="absolute top-1 sm:top-1.5 left-0 inline-flex items-center gap-1 bg-sky-500 text-zinc-950 font-mono text-[10px] sm:text-[11px] font-bold px-2 sm:px-2.5 py-0.5 rounded shadow-sm whitespace-nowrap tabular-nums"
             style={{
               transform:
-                scrubberPercent < 4
+                scrubberPercent < 12
                   ? 'translate(6px, 0)'
-                  : scrubberPercent > 96
+                  : scrubberPercent > 88
                   ? 'translate(calc(-100% - 6px), 0)'
                   : 'translateX(-50%)'
             }}
           >
-            <span className="hidden sm:inline">🇨🇱 </span>
-            <span>{formatMinutes(scrubberMinutes)}</span>
-            {!isToday && (
-              <span className="ml-1 text-[9px] font-medium text-zinc-900">
-                proyección
+            <span className="hidden sm:inline" aria-hidden="true">🇨🇱</span>
+            <span>{scrubberTimeLabel}</span>
+            {isPinned && (
+              <span className="hidden sm:inline text-[10px] font-semibold bg-zinc-950/20 px-1 rounded">
+                fijado
+              </span>
+            )}
+            {!isToday && !isPinned && (
+              <span className="text-[10px] font-medium text-zinc-900">
+                día futuro
               </span>
             )}
           </div>

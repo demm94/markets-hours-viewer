@@ -1,16 +1,20 @@
 import { describe, it, expect } from 'vitest';
 import { DateTime } from 'luxon';
 import { Header } from '../components/Header';
+import { AlertsPopover } from '../components/AlertsPopover';
+import { LiveStatusBar } from '../components/LiveStatusBar';
+import { TodayAgendaStrip } from '../components/TodayAgendaStrip';
 import { MarketCards } from '../components/MarketCards';
 import { TimelineGrid } from '../components/TimelineGrid';
 import { TimelineHeader } from '../components/timeline/TimelineHeader';
 import { TimelineLeftColumn } from '../components/timeline/TimelineLeftColumn';
 import { TimelineBars } from '../components/timeline/TimelineBars';
 import { TimelineLegend } from '../components/timeline/TimelineLegend';
-import { TradingWindowsRadar } from '../components/trading-windows/TradingWindowsRadar';
 import {
   calculateScrubberMinutesFromBounds,
-  resolveScrubberKeyAction
+  resolveScrubberKeyAction,
+  shouldClearScrubberOnLeave,
+  resolveScrubberCancelState
 } from '../hooks/useScrubber';
 import { evaluateMarketAt } from './timezone';
 import { MARKETS } from './markets';
@@ -28,8 +32,14 @@ describe('React memoization & render optimization verification', () => {
     expect((TimelineGrid as any).$$typeof).toBe(REACT_MEMO_TYPE);
     expect(TimelineGrid.displayName).toBe('TimelineGrid');
 
-    expect((TradingWindowsRadar as any).$$typeof).toBe(REACT_MEMO_TYPE);
-    expect(TradingWindowsRadar.displayName).toBe('TradingWindowsRadar');
+    expect((AlertsPopover as any).$$typeof).toBe(REACT_MEMO_TYPE);
+    expect(AlertsPopover.displayName).toBe('AlertsPopover');
+
+    expect((LiveStatusBar as any).$$typeof).toBe(REACT_MEMO_TYPE);
+    expect(LiveStatusBar.displayName).toBe('LiveStatusBar');
+
+    expect((TodayAgendaStrip as any).$$typeof).toBe(REACT_MEMO_TYPE);
+    expect(TodayAgendaStrip.displayName).toBe('TodayAgendaStrip');
   });
 
   it('verifies decomposed timeline atomic subcomponents are wrapped with React.memo', () => {
@@ -78,6 +88,22 @@ describe('React memoization & render optimization verification', () => {
       timelineSliderExists = false;
     }
     expect(timelineSliderExists).toBe(false);
+
+    let radarExists = true;
+    try {
+      await import('../components/trading-windows/TradingWindowsRadar' as any);
+    } catch {
+      radarExists = false;
+    }
+    expect(radarExists).toBe(false);
+
+    let pullToRefreshExists = true;
+    try {
+      await import('../hooks/usePullToRefresh' as any);
+    } catch {
+      pullToRefreshExists = false;
+    }
+    expect(pullToRefreshExists).toBe(false);
   });
 
   describe('useScrubber behavioral interaction logic', () => {
@@ -104,6 +130,26 @@ describe('React memoization & render optimization verification', () => {
       expect(resolveScrubberKeyAction('ArrowLeft', 10, 720)).toEqual({
         handled: true,
         nextMinutes: 0,
+        isHovering: true
+      });
+      expect(resolveScrubberKeyAction('ArrowUp', 720, 720)).toEqual({
+        handled: true,
+        nextMinutes: 735,
+        isHovering: true
+      });
+      expect(resolveScrubberKeyAction('ArrowDown', 720, 720)).toEqual({
+        handled: true,
+        nextMinutes: 705,
+        isHovering: true
+      });
+      expect(resolveScrubberKeyAction('ArrowDown', 5, 720)).toEqual({
+        handled: true,
+        nextMinutes: 0,
+        isHovering: true
+      });
+      expect(resolveScrubberKeyAction('ArrowUp', 1435, 720)).toEqual({
+        handled: true,
+        nextMinutes: 1440,
         isHovering: true
       });
       expect(resolveScrubberKeyAction('PageUp', 1400, 720)).toEqual({
@@ -133,6 +179,31 @@ describe('React memoization & render optimization verification', () => {
         isDragging: false
       });
       expect(resolveScrubberKeyAction('Tab', 800, 720).handled).toBe(false);
+    });
+
+    it('preserves pinned or touch scrubber positions on pointer leave and clears unpinned mouse hover', () => {
+      // Unpinned mouse leave clears preview
+      expect(shouldClearScrubberOnLeave('mouse', false, false)).toBe(true);
+      // Pinned mouse leave preserves position so desktop users can click "Volver a Ahora"
+      expect(shouldClearScrubberOnLeave('mouse', false, true)).toBe(false);
+      // Active drag preserves position
+      expect(shouldClearScrubberOnLeave('mouse', true, false)).toBe(false);
+      // Touch/pen pointer leave preserves scrubbed position
+      expect(shouldClearScrubberOnLeave('touch', false, false)).toBe(false);
+      expect(shouldClearScrubberOnLeave('pen', false, false)).toBe(false);
+    });
+
+    it('restores prior pin state on pointercancel so vertical scrolling does not accidentally pin', () => {
+      expect(resolveScrubberCancelState(false, null)).toEqual({
+        isPinned: false,
+        scrubberMinutes: null,
+        isHovering: false
+      });
+      expect(resolveScrubberCancelState(true, 600)).toEqual({
+        isPinned: true,
+        scrubberMinutes: 600,
+        isHovering: true
+      });
     });
   });
 });

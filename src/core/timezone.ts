@@ -1,9 +1,20 @@
 import { DateTime } from 'luxon';
-import { MarketConfig, MarketEvaluation, MarketStatus, TimelineSegment, MarketTransition } from './types';
+import {
+  MarketConfig,
+  MarketEvaluation,
+  MarketStatus,
+  TimelineSegment,
+  MarketTransition,
+  MarketChileSchedule
+} from './types';
 import { CHILE_CONFIG } from './markets';
 import { getMarketHoliday, isMarketHoliday, getEffectiveMarketSessions } from './holidays';
 
 export const CHILE_TZ = CHILE_CONFIG.timezone; // 'America/Santiago'
+
+export interface ProjectTimelineOptions {
+  isSimulation?: boolean;
+}
 
 /**
  * Parses "HH:mm" into hour and minute numbers.
@@ -20,10 +31,11 @@ export function parseTime(timeStr: string): { hour: number; minute: number } {
 export function projectMarketToTimeline(
   market: MarketConfig,
   referenceDate: DateTime = DateTime.now().setZone(CHILE_TZ),
-  referenceZone: string = CHILE_TZ
+  referenceZone: string = CHILE_TZ,
+  options: ProjectTimelineOptions = {}
 ): TimelineSegment[] {
   const refDayStart = referenceDate.setZone(referenceZone).startOf('day');
-  const refDayEnd = refDayStart.plus({ days: 1 });
+  const refDayEnd = refDayStart.plus({ days: 1 }).startOf('day');
 
   const segments: TimelineSegment[] = [];
 
@@ -32,9 +44,14 @@ export function projectMarketToTimeline(
 
   for (const dayOffset of daysToCheck) {
     const targetDay = refDayStart.plus({ days: dayOffset }).setZone(market.timezone);
+    if (!options.isSimulation && isWeekend(targetDay)) {
+      continue;
+    }
     const targetDateStr = targetDay.toFormat('yyyy-MM-dd');
-    const holiday = getMarketHoliday(market.id, targetDateStr);
-    const sessions = getEffectiveMarketSessions(market, targetDateStr);
+    const holiday = !options.isSimulation ? getMarketHoliday(market.id, targetDateStr) : undefined;
+    const sessions = options.isSimulation
+      ? market.sessions
+      : getEffectiveMarketSessions(market, targetDateStr);
 
     for (const session of sessions) {
       const { hour: startH, minute: startM } = parseTime(session.start);
@@ -131,6 +148,95 @@ export function formatMinutesCountdown(minutesRemaining: number): string {
 }
 
 /**
+ * Formats a transition instant into Chile reference time (e.g. "17:00 CL" or "lun 11:30 CL").
+ */
+function formatChileTransitionTime(
+  targetInstant: DateTime,
+  referenceNow: DateTime,
+  referenceZone: string = CHILE_TZ
+): string {
+  const targetRef = targetInstant.setZone(referenceZone);
+  const nowRef = referenceNow.setZone(referenceZone);
+  const timeStr = targetRef.toFormat('HH:mm');
+  if (targetRef.hasSame(nowRef, 'day')) {
+    return `${timeStr} CL`;
+  }
+  const dayName = targetRef.toFormat('ccc', { locale: 'es' }).replace(/\.$/, '');
+  return `${dayName} ${timeStr} CL`;
+}
+
+/**
+ * Formats a market's effective regular trading schedule in Chile reference time
+ * (e.g. "10:30–17:00 CL", "22:00–02:30 CL", "22:30–00:30 · 02:00–04:00 CL").
+ */
+export function formatMarketChileSchedule(
+  market: MarketConfig,
+  referenceDate: DateTime = DateTime.now().setZone(CHILE_TZ),
+  referenceZone: string = CHILE_TZ,
+  options: EvaluateMarketOptions = {}
+): MarketChileSchedule {
+  const localRef = referenceDate.setZone(market.timezone);
+  const localDateStr = localRef.toFormat('yyyy-MM-dd');
+  const weekend = isWeekend(localRef);
+  const holiday = !options.isSimulation && !weekend ? getMarketHoliday(market.id, localDateStr) : undefined;
+
+  if (holiday && !holiday.isEarlyClose) {
+    return {
+      summary: 'Feriado · Sin rueda',
+      isOvernight: false,
+      isEarlyClose: false,
+      isHoliday: true
+    };
+  }
+
+  const effectiveSessions =
+    !options.isSimulation && !weekend
+      ? getEffectiveMarketSessions(market, localDateStr)
+      : market.sessions;
+
+  const regularSessions = effectiveSessions.filter((s) => s.type === 'regular');
+  const displaySessions = regularSessions.length > 0 ? regularSessions : effectiveSessions;
+
+  if (displaySessions.length === 0) {
+    return {
+      summary: 'Sin sesiones',
+      isOvernight: false,
+      isEarlyClose: false,
+      isHoliday: false
+    };
+  }
+
+  const converted = displaySessions.map((session) => {
+    const { hour: startH, minute: startM } = parseTime(session.start);
+    const { hour: endH, minute: endM } = parseTime(session.end);
+
+    const startRef = DateTime.fromObject(
+      { year: localRef.year, month: localRef.month, day: localRef.day, hour: startH, minute: startM, second: 0 },
+      { zone: market.timezone }
+    ).setZone(referenceZone);
+
+    const endRef = DateTime.fromObject(
+      { year: localRef.year, month: localRef.month, day: localRef.day, hour: endH, minute: endM, second: 0 },
+      { zone: market.timezone }
+    ).setZone(referenceZone);
+
+    return { startRef, endRef };
+  });
+
+  const ranges = converted.map(({ startRef, endRef }) => `${startRef.toFormat('HH:mm')}–${endRef.toFormat('HH:mm')}`);
+  const firstStart = converted[0]?.startRef;
+  const lastEnd = converted[converted.length - 1]?.endRef;
+  const isOvernight = Boolean(firstStart && lastEnd && !firstStart.hasSame(lastEnd, 'day'));
+
+  return {
+    summary: `${ranges.join(' · ')} CL`,
+    isOvernight,
+    isEarlyClose: Boolean(holiday?.isEarlyClose),
+    isHoliday: false
+  };
+}
+
+/**
  * Calculates the next state transition (time until opening, closing, lunch, etc.) for a market.
  */
 export function getNextTransition(
@@ -164,11 +270,12 @@ export function getNextTransition(
       const { hour, minute } = parseTime(firstSession.start);
       const dayOpen = day.set({ hour, minute, second: 0, millisecond: 0 });
       const diffMins = Math.round(dayOpen.diff(localTime, 'minutes').minutes);
-      const dayName = day.toFormat('ccc', { locale: 'es' });
+      const atChileFormatted = formatChileTransitionTime(dayOpen, localTime, CHILE_TZ);
       return {
         type: 'open',
         inMinutes: diffMins,
-        formattedCountdown: `Abre ${dayName} ${firstSession.start}`
+        formattedCountdown: `Abre ${atChileFormatted}`,
+        atChileFormatted
       };
     }
   }
@@ -195,11 +302,13 @@ export function getNextTransition(
 
       if (localTime >= sessionStart && localTime < sessionEnd) {
         const diffMins = Math.round(sessionEnd.diff(localTime, 'minutes').minutes);
+        const atChileFormatted = formatChileTransitionTime(sessionEnd, localTime, CHILE_TZ);
         if (session.type === 'lunch') {
           return {
             type: 'resume',
             inMinutes: diffMins,
-            formattedCountdown: `Reanuda en ${formatMinutesCountdown(diffMins)}`
+            formattedCountdown: `Reanuda en ${formatMinutesCountdown(diffMins)}`,
+            atChileFormatted
           };
         }
         const nextSession = todaySessions.find((s) => s.start === session.end);
@@ -207,13 +316,15 @@ export function getNextTransition(
           return {
             type: 'lunch',
             inMinutes: diffMins,
-            formattedCountdown: `Almuerzo en ${formatMinutesCountdown(diffMins)}`
+            formattedCountdown: `Almuerzo en ${formatMinutesCountdown(diffMins)}`,
+            atChileFormatted
           };
         }
         return {
           type: 'close',
           inMinutes: diffMins,
-          formattedCountdown: `Cierra en ${formatMinutesCountdown(diffMins)}`
+          formattedCountdown: `Cierra en ${formatMinutesCountdown(diffMins)}`,
+          atChileFormatted
         };
       }
     }
@@ -242,11 +353,11 @@ export function getNextTransition(
       if (sessionStart > localTime) {
         const diffMins = Math.round(sessionStart.diff(localTime, 'minutes').minutes);
         const prefix = session.type === 'pre_market' ? 'Pre en' : 'Abre en';
+        const atChileFormatted = formatChileTransitionTime(sessionStart, localTime, CHILE_TZ);
 
         let formattedCountdown: string;
-        if ((isTodayHoliday || holiday?.isEarlyClose) && dayOffset >= 1) {
-          const dayName = day.toFormat('ccc', { locale: 'es' });
-          formattedCountdown = `Abre ${dayName} ${session.start}`;
+        if (((isTodayHoliday || holiday?.isEarlyClose) && dayOffset >= 1) || dayOffset >= 2 || diffMins >= 1440) {
+          formattedCountdown = `Abre ${atChileFormatted}`;
         } else {
           formattedCountdown = `${prefix} ${formatMinutesCountdown(diffMins)}`;
         }
@@ -254,7 +365,8 @@ export function getNextTransition(
         return {
           type: 'open',
           inMinutes: diffMins,
-          formattedCountdown
+          formattedCountdown,
+          atChileFormatted
         };
       }
     }
@@ -366,7 +478,7 @@ export function dateTimeToWallClockMinutes(
   referenceZone: string = CHILE_TZ
 ): number {
   const refDayStart = referenceDate.setZone(referenceZone).startOf('day');
-  const refDayEnd = refDayStart.plus({ days: 1 });
+  const refDayEnd = refDayStart.plus({ days: 1 }).startOf('day');
   const dtInRef = dt.setZone(referenceZone);
 
   if (dtInRef <= refDayStart) return 0;
@@ -388,7 +500,7 @@ export function minuteOffsetToDateTime(
   const refDayStart = referenceDate.setZone(referenceZone).startOf('day');
 
   if (clamped >= 1440) {
-    return refDayStart.plus({ days: 1 });
+    return refDayStart.plus({ days: 1 }).startOf('day');
   }
 
   const hour = Math.floor(clamped / 60);

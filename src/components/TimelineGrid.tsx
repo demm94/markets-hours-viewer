@@ -1,13 +1,17 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { CalendarOff, Eye, RotateCcw } from 'lucide-react';
 import { MarketConfig, MarketEvaluation, TimelineSegment, TimelineEventMarkerData, RollingDayInfo } from '../core/types';
 import { CHILE_CONFIG } from '../core/markets';
 import { TimelineHeader } from './timeline/TimelineHeader';
 import { TimelineLeftColumn } from './timeline/TimelineLeftColumn';
 import { TimelineBars } from './timeline/TimelineBars';
 import { TimelineLegend } from './timeline/TimelineLegend';
+import { Button } from './ui/button';
 
 const CHILE_MARKET: MarketConfig = {
   ...CHILE_CONFIG,
+  name: CHILE_CONFIG.country,
+  code: 'Santiago',
   sessions: []
 };
 
@@ -19,9 +23,9 @@ interface TimelineGridProps {
   scrubberMinutes: number;
   currentMinutes: number;
   isHovering: boolean;
+  isPinned?: boolean;
   containerRef: React.RefObject<HTMLDivElement | null>;
   dailyEvents?: Record<string, TimelineEventMarkerData[]>;
-  onSelectEvent?: (marketId: string) => void;
   onEventClick?: (event: TimelineEventMarkerData) => void;
   onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => void;
   onPointerMove: (e: React.PointerEvent<HTMLDivElement>) => void;
@@ -30,10 +34,14 @@ interface TimelineGridProps {
   onPointerLeave: (e: React.PointerEvent<HTMLDivElement>) => void;
   onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
   onResetScrubber?: () => void;
-  rollingDays?: RollingDayInfo[];
-  selectedIsoDate?: string;
-  onSelectDay?: (day: RollingDayInfo) => void;
+  rollingDays: RollingDayInfo[];
+  selectedIsoDate: string;
+  onSelectDay: (day: RollingDayInfo) => void;
   isToday?: boolean;
+  isWeekendDay?: boolean;
+  simulateWeekday?: boolean;
+  onToggleSimulateWeekday?: () => void;
+  nextReopenLabel?: string;
 }
 
 export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
@@ -44,9 +52,9 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
   scrubberMinutes,
   currentMinutes,
   isHovering,
+  isPinned = false,
   containerRef,
   dailyEvents,
-  onSelectEvent,
   onEventClick,
   onPointerDown,
   onPointerMove,
@@ -55,11 +63,42 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
   onPointerLeave,
   onKeyDown,
   onResetScrubber,
-  isToday = true
+  rollingDays,
+  selectedIsoDate,
+  onSelectDay,
+  isToday = true,
+  isWeekendDay = false,
+  simulateWeekday = false,
+  onToggleSimulateWeekday,
+  nextReopenLabel
 }) => {
   const userToggledRef = useRef(false);
+  const scrollWrapperRef = useRef<HTMLDivElement | null>(null);
+  const hasCenteredNowRef = useRef(false);
 
-  // Default to collapsed on mobile viewports (<= 768px) to maximize timeline space
+  // Center horizontal scroll around current Chile time on mobile/scrollable viewports when viewing Today
+  useEffect(() => {
+    if (!isToday) {
+      hasCenteredNowRef.current = false;
+      return;
+    }
+    if (hasCenteredNowRef.current) return;
+
+    const wrapper = scrollWrapperRef.current;
+    if (!wrapper || wrapper.scrollWidth <= wrapper.clientWidth) return;
+
+    const leftCol = wrapper.querySelector<HTMLElement>('.timeline-left-column');
+    const leftColWidth = leftCol ? leftCol.offsetWidth : 0;
+    const barsWidth = wrapper.scrollWidth - leftColWidth;
+    const visibleBarsWidth = wrapper.clientWidth - leftColWidth;
+    if (barsWidth <= visibleBarsWidth) return;
+
+    const nowX = (currentMinutes / 1440) * barsWidth;
+    wrapper.scrollLeft = Math.max(0, Math.min(barsWidth - visibleBarsWidth, nowX - visibleBarsWidth / 2));
+    hasCenteredNowRef.current = true;
+  }, [isToday, currentMinutes]);
+
+  // Default to collapsed on mobile viewports (<= 768px) to maximize 24h bar space
   const [isColumnCollapsed, setIsColumnCollapsed] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       return window.innerWidth <= 768;
@@ -67,7 +106,6 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
     return false;
   });
 
-  // Sync collapsed state across viewport orientation/resize transitions unless manually overridden
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
     const mql = window.matchMedia('(max-width: 768px)');
@@ -87,24 +125,92 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
 
   const allMarkets = useMemo(() => [CHILE_MARKET, ...markets], [markets]);
 
+  const hasAnyRealSegment = useMemo(
+    () => markets.some((m) => (marketSegments[m.id]?.length ?? 0) > 0),
+    [markets, marketSegments]
+  );
+
   return (
-    <div className="flex flex-col gap-2 sm:gap-3.5">
-      {/* Top Controls Row */}
+    <section
+      aria-label="Línea de tiempo bursátil de 24 horas"
+      className="rounded-xl border border-border bg-card backdrop-blur-md shadow-neon p-3 sm:p-4 md:p-5 flex flex-col gap-3"
+    >
       <TimelineHeader
         isColumnCollapsed={isColumnCollapsed}
         onToggleColumn={toggleColumn}
-        isScrubbing={isHovering}
+        isPinned={isPinned}
+        isToday={isToday}
         onResetScrubber={onResetScrubber}
+        days={rollingDays}
+        selectedIsoDate={selectedIsoDate}
+        onSelectDay={onSelectDay}
       />
 
-      {/* Horizontal Table with Left Frozen Column + 24h Bars */}
-      <div 
+      {/* Honest Weekend Banner with explicit Weekday Reference Simulation Toggle */}
+      {isWeekendDay && onToggleSimulateWeekday && (
+        <div
+          className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 py-2 rounded-lg border text-xs ${
+            simulateWeekday
+              ? 'border-sky-500/35 bg-sky-500/10 text-sky-100'
+              : 'border-border-strong bg-white/[0.03] text-zinc-200'
+          }`}
+        >
+          <div className="flex items-start sm:items-center gap-2 min-w-0">
+            <CalendarOff
+              size={15}
+              className={`shrink-0 mt-0.5 sm:mt-0 ${simulateWeekday ? 'text-sky-400' : 'text-zinc-400'}`}
+              aria-hidden="true"
+            />
+            <span className="leading-snug">
+              {simulateWeekday ? (
+                <>
+                  <strong>Jornada hábil de referencia:</strong> mostrando horarios habituales de lunes a viernes en hora Chile.
+                </>
+              ) : hasAnyRealSegment ? (
+                <>
+                  <strong>Fin de semana:</strong> mercados occidentales cerrados; solo aperturas asiáticas desde la noche (hora Chile).
+                </>
+              ) : (
+                <>
+                  <strong>Fin de semana:</strong> {isToday ? 'mercados cerrados hoy.' : 'mercados cerrados este día.'}
+                  {nextReopenLabel && (
+                    <span className="text-zinc-400"> Próxima apertura: {nextReopenLabel}.</span>
+                  )}
+                </>
+              )}
+            </span>
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onToggleSimulateWeekday}
+            aria-pressed={simulateWeekday}
+            className="gap-1.5 min-h-[40px] px-3 text-xs font-medium shrink-0 self-start sm:self-auto cursor-pointer"
+          >
+            {simulateWeekday ? (
+              <>
+                <RotateCcw size={12} aria-hidden="true" />
+                <span>Volver a calendario real</span>
+              </>
+            ) : (
+              <>
+                <Eye size={13} aria-hidden="true" />
+                <span>Ver jornada hábil de referencia</span>
+              </>
+            )}
+          </Button>
+        </div>
+      )}
+
+      {/* Horizontal Table with Left Sticky Column + 24h Bars */}
+      <div
+        ref={scrollWrapperRef}
         className="timeline-table-wrapper relative flex w-full overflow-x-auto select-none rounded-xl border border-border bg-muted/40 touch-pan-y [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         <TimelineLeftColumn
           allMarkets={allMarkets}
           isColumnCollapsed={isColumnCollapsed}
-          onToggleColumn={toggleColumn}
           scrubberEvaluations={scrubberEvaluations}
           chileScrubberEvaluation={chileScrubberEvaluation}
         />
@@ -117,10 +223,10 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
           scrubberMinutes={scrubberMinutes}
           currentMinutes={currentMinutes}
           isHovering={isHovering}
+          isPinned={isPinned}
           isColumnCollapsed={isColumnCollapsed}
           containerRef={containerRef}
           dailyEvents={dailyEvents}
-          onSelectEvent={onSelectEvent}
           onEventClick={onEventClick}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
@@ -129,12 +235,13 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
           onPointerLeave={onPointerLeave}
           onKeyDown={onKeyDown}
           isToday={isToday}
+          isWeekendDay={isWeekendDay}
+          simulateWeekday={simulateWeekday}
         />
       </div>
 
-      {/* Legend */}
       <TimelineLegend />
-    </div>
+    </section>
   );
 });
 

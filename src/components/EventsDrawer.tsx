@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DateTime } from 'luxon';
-import { X, Calendar, Flame, AlertCircle, Building2, TrendingUp, DollarSign, Bell, BellOff } from 'lucide-react';
+import { X, Calendar, Flame, AlertCircle, Building2, TrendingUp, DollarSign } from 'lucide-react';
 import { EventCategory } from '../core/types';
 import { MARKETS, CHILE_CONFIG } from '../core/markets';
 import { getUpcomingEvents, getDataFreshnessStatus } from '../core/events';
@@ -15,17 +15,17 @@ interface EventsDrawerProps {
   selectedMarketId: string;
   onSelectMarketId: (marketId: string) => void;
   chileNow: DateTime;
-  notificationsEnabled?: boolean;
-  subscribedMarketIds?: string[];
-  onToggleMarketAlert?: (marketId: string) => void;
 }
 
-const CATEGORY_LABELS: Record<EventCategory, { label: string; icon: React.ComponentType<{ className?: string }> }> = {
+const CATEGORY_LABELS: Record<
+  EventCategory,
+  { label: string; icon: React.ComponentType<{ className?: string; 'aria-hidden'?: boolean | 'true' | 'false' }> }
+> = {
   central_bank: { label: 'Banco Central', icon: Building2 },
   inflation: { label: 'Inflación / IPC', icon: TrendingUp },
   gdp: { label: 'Actividad / PIB', icon: DollarSign },
-  employment: { label: 'Empleo & PMI', icon: AlertCircle },
-  holidays: { label: 'Feriado Bursátil', icon: Calendar }
+  employment: { label: 'Empleo y PMI', icon: AlertCircle },
+  holidays: { label: 'Feriado bursátil', icon: Calendar }
 };
 
 export const EventsDrawer: React.FC<EventsDrawerProps> = ({
@@ -33,10 +33,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
   onClose,
   selectedMarketId,
   onSelectMarketId,
-  chileNow,
-  notificationsEnabled = false,
-  subscribedMarketIds,
-  onToggleMarketAlert
+  chileNow
 }) => {
   const [viewMode, setViewMode] = useState<'events' | 'holidays'>('events');
   const [onlyHighImportance, setOnlyHighImportance] = useState(false);
@@ -85,6 +82,9 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
 
   const handleMouseUpOrLeave = () => {
     isDraggingRef.current = false;
+    setTimeout(() => {
+      hasDraggedRef.current = false;
+    }, 0);
   };
 
   // Check scrollability on mount, drawer open, and resize
@@ -115,25 +115,23 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
     initialFocusRef: closeButtonRef
   });
 
+  const restoreBodyScrollIfNoDialogs = useCallback(() => {
+    if (!document.querySelector('[role="dialog"][aria-modal="true"]')) {
+      document.body.style.overflow = '';
+    }
+  }, []);
+
   // Lock body scroll when drawer is open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
     } else {
-      requestAnimationFrame(() => {
-        if (!document.querySelector('[role="dialog"]')) {
-          document.body.style.overflow = '';
-        }
-      });
+      requestAnimationFrame(restoreBodyScrollIfNoDialogs);
     }
     return () => {
-      requestAnimationFrame(() => {
-        if (!document.querySelector('[role="dialog"]')) {
-          document.body.style.overflow = '';
-        }
-      });
+      requestAnimationFrame(restoreBodyScrollIfNoDialogs);
     };
-  }, [isOpen]);
+  }, [isOpen, restoreBodyScrollIfNoDialogs]);
 
   const upcomingEvents = useMemo(() => {
     return getUpcomingEvents(chileNow, {
@@ -162,20 +160,10 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
     ];
   }, []);
 
-  const selectedMarketConfig = useMemo(() => {
-    if (selectedMarketId === 'all' || selectedMarketId === 'chile') return null;
-    return MARKETS.find((m) => m.id === selectedMarketId) ?? null;
-  }, [selectedMarketId]);
-
-  const isSelectedMarketSubscribed = useMemo(() => {
-    if (!selectedMarketConfig) return false;
-    return subscribedMarketIds ? subscribedMarketIds.includes(selectedMarketConfig.id) : true;
-  }, [selectedMarketConfig, subscribedMarketIds]);
-
   return (
-    <AnimatePresence>
+    <AnimatePresence onExitComplete={restoreBodyScrollIfNoDialogs}>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end">
+        <div key="events-drawer-overlay" className="fixed inset-0 z-50 flex justify-end">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -208,10 +196,10 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                 </div>
                 <div>
                   <h2 id="events-drawer-title" className="text-sm font-semibold text-zinc-100 tracking-tight">
-                    Próximos Eventos
+                    Agenda de Mercados
                   </h2>
                   <p id="events-drawer-desc" className="text-xs text-muted-foreground">
-                    Catalizadores macro y eventos clave
+                    Eventos macroeconómicos y feriados bursátiles
                   </p>
                 </div>
               </div>
@@ -220,7 +208,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                 type="button"
                 onClick={onClose}
                 className="relative flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:text-white hover:bg-white/[0.06] transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 cursor-pointer before:absolute before:-inset-1.5 before:content-['']"
-                aria-label="Cerrar panel de eventos"
+                aria-label="Cerrar agenda de mercados"
               >
                 <X className="w-4 h-4" aria-hidden="true" />
               </button>
@@ -228,27 +216,27 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
 
             {/* Filter Bar */}
             <div className="p-3 bg-popover border-b border-border space-y-2.5">
-              {/* Mode Segmented Control: Eventos Macro vs Feriados Bursátiles */}
-              <div className="grid grid-cols-2 p-0.5 bg-muted rounded-lg border border-border text-xs font-medium" role="group" aria-label="Modo de visualización de eventos">
+              {/* Mode Segmented Control: Eventos macro vs Feriados */}
+              <div className="grid grid-cols-2 p-0.5 bg-muted rounded-lg border border-border text-xs font-medium" role="group" aria-label="Tipo de agenda">
                 <button
                   type="button"
                   onClick={() => setViewMode('events')}
                   aria-pressed={viewMode === 'events'}
                   className={cn(
-                    'min-h-[34px] py-1.5 px-2 rounded-md text-center transition-colors duration-150 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
+                    'min-h-[40px] py-1.5 px-2 rounded-md text-center transition-colors duration-150 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
                     viewMode === 'events'
                       ? 'bg-card text-zinc-100 border border-border-strong font-semibold'
                       : 'text-muted-foreground hover:text-zinc-200 border border-transparent'
                   )}
                 >
-                  Eventos Macro ({upcomingEvents.length})
+                  Eventos macro ({upcomingEvents.length})
                 </button>
                 <button
                   type="button"
                   onClick={() => setViewMode('holidays')}
                   aria-pressed={viewMode === 'holidays'}
                   className={cn(
-                    'min-h-[34px] py-1.5 px-2 rounded-md text-center transition-colors duration-150 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
+                    'min-h-[40px] py-1.5 px-2 rounded-md text-center transition-colors duration-150 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
                     viewMode === 'holidays'
                       ? 'bg-card text-zinc-100 border border-border-strong font-semibold'
                       : 'text-muted-foreground hover:text-zinc-200 border border-transparent'
@@ -259,7 +247,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
               </div>
 
               {/* Market Filter Chips with horizontal wheel scroll, drag-to-scroll, and edge fade cues */}
-              <div className="relative" role="group" aria-label="Filtrar eventos por mercado">
+              <div className="relative" role="group" aria-label="Filtrar agenda por mercado">
                 <div
                   ref={chipsContainerRef}
                   onWheel={handleChipsWheel}
@@ -268,7 +256,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                   onMouseUp={handleMouseUpOrLeave}
                   onMouseLeave={handleMouseUpOrLeave}
                   onScroll={checkScrollability}
-                  className="flex items-center gap-1.5 overflow-x-auto pb-1 pr-6 scrollbar-none text-xs cursor-grab active:cursor-grabbing select-none"
+                  className="flex items-center gap-1.5 overflow-x-auto pb-1 pr-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden text-xs cursor-grab active:cursor-grabbing select-none"
                 >
                   {marketTabs.map((tab) => {
                     const isActive = selectedMarketId === tab.id;
@@ -283,7 +271,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                         }}
                         aria-pressed={isActive}
                         className={cn(
-                          'flex items-center gap-1.5 min-h-[34px] px-2.5 py-1.5 rounded-md font-medium whitespace-nowrap transition-colors duration-150 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 shrink-0',
+                          'flex items-center gap-1.5 min-h-[40px] px-2.5 py-1.5 rounded-md font-medium whitespace-nowrap transition-colors duration-150 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 shrink-0',
                           isActive
                             ? 'bg-white/[0.08] text-zinc-100 border border-border-strong font-semibold'
                             : 'bg-muted/50 text-muted-foreground border border-border hover:bg-muted hover:text-zinc-200'
@@ -313,38 +301,6 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                 )}
               </div>
 
-              {/* Per-market Bell Alert Toggle (accessible on mobile & desktop when a specific market is selected) */}
-              {notificationsEnabled && onToggleMarketAlert && selectedMarketConfig && (
-                <div className="flex items-center justify-between gap-2 pt-0.5 border-t border-border/60">
-                  <span className="text-xs text-muted-foreground truncate">
-                    Campana de {selectedMarketConfig.flag} {selectedMarketConfig.name}:
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => onToggleMarketAlert(selectedMarketConfig.id)}
-                    aria-pressed={isSelectedMarketSubscribed}
-                    className={cn(
-                      'flex items-center gap-1.5 min-h-[34px] px-2.5 py-1 rounded-md text-xs font-medium border transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 shrink-0',
-                      isSelectedMarketSubscribed
-                        ? 'bg-emerald-500/15 border-emerald-500/35 text-emerald-300'
-                        : 'bg-muted/50 border-border text-muted-foreground hover:text-zinc-200'
-                    )}
-                  >
-                    {isSelectedMarketSubscribed ? (
-                      <>
-                        <Bell className="w-3.5 h-3.5 text-emerald-400" aria-hidden="true" />
-                        <span>Alertas Activas</span>
-                      </>
-                    ) : (
-                      <>
-                        <BellOff className="w-3.5 h-3.5" aria-hidden="true" />
-                        <span>Silenciado</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              )}
-
               {/* Secondary filter info */}
               {viewMode === 'events' ? (
                 <div className="flex items-center justify-between pt-0.5">
@@ -357,14 +313,14 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                     onClick={() => setOnlyHighImportance((prev) => !prev)}
                     aria-pressed={onlyHighImportance}
                     className={cn(
-                      'flex items-center gap-1.5 min-h-[34px] px-2.5 py-1 rounded-md text-xs font-medium border transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
+                      'flex items-center gap-1.5 min-h-[40px] px-2.5 py-1 rounded-md text-xs font-medium border transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
                       onlyHighImportance
                         ? 'bg-rose-500/15 border-rose-500/35 text-rose-300'
                         : 'bg-muted/50 border-border text-muted-foreground hover:text-zinc-200'
                     )}
                   >
                     <Flame className="w-3.5 h-3.5" aria-hidden="true" />
-                    <span>Solo Alta Importancia</span>
+                    <span>Solo impacto alto</span>
                   </button>
                 </div>
               ) : (
@@ -374,7 +330,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                     {upcomingHolidays.length === 1 ? 'feriado próximo' : 'feriados próximos'}
                   </span>
                   <span className="text-xs font-mono text-violet-300/80 font-medium">
-                    Ventana 120 días
+                    Próximos 120 días
                   </span>
                 </div>
               )}
@@ -393,14 +349,14 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
               <div className="flex-1 overflow-y-auto p-3 space-y-2">
                 {upcomingHolidays.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-secondary text-muted-foreground/70 mb-3">
-                      <Calendar className="w-6 h-6" />
+                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-secondary text-muted-foreground mb-3">
+                      <Calendar className="w-6 h-6" aria-hidden="true" />
                     </div>
                     <p className="text-sm font-medium text-foreground/80">
                       No hay feriados bursátiles programados
                     </p>
-                    <p className="text-xs text-muted-foreground/70 mt-1 max-w-xs">
-                      No registramos feriados para el mercado seleccionado en la ventana de los próximos 120 días.
+                    <p className="text-xs text-muted-foreground mt-1 max-w-xs">
+                      No se registran feriados para el mercado seleccionado en los próximos 120 días.
                     </p>
                   </div>
                 ) : (
@@ -411,7 +367,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span className="flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-semibold bg-white/[0.04] text-zinc-200 border border-border">
-                          <span>{holiday.marketFlag}</span>
+                          <span aria-hidden="true">{holiday.marketFlag}</span>
                           <span>{holiday.marketName}</span>
                         </span>
                         <span
@@ -434,16 +390,18 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
                         </h3>
                       </div>
 
-                      <div className="flex items-center justify-between text-xs text-muted-foreground pt-1.5 border-t border-border">
+                      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-xs text-muted-foreground pt-1.5 border-t border-border">
                         <span className="font-mono text-zinc-300">{holiday.dateFormatted} ({holiday.date})</span>
                         <span
                           className={cn(
-                            'text-xs font-medium uppercase tracking-wider',
+                            'text-xs font-medium',
                             holiday.isEarlyClose ? 'text-amber-300' : 'text-violet-300'
                           )}
                         >
                           {holiday.isEarlyClose
-                            ? `Cierre temprano (${holiday.closeTime})`
+                            ? holiday.closeTimeChile
+                              ? `Cierre temprano (${holiday.closeTime} local · ${holiday.closeTimeChile})`
+                              : `Cierre temprano (${holiday.closeTime} local)`
                             : 'Mercado cerrado'}
                         </span>
                       </div>
@@ -455,124 +413,122 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
               <div className="flex-1 overflow-y-auto p-3 space-y-2">
                 {upcomingEvents.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-secondary text-muted-foreground/70 mb-3">
-                      <Calendar className="w-6 h-6" />
+                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-secondary text-muted-foreground mb-3">
+                      <Calendar className="w-6 h-6" aria-hidden="true" />
                     </div>
                     <p className="text-sm font-medium text-foreground/80">
                       No hay eventos programados
                     </p>
-                    <p className="text-xs text-muted-foreground/70 mt-1 max-w-xs">
-                      No encontramos eventos con los filtros actuales en la ventana de los próximos 120 días.
+                    <p className="text-xs text-muted-foreground mt-1 max-w-xs">
+                      No hay eventos con los filtros actuales en los próximos 120 días.
                     </p>
                   </div>
                 ) : (
-                upcomingEvents.map((ev) => {
-                  const catInfo = CATEGORY_LABELS[ev.category] ?? {
-                    label: ev.category,
-                    icon: AlertCircle
-                  };
-                  const CatIcon = catInfo.icon;
-                  const isHigh = ev.importance === 'high';
+                  upcomingEvents.map((ev) => {
+                    const catInfo = CATEGORY_LABELS[ev.category] ?? {
+                      label: ev.category,
+                      icon: AlertCircle
+                    };
+                    const CatIcon = catInfo.icon;
+                    const isHigh = ev.importance === 'high';
 
-                  // Market info
-                  const market =
-                    MARKETS.find((m) => m.id === ev.marketId) ||
-                    (ev.marketId === 'chile' ? CHILE_CONFIG : null);
+                    const market =
+                      MARKETS.find((m) => m.id === ev.marketId) ||
+                      (ev.marketId === 'chile' ? { ...CHILE_CONFIG, name: CHILE_CONFIG.country } : null);
 
-                  return (
-                    <div
-                      key={ev.id}
-                      className="group flex flex-col gap-2 p-3 rounded-xl bg-card border border-border hover:border-border-strong transition-colors duration-150"
-                    >
-                      {/* Top row: tags & badges */}
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-white/[0.04] text-zinc-200 border border-border">
-                            <span>{market?.flag ?? '🌐'}</span>
-                            <span>{market?.name ?? ev.marketId.toUpperCase()}</span>
-                          </span>
+                    return (
+                      <div
+                        key={ev.id}
+                        className="group flex flex-col gap-2 p-3 rounded-xl bg-card border border-border hover:border-border-strong transition-colors duration-150"
+                      >
+                        {/* Top row: tags & badges */}
+                        <div className="flex items-start justify-between gap-2 flex-wrap">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-white/[0.04] text-zinc-200 border border-border">
+                              <span aria-hidden="true">{market?.flag ?? '🌐'}</span>
+                              <span>{market?.name ?? ev.marketId.toUpperCase()}</span>
+                            </span>
 
-                          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-white/[0.03] text-muted-foreground">
-                            <CatIcon className="w-3.5 h-3.5" />
-                            <span>{catInfo.label}</span>
-                          </span>
+                            <span className="flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-white/[0.03] text-muted-foreground">
+                              <CatIcon className="w-3.5 h-3.5" aria-hidden="true" />
+                              <span>{catInfo.label}</span>
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span
+                              className={cn(
+                                'px-1.5 py-0.5 rounded text-[11px] font-semibold whitespace-nowrap',
+                                isHigh
+                                  ? 'bg-rose-500/15 text-rose-300 border border-rose-500/35'
+                                  : 'bg-amber-500/15 text-amber-300 border border-amber-500/35'
+                              )}
+                            >
+                              {isHigh ? 'Impacto alto' : 'Impacto medio'}
+                            </span>
+                            <span className="px-1.5 py-0.5 rounded text-[11px] font-mono font-medium bg-white/[0.04] text-zinc-300 border border-border whitespace-nowrap">
+                              {ev.relativeTimeDescriptor}
+                            </span>
+                          </div>
                         </div>
 
-                        <div className="flex items-center gap-1.5">
-                          <span
-                            className={cn(
-                              'px-1.5 py-0.5 rounded text-xs font-semibold uppercase tracking-wider font-mono',
-                              isHigh
-                                ? 'bg-rose-500/15 text-rose-300 border border-rose-500/35'
-                                : 'bg-amber-500/15 text-amber-300 border border-amber-500/35'
+                        {/* Title & description */}
+                        <div>
+                          <h3 className="text-sm font-semibold text-zinc-100 leading-snug">
+                            {ev.title}
+                          </h3>
+                          {ev.description && (
+                            <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                              {ev.description}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Timestamps conversion grid */}
+                        <div className="grid grid-cols-2 gap-2 mt-1 p-2 rounded-lg bg-muted border border-border text-xs">
+                          <div>
+                            <span className="text-[11px] uppercase font-semibold tracking-wider text-zinc-300 flex items-center gap-1">
+                              <span aria-hidden="true">🇨🇱</span> Hora Chile
+                            </span>
+                            <span className="font-mono font-medium text-zinc-100 mt-0.5 block tabular-nums">
+                              {ev.chileTimeFormatted}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[11px] uppercase font-semibold tracking-wider text-muted-foreground flex items-center gap-1">
+                              <span aria-hidden="true">{market?.flag ?? '🌐'}</span> Hora local
+                            </span>
+                            <span className="font-mono font-medium text-zinc-300 mt-0.5 block tabular-nums">
+                              {ev.exchangeTimeFormatted}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Forecast / Previous metrics if available */}
+                        {(ev.forecast || ev.previous) && (
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground pt-0.5 px-0.5">
+                            {ev.forecast && (
+                              <span>
+                                <strong className="text-foreground/80">Pronóstico:</strong> {ev.forecast}
+                              </span>
                             )}
-                          >
-                            {isHigh ? 'Alta' : 'Media'}
-                          </span>
-                          <span className="px-1.5 py-0.5 rounded text-xs font-mono font-medium bg-white/[0.04] text-zinc-300 border border-border">
-                            {ev.relativeTimeDescriptor}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Title & description */}
-                      <div>
-                        <h3 className="text-sm font-semibold text-zinc-100 leading-snug">
-                          {ev.title}
-                        </h3>
-                        {ev.description && (
-                          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                            {ev.description}
-                          </p>
+                            {ev.previous && (
+                              <span>
+                                <strong className="text-foreground/80">Anterior:</strong> {ev.previous}
+                              </span>
+                            )}
+                          </div>
                         )}
                       </div>
-
-                      {/* Timestamps conversion grid */}
-                      <div className="grid grid-cols-2 gap-2 mt-1 p-2 rounded-lg bg-muted border border-border text-xs">
-                        <div>
-                          <span className="text-xs uppercase font-semibold tracking-wider text-zinc-300 flex items-center gap-1">
-                            <span>🇨🇱</span> Hora Chile
-                          </span>
-                          <span className="font-mono font-medium text-zinc-100 mt-0.5 block tabular-nums">
-                            {ev.chileTimeFormatted}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-xs uppercase font-semibold tracking-wider text-muted-foreground flex items-center gap-1">
-                            <span>{market?.flag ?? '🌐'}</span> Hora Bolsa
-                          </span>
-                          <span className="font-mono font-medium text-zinc-300 mt-0.5 block tabular-nums">
-                            {ev.exchangeTimeFormatted}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Forecast / Previous metrics if available */}
-                      {(ev.forecast || ev.previous) && (
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground pt-0.5 px-0.5">
-                          {ev.forecast && (
-                            <span>
-                              <strong className="text-foreground/80">Previsto:</strong> {ev.forecast}
-                            </span>
-                          )}
-                          {ev.previous && (
-                            <span>
-                              <strong className="text-foreground/80">Previo:</strong> {ev.previous}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          )}
+                    );
+                  })
+                )}
+              </div>
+            )}
 
             {/* Footer with iOS PWA safe-area-inset-bottom support */}
-            <div className="px-4 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] border-t border-border bg-popover/90 text-xs text-muted-foreground flex items-center justify-between">
-              <span>Sincronizado con IANA America/Santiago</span>
-              <span className="font-mono">PWA Offline ready</span>
+            <div className="px-4 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] border-t border-border bg-popover/90 text-xs text-muted-foreground">
+              <span>Horarios ajustados automáticamente · Referencia: Santiago, Chile</span>
             </div>
           </motion.div>
         </div>

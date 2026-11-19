@@ -33,6 +33,14 @@ export interface MarketTransition {
   type: 'open' | 'close' | 'lunch' | 'resume';
   inMinutes: number;
   formattedCountdown: string;
+  atChileFormatted?: string;
+}
+
+export interface MarketChileSchedule {
+  summary: string;
+  isOvernight: boolean;
+  isEarlyClose: boolean;
+  isHoliday: boolean;
 }
 
 export interface MarketHoliday {
@@ -120,4 +128,35 @@ export interface TradingWindow {
   minutesRemaining?: number;
   events: TimelineEventMarkerData[];
   holidayNames?: string[];
+}
+
+export interface UpcomingBell {
+  market: MarketConfig;
+  type: MarketTransition['type'];
+  inMinutes: number;
+  formattedCountdown: string;
+  atChileFormatted: string;
+}
+
+export interface LiveStatusSummary {
+  openMarkets: MarketConfig[];
+  lunchMarkets: MarketConfig[];
+  preMarketMarkets: MarketConfig[];
+  isGlobalWeekend: boolean;
+  nextBell?: UpcomingBell;
+}
+
+export interface TodayHolidayItem {
+  marketId: string;
+  marketName: string;
+  flag: string;
+  holiday: MarketHoliday;
+}
+
+export interface TodayAgendaSummary {
+  holidays: TodayHolidayItem[];
+  earlyCloses: TodayHolidayItem[];
+  events: TimelineEventMarkerData[];
+  highImpactCount: number;
+  hasItems: boolean;
 }
