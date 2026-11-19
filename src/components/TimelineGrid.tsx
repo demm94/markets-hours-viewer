@@ -73,6 +73,30 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
   nextReopenLabel
 }) => {
   const userToggledRef = useRef(false);
+  const scrollWrapperRef = useRef<HTMLDivElement | null>(null);
+  const hasCenteredNowRef = useRef(false);
+
+  // Center horizontal scroll around current Chile time on mobile/scrollable viewports when viewing Today
+  useEffect(() => {
+    if (!isToday) {
+      hasCenteredNowRef.current = false;
+      return;
+    }
+    if (hasCenteredNowRef.current) return;
+
+    const wrapper = scrollWrapperRef.current;
+    if (!wrapper || wrapper.scrollWidth <= wrapper.clientWidth) return;
+
+    const leftCol = wrapper.querySelector<HTMLElement>('.timeline-left-column');
+    const leftColWidth = leftCol ? leftCol.offsetWidth : 0;
+    const barsWidth = wrapper.scrollWidth - leftColWidth;
+    const visibleBarsWidth = wrapper.clientWidth - leftColWidth;
+    if (barsWidth <= visibleBarsWidth) return;
+
+    const nowX = (currentMinutes / 1440) * barsWidth;
+    wrapper.scrollLeft = Math.max(0, Math.min(barsWidth - visibleBarsWidth, nowX - visibleBarsWidth / 2));
+    hasCenteredNowRef.current = true;
+  }, [isToday, currentMinutes]);
 
   // Default to collapsed on mobile viewports (<= 768px) to maximize 24h bar space
   const [isColumnCollapsed, setIsColumnCollapsed] = useState<boolean>(() => {
@@ -180,7 +204,10 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
       )}
 
       {/* Horizontal Table with Left Sticky Column + 24h Bars */}
-      <div className="timeline-table-wrapper relative flex w-full overflow-x-auto select-none rounded-xl border border-border bg-muted/40 touch-pan-y [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div
+        ref={scrollWrapperRef}
+        className="timeline-table-wrapper relative flex w-full overflow-x-auto select-none rounded-xl border border-border bg-muted/40 touch-pan-y [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
         <TimelineLeftColumn
           allMarkets={allMarkets}
           isColumnCollapsed={isColumnCollapsed}

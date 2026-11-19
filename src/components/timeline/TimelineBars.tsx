@@ -75,7 +75,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
         {allMarkets.map((market, idx) => {
           const isChile = market.id === 'chile';
           const rowEvents = dailyEvents[market.id] ?? [];
-          if (rowEvents.some((evt) => Math.abs(evt.leftPercent - linePercent) < 8)) {
+          if (rowEvents.some((evt) => Math.abs(evt.leftPercent - linePercent) < 14)) {
             return null;
           }
 
