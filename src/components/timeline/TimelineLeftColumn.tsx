@@ -1,13 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Globe } from 'lucide-react';
 import { MarketConfig, MarketEvaluation } from '../../core/types';
 import { Badge } from '../ui/badge';
 
 interface TimelineLeftColumnProps {
   allMarkets: MarketConfig[];
   isColumnCollapsed: boolean;
-  onToggleColumn: () => void;
   scrubberEvaluations: Record<string, MarketEvaluation>;
   chileScrubberEvaluation: MarketEvaluation;
 }
@@ -15,7 +14,6 @@ interface TimelineLeftColumnProps {
 export const TimelineLeftColumn: React.FC<TimelineLeftColumnProps> = React.memo(({
   allMarkets,
   isColumnCollapsed,
-  onToggleColumn,
   scrubberEvaluations,
   chileScrubberEvaluation
 }) => {
@@ -68,7 +66,7 @@ export const TimelineLeftColumn: React.FC<TimelineLeftColumnProps> = React.memo(
         : evaluation.status === 'lunch'
         ? 'Almuerzo'
         : evaluation.status === 'pre_market'
-        ? 'Pre'
+        ? 'Pre-apertura'
         : 'Cerrado';
 
     return (
@@ -84,27 +82,22 @@ export const TimelineLeftColumn: React.FC<TimelineLeftColumnProps> = React.memo(
       className={`timeline-left-column sticky left-0 bg-card border-r border-border shadow-[4px_0_16px_rgba(0,0,0,0.45)] flex flex-col z-10 transition-[width,min-width] duration-200 ease-out ${
         isColumnCollapsed
           ? 'w-11 min-w-[44px] sm:w-14 sm:min-w-[56px]'
-          : 'w-[84px] min-w-[84px] sm:w-48 sm:min-w-[192px] md:w-56 md:min-w-[224px]'
+          : 'w-[92px] min-w-[92px] sm:w-48 sm:min-w-[192px] md:w-56 md:min-w-[224px]'
       }`}
     >
       <div
         className={`h-9 sm:h-11 flex items-center border-b border-border bg-muted font-mono text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground ${
-          isColumnCollapsed ? 'justify-center px-0' : 'justify-between px-2 sm:px-3'
+          isColumnCollapsed ? 'justify-center px-0' : 'justify-between px-2.5 sm:px-3'
         }`}
       >
-        {!isColumnCollapsed && (
-          <span className="text-[9px] sm:text-[11px] font-semibold">Mercado</span>
+        {isColumnCollapsed ? (
+          <Globe size={14} className="text-zinc-400" aria-hidden="true" />
+        ) : (
+          <>
+            <span className="text-[10px] sm:text-[11px] font-semibold">Mercado</span>
+            <span className="hidden sm:inline text-[10px] font-normal text-zinc-500">Hora local</span>
+          </>
         )}
-        <motion.button
-          type="button"
-          onClick={onToggleColumn}
-          whileTap={{ scale: 0.95 }}
-          className="relative inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-md bg-white/[0.03] border border-border text-zinc-300 hover:bg-white/[0.06] hover:border-border-strong hover:text-white transition-colors cursor-pointer before:absolute before:-inset-2 before:content-['']"
-          title={isColumnCollapsed ? 'Expandir nombres y detalles de mercados' : 'Colapsar a solo banderas'}
-          aria-label={isColumnCollapsed ? 'Expandir columna' : 'Colapsar columna'}
-        >
-          {isColumnCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-        </motion.button>
       </div>
 
       {allMarkets.map((market) => {
@@ -125,13 +118,11 @@ export const TimelineLeftColumn: React.FC<TimelineLeftColumnProps> = React.memo(
             layout
             key={market.id}
             className={`h-[38px] sm:h-[46px] md:h-[50px] flex items-center border-b border-border transition-colors ${
-              isChile
-                ? 'bg-white/[0.02]'
-                : 'hover:bg-white/[0.02]'
+              isChile ? 'bg-white/[0.02]' : 'hover:bg-white/[0.02]'
             } ${isHoliday ? 'opacity-60' : ''} ${isColumnCollapsed ? 'justify-center px-0' : 'justify-between px-2 sm:px-3'}`}
             title={
               isColumnCollapsed
-                ? `${market.name} (${market.code}) - ${ev.localTimeFormatted}${
+                ? `${market.name} (${market.code}) — ${ev.localTimeFormatted}${
                     holiday
                       ? isChile
                         ? ` · Feriado en Chile: ${holiday.name}`
@@ -158,7 +149,6 @@ export const TimelineLeftColumn: React.FC<TimelineLeftColumnProps> = React.memo(
               </span>
               {!isColumnCollapsed && (
                 <div className="flex flex-col min-w-0">
-                  {/* Desktop: Name on top, Code below */}
                   <span className="text-[11px] sm:text-xs font-semibold text-zinc-100 whitespace-nowrap truncate hidden sm:inline">
                     {market.name}
                   </span>
@@ -166,10 +156,9 @@ export const TimelineLeftColumn: React.FC<TimelineLeftColumnProps> = React.memo(
                     {market.code}
                   </span>
 
-                  {/* Mobile: Code on top with Status Dot, Time below */}
                   <div className="flex items-center gap-1 sm:hidden">
-                    <span className="text-[9.5px] font-bold text-zinc-100 font-mono leading-none tracking-tight">
-                      {market.code}
+                    <span className="text-[10px] font-bold text-zinc-100 font-mono leading-none tracking-tight">
+                      {market.code.split(' ')[0]}
                     </span>
                     <span
                       className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
@@ -189,14 +178,13 @@ export const TimelineLeftColumn: React.FC<TimelineLeftColumnProps> = React.memo(
                       }`}
                     />
                   </div>
-                  <span className="font-mono text-[9px] font-medium text-muted-foreground tabular-nums leading-none mt-0.5 sm:hidden">
+                  <span className="font-mono text-[10px] font-medium text-muted-foreground tabular-nums leading-none mt-0.5 sm:hidden">
                     {ev.localTimeFormatted}
                   </span>
                 </div>
               )}
             </div>
 
-            {/* Desktop right side: Line 1: Time + Status Badge | Line 2: Countdown */}
             {!isColumnCollapsed && (
               <div className="hidden sm:flex flex-col items-end justify-center gap-1 flex-shrink-0">
                 <div className="flex items-center gap-1.5">
@@ -206,7 +194,7 @@ export const TimelineLeftColumn: React.FC<TimelineLeftColumnProps> = React.memo(
                   {getStatusBadge(market.id, ev)}
                 </div>
                 {ev.nextTransition?.formattedCountdown && (
-                  <span className="text-[9px] font-mono text-muted-foreground leading-none tabular-nums whitespace-nowrap">
+                  <span className="text-[10px] font-mono text-muted-foreground leading-none tabular-nums whitespace-nowrap">
                     {ev.nextTransition.formattedCountdown}
                   </span>
                 )}

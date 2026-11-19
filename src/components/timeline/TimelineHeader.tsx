@@ -1,5 +1,5 @@
 import React from 'react';
-import { PanelLeftClose, PanelLeftOpen, RotateCcw } from 'lucide-react';
+import { PanelLeftClose, PanelLeftOpen, RotateCcw, Clock } from 'lucide-react';
 import { Button } from '../ui/button';
 import { RollingDayInfo } from '../../core/types';
 import { TimelineWeekSelector } from './TimelineWeekSelector';
@@ -8,40 +8,52 @@ interface TimelineHeaderProps {
   isColumnCollapsed: boolean;
   onToggleColumn: () => void;
   isScrubbing?: boolean;
+  isPinned?: boolean;
   onResetScrubber?: () => void;
-  days?: RollingDayInfo[];
-  selectedIsoDate?: string;
-  onSelectDay?: (day: RollingDayInfo) => void;
+  days: RollingDayInfo[];
+  selectedIsoDate: string;
+  onSelectDay: (day: RollingDayInfo) => void;
 }
 
 export const TimelineHeader: React.FC<TimelineHeaderProps> = React.memo(({
   isColumnCollapsed,
   onToggleColumn,
   isScrubbing = false,
+  isPinned = false,
   onResetScrubber,
   days,
   selectedIsoDate,
   onSelectDay
 }) => {
+  const showReset = Boolean((isPinned || isScrubbing) && onResetScrubber);
+
   return (
-    <div className="flex flex-col gap-1.5 sm:gap-2 mb-1 sm:mb-2">
-      <div className="flex flex-row justify-between items-center gap-2">
-        <h2 className="text-xs sm:text-sm font-semibold tracking-tight text-zinc-100 flex items-center gap-2">
-          <span>Línea 24 Horas</span>
-          <span className="text-[10px] sm:text-xs font-mono font-medium text-zinc-300 bg-white/[0.04] px-2 py-0.5 rounded border border-border whitespace-nowrap">
-            🇨🇱 Chile
-          </span>
-        </h2>
+    <div className="flex flex-col gap-2.5">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-7 h-7 rounded-lg bg-sky-500/10 border border-sky-500/25 flex items-center justify-center text-sky-400 shrink-0">
+            <Clock size={14} aria-hidden="true" />
+          </div>
+          <div className="flex items-center gap-2 flex-wrap min-w-0">
+            <h2 className="text-sm sm:text-base font-semibold tracking-tight text-zinc-100">
+              Línea 24 Horas
+            </h2>
+            <span className="text-[11px] font-mono font-medium text-zinc-300 bg-white/[0.04] px-2 py-0.5 rounded border border-border whitespace-nowrap">
+              🇨🇱 Hora Chile
+            </span>
+          </div>
+        </div>
+
         <div className="flex items-center gap-1.5 sm:gap-2">
-          {isScrubbing && onResetScrubber && (
+          {showReset && onResetScrubber && (
             <Button
               variant="outline"
               size="sm"
               onClick={onResetScrubber}
-              className="gap-1 min-h-[34px] px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs font-medium border-sky-500/35 bg-sky-500/10 text-sky-300 hover:bg-sky-500/20 hover:text-white"
+              className="gap-1.5 min-h-[36px] px-2.5 sm:px-3 py-1 text-xs font-medium border-sky-500/40 bg-sky-500/12 text-sky-200 hover:bg-sky-500/22 hover:text-white cursor-pointer"
               title="Restablecer cursor a la hora actual"
             >
-              <RotateCcw size={12} />
+              <RotateCcw size={12} aria-hidden="true" />
               <span>Volver a Ahora</span>
             </Button>
           )}
@@ -49,25 +61,38 @@ export const TimelineHeader: React.FC<TimelineHeaderProps> = React.memo(({
             variant="outline"
             size="sm"
             onClick={onToggleColumn}
-            className="gap-1 min-h-[34px] px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs font-medium"
-            title={isColumnCollapsed ? 'Expandir nombres y detalles de mercados' : 'Colapsar a solo banderas para más espacio'}
+            className="gap-1.5 min-h-[36px] px-2.5 sm:px-3 py-1 text-xs font-medium cursor-pointer"
+            title={isColumnCollapsed ? 'Mostrar nombres y horarios locales de cada bolsa' : 'Colapsar columna a solo banderas'}
+            aria-expanded={!isColumnCollapsed}
           >
-            {isColumnCollapsed ? <PanelLeftOpen size={13} /> : <PanelLeftClose size={13} />}
+            {isColumnCollapsed ? <PanelLeftOpen size={13} aria-hidden="true" /> : <PanelLeftClose size={13} aria-hidden="true" />}
             <span>{isColumnCollapsed ? 'Mercados' : 'Colapsar'}</span>
           </Button>
-          <span className="font-mono text-[11px] font-medium text-muted-foreground bg-white/[0.03] px-2.5 py-1 rounded-md border border-border hidden lg:inline">
-            Deslizá sobre la cuadrícula para sincronizar horarios
-          </span>
         </div>
       </div>
 
-      {days && selectedIsoDate && onSelectDay && (
-        <TimelineWeekSelector
-          days={days}
-          selectedIsoDate={selectedIsoDate}
-          onSelectDay={onSelectDay}
-        />
-      )}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          <TimelineWeekSelector
+            days={days}
+            selectedIsoDate={selectedIsoDate}
+            onSelectDay={onSelectDay}
+          />
+        </div>
+
+        <p className="font-mono text-[11px] text-muted-foreground whitespace-nowrap shrink-0">
+          <span className="hidden sm:inline">
+            {isPinned
+              ? 'Hora fijada · Haz clic en otra hora o vuelve a Ahora'
+              : 'Pasa el cursor para explorar · Haz clic para fijar una hora'}
+          </span>
+          <span className="sm:hidden">
+            {isPinned
+              ? 'Hora fijada · Toca otra hora o vuelve a Ahora'
+              : 'Toca o arrastra la grilla para comparar horarios'}
+          </span>
+        </p>
+      </div>
     </div>
   );
 });

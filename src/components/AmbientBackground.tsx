@@ -5,9 +5,8 @@ interface AmbientBackgroundProps {
 }
 
 /**
- * Living architectural background for the financial terminal.
- * Combines slow-drifting volumetric aurora orbs, a radial-masked coordinate grid,
- * animated telemetry light beams along grid axes, and a reactive market-status pulse.
+ * Calm, high-contrast ambient backdrop for the market hours dashboard.
+ * Provides subtle depth without distracting animated beams or grid noise.
  */
 export const AmbientBackground: React.FC<AmbientBackgroundProps> = React.memo(({
   openMarketsCount = 0
@@ -19,124 +18,32 @@ export const AmbientBackground: React.FC<AmbientBackgroundProps> = React.memo(({
       aria-hidden="true"
       className="fixed inset-0 pointer-events-none overflow-hidden z-0 select-none"
     >
-      {/* 1. Deep atmospheric base gradient */}
+      {/* Base obsidian depth gradient */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            'radial-gradient(circle at 50% -10%, rgba(14, 21, 38, 0.95) 0%, rgba(7, 9, 16, 0.98) 55%, #05060a 100%)'
+            'radial-gradient(ellipse 85% 50% at 50% -10%, rgba(16, 24, 42, 0.85) 0%, rgba(7, 9, 16, 0.96) 55%, #05060a 100%)'
         }}
       />
 
-      {/* 2. Top horizon atmospheric crest */}
+      {/* Subtle status-reactive top glow */}
       <div
-        className="absolute -top-32 left-1/2 -translate-x-1/2 w-[120vw] max-w-[1600px] h-[340px] rounded-full opacity-90"
-        style={{
-          background:
-            'radial-gradient(ellipse 60% 50% at 50% 35%, rgba(56, 189, 248, 0.20), rgba(16, 185, 129, 0.08) 45%, transparent 80%)',
-          filter: 'blur(40px)'
-        }}
-      />
-
-      {/* 3. Living Volumetric Aurora Orbs (GPU compositor animated) */}
-      <div
-        className="ambient-orb-1 absolute -top-[10%] left-[5%] w-80 h-80 sm:w-[30rem] sm:h-[30rem] lg:w-[38rem] lg:h-[38rem] rounded-full opacity-70 sm:opacity-80 blur-[50px] sm:blur-[75px] lg:blur-[85px] transform-gpu pointer-events-none"
-        style={{
-          background:
-            'radial-gradient(circle, rgba(56, 189, 248, 0.22) 0%, rgba(34, 211, 238, 0.08) 45%, transparent 72%)'
-        }}
-      />
-
-      <div
-        className="ambient-orb-2 absolute top-[20%] right-[3%] w-72 h-72 sm:w-[28rem] sm:h-[28rem] lg:w-[36rem] lg:h-[36rem] rounded-full transition-colors duration-1000 opacity-75 sm:opacity-85 blur-[50px] sm:blur-[75px] lg:blur-[85px] transform-gpu pointer-events-none"
+        className="absolute -top-28 left-1/2 -translate-x-1/2 w-[90vw] max-w-[1200px] h-[220px] rounded-full transition-colors duration-700"
         style={{
           background: hasActiveMarkets
-            ? 'radial-gradient(circle, rgba(16, 185, 129, 0.20) 0%, rgba(56, 189, 248, 0.08) 48%, transparent 72%)'
-            : 'radial-gradient(circle, rgba(99, 102, 241, 0.20) 0%, rgba(56, 189, 248, 0.07) 48%, transparent 72%)'
+            ? 'radial-gradient(ellipse 65% 55% at 50% 35%, rgba(16, 185, 129, 0.08), rgba(56, 189, 248, 0.06) 50%, transparent 80%)'
+            : 'radial-gradient(ellipse 65% 55% at 50% 35%, rgba(56, 189, 248, 0.08), transparent 75%)',
+          filter: 'blur(36px)'
         }}
       />
 
-      <div
-        className="ambient-orb-3 absolute -bottom-[12%] left-[18%] w-80 h-80 sm:w-[32rem] sm:h-[32rem] lg:w-[42rem] lg:h-[42rem] rounded-full opacity-65 sm:opacity-75 blur-[55px] sm:blur-[80px] lg:blur-[90px] transform-gpu pointer-events-none"
-        style={{
-          background:
-            'radial-gradient(circle, rgba(139, 92, 246, 0.16) 0%, rgba(56, 189, 248, 0.06) 50%, transparent 72%)'
-        }}
-      />
-
-      {/* 4. Architectural Coordinate Grid + Sub-grid with Radial Vignette Mask */}
-      <div className="absolute inset-0 ambient-grid-mask">
-        {/* Primary 48px hairline grid */}
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `
-              linear-gradient(to right, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
-              linear-gradient(to bottom, rgba(255, 255, 255, 0.045) 1px, transparent 1px)
-            `,
-            backgroundSize: '48px 48px'
-          }}
-        />
-
-        {/* Secondary 240px macro-sector grid */}
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `
-              linear-gradient(to right, rgba(56, 189, 248, 0.07) 1px, transparent 1px),
-              linear-gradient(to bottom, rgba(56, 189, 248, 0.07) 1px, transparent 1px)
-            `,
-            backgroundSize: '240px 240px'
-          }}
-        />
-
-        {/* 5. Animated Telemetry Light Beams (desktop & tablet only for peak mobile performance) */}
-        <div
-          className="ambient-beam-x-1 absolute top-[192px] left-0 h-[1px] w-72 hidden sm:block"
-          style={{
-            background:
-              'linear-gradient(90deg, transparent 0%, rgba(56, 189, 248, 0.65) 50%, rgba(255, 255, 255, 0.9) 85%, transparent 100%)',
-            boxShadow: '0 0 12px rgba(56, 189, 248, 0.45)'
-          }}
-        />
-
-        <div
-          className="ambient-beam-x-2 absolute top-[432px] left-0 h-[1px] w-96 hidden sm:block"
-          style={{
-            background: hasActiveMarkets
-              ? 'linear-gradient(90deg, transparent 0%, rgba(16, 185, 129, 0.65) 50%, rgba(110, 231, 183, 0.9) 85%, transparent 100%)'
-              : 'linear-gradient(90deg, transparent 0%, rgba(168, 85, 247, 0.6) 50%, rgba(216, 180, 254, 0.85) 85%, transparent 100%)',
-            boxShadow: hasActiveMarkets
-              ? '0 0 12px rgba(16, 185, 129, 0.45)'
-              : '0 0 12px rgba(168, 85, 247, 0.4)'
-          }}
-        />
-
-        <div
-          className="ambient-beam-y-1 absolute top-0 left-[240px] w-[1px] h-64 hidden sm:block"
-          style={{
-            background:
-              'linear-gradient(180deg, transparent 0%, rgba(56, 189, 248, 0.55) 60%, rgba(255, 255, 255, 0.85) 90%, transparent 100%)',
-            boxShadow: '0 0 10px rgba(56, 189, 248, 0.4)'
-          }}
-        />
-
-        <div
-          className="ambient-beam-y-2 absolute top-0 right-[288px] w-[1px] h-72 hidden md:block"
-          style={{
-            background:
-              'linear-gradient(180deg, transparent 0%, rgba(16, 185, 129, 0.5) 60%, rgba(167, 243, 208, 0.85) 90%, transparent 100%)',
-            boxShadow: '0 0 10px rgba(16, 185, 129, 0.35)'
-          }}
-        />
-      </div>
-
-      {/* 6. Top Specular Horizon Line */}
+      {/* Top specular hairline */}
       <div
         className="absolute top-0 inset-x-0 h-[1px]"
         style={{
           background:
-            'linear-gradient(90deg, transparent 5%, rgba(56, 189, 248, 0.45) 35%, rgba(16, 185, 129, 0.45) 65%, transparent 95%)'
+            'linear-gradient(90deg, transparent 10%, rgba(56, 189, 248, 0.30) 40%, rgba(16, 185, 129, 0.25) 65%, transparent 90%)'
         }}
       />
     </div>

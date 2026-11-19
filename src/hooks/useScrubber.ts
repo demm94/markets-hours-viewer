@@ -4,6 +4,7 @@ export interface UseScrubberResult {
   scrubberMinutes: number;
   isHovering: boolean;
   isDragging: boolean;
+  isPinned: boolean;
   containerRef: React.RefObject<HTMLDivElement | null>;
   handlePointerDown: (e: React.PointerEvent<HTMLDivElement>) => void;
   handlePointerMove: (e: React.PointerEvent<HTMLDivElement>) => void;
@@ -27,6 +28,25 @@ export function calculateScrubberMinutesFromBounds(
   const relativeX = clientX - rectLeft;
   const clampedRatio = Math.max(0, Math.min(1, relativeX / rectWidth));
   return Math.round(clampedRatio * 1440);
+}
+
+/**
+ * Determines whether leaving the timeline bounds should clear the active scrubber position.
+ * Touch/pen pointers, active drags, and pinned positions remain sticky so users can read times
+ * and reach the "Volver a Ahora" button cleanly on desktop and mobile.
+ */
+export function shouldClearScrubberOnLeave(
+  pointerType: string | undefined,
+  isDragging: boolean,
+  isPinned: boolean
+): boolean {
+  if (pointerType && pointerType !== 'mouse') {
+    return false;
+  }
+  if (isDragging || isPinned) {
+    return false;
+  }
+  return true;
 }
 
 export interface ScrubberKeyResolution {
@@ -73,6 +93,7 @@ export function useScrubber(defaultMinutes: number): UseScrubberResult {
   const [scrubberMinutes, setScrubberMinutes] = useState<number | null>(null);
   const [isHovering, setIsHovering] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [isPinned, setIsPinned] = useState<boolean>(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const calculateMinutesFromEvent = useCallback((clientX: number): number | null => {
@@ -83,12 +104,12 @@ export function useScrubber(defaultMinutes: number): UseScrubberResult {
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
-      // Isolate pointer interaction
       const minutes = calculateMinutesFromEvent(e.clientX);
       if (minutes !== null) {
         setScrubberMinutes(minutes);
         setIsDragging(true);
         setIsHovering(true);
+        setIsPinned(true);
         try {
           e.currentTarget.setPointerCapture(e.pointerId);
         } catch {
@@ -101,13 +122,17 @@ export function useScrubber(defaultMinutes: number): UseScrubberResult {
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
+      // Preserve pinned cursor when hovering without holding pointer down
+      if (isPinned && !isDragging) {
+        return;
+      }
       const minutes = calculateMinutesFromEvent(e.clientX);
       if (minutes !== null) {
         setScrubberMinutes(minutes);
         setIsHovering(true);
       }
     },
-    [calculateMinutesFromEvent]
+    [calculateMinutesFromEvent, isDragging, isPinned]
   );
 
   const handlePointerUp = useCallback(
@@ -127,8 +152,10 @@ export function useScrubber(defaultMinutes: number): UseScrubberResult {
   const handlePointerCancel = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
       setIsDragging(false);
-      setIsHovering(false);
-      setScrubberMinutes(null);
+      if (!isPinned) {
+        setIsHovering(false);
+        setScrubberMinutes(null);
+      }
       try {
         if (e.currentTarget.hasPointerCapture(e.pointerId)) {
           e.currentTarget.releasePointerCapture(e.pointerId);
@@ -137,27 +164,24 @@ export function useScrubber(defaultMinutes: number): UseScrubberResult {
         // Safe fallback
       }
     },
-    []
+    [isPinned]
   );
 
   const handlePointerLeave = useCallback(
     (e?: React.PointerEvent<HTMLDivElement>) => {
-      // On touch/pen devices, keep the scrubbed position persistent after lifting the finger
-      if (e && e.pointerType !== 'mouse') {
-        return;
-      }
-      if (!isDragging) {
+      if (shouldClearScrubberOnLeave(e?.pointerType, isDragging, isPinned)) {
         setIsHovering(false);
         setScrubberMinutes(null);
       }
     },
-    [isDragging]
+    [isDragging, isPinned]
   );
 
   const resetToNow = useCallback(() => {
     setScrubberMinutes(null);
     setIsHovering(false);
     setIsDragging(false);
+    setIsPinned(false);
   }, []);
 
   const handleKeyDown = useCallback(
@@ -173,6 +197,7 @@ export function useScrubber(defaultMinutes: number): UseScrubberResult {
         if (!res.handled) return prev;
         e.preventDefault();
         setIsHovering(res.isHovering);
+        setIsPinned(true);
         return res.nextMinutes;
       });
     },
@@ -183,6 +208,7 @@ export function useScrubber(defaultMinutes: number): UseScrubberResult {
     scrubberMinutes: scrubberMinutes ?? defaultMinutes,
     isHovering,
     isDragging,
+    isPinned,
     containerRef,
     handlePointerDown,
     handlePointerMove,
