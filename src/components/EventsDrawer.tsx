@@ -7,6 +7,7 @@ import { MARKETS, CHILE_CONFIG } from '../core/markets';
 import { getUpcomingEvents, getDataFreshnessStatus } from '../core/events';
 import { getUpcomingHolidays } from '../core/holidays';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 import { cn } from '../lib/utils';
 
 interface EventsDrawerProps {
@@ -115,23 +116,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
     initialFocusRef: closeButtonRef
   });
 
-  const restoreBodyScrollIfNoDialogs = useCallback(() => {
-    if (!document.querySelector('[role="dialog"][aria-modal="true"]')) {
-      document.body.style.overflow = '';
-    }
-  }, []);
-
-  // Lock body scroll when drawer is open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      requestAnimationFrame(restoreBodyScrollIfNoDialogs);
-    }
-    return () => {
-      requestAnimationFrame(restoreBodyScrollIfNoDialogs);
-    };
-  }, [isOpen, restoreBodyScrollIfNoDialogs]);
+  useBodyScrollLock(isOpen);
 
   const upcomingEvents = useMemo(() => {
     return getUpcomingEvents(chileNow, {
@@ -161,7 +146,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
   }, []);
 
   return (
-    <AnimatePresence onExitComplete={restoreBodyScrollIfNoDialogs}>
+    <AnimatePresence>
       {isOpen && (
         <div key="events-drawer-overlay" className="fixed inset-0 z-50 flex justify-end">
           {/* Backdrop */}
@@ -180,7 +165,7 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
             ref={drawerRef}
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
-            exit={{ x: '100%' }}
+            exit={{ x: '100%', transition: { duration: 0.2, ease: 'easeIn' } }}
             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
             role="dialog"
             aria-modal="true"

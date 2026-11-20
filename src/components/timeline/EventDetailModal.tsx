@@ -1,9 +1,10 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TimelineEventMarkerData } from '../../core/types';
 import { MARKETS, CHILE_CONFIG } from '../../core/markets';
 import { Flame, AlertCircle, X, ExternalLink, Calendar, Clock } from 'lucide-react';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 interface EventDetailModalProps {
   event: TimelineEventMarkerData | null;
@@ -24,24 +25,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = React.memo(({
     initialFocusRef: closeButtonRef
   });
 
-  const restoreBodyScrollIfNoDialogs = useCallback(() => {
-    if (!document.querySelector('[role="dialog"][aria-modal="true"]')) {
-      document.body.style.overflow = '';
-    }
-  }, []);
-
-  // Lock body scroll while modal is open
-  useEffect(() => {
-    if (!event) {
-      requestAnimationFrame(restoreBodyScrollIfNoDialogs);
-      return;
-    }
-
-    document.body.style.overflow = 'hidden';
-    return () => {
-      requestAnimationFrame(restoreBodyScrollIfNoDialogs);
-    };
-  }, [event, restoreBodyScrollIfNoDialogs]);
+  useBodyScrollLock(Boolean(event));
 
   const isHigh = event?.importance === 'high';
   const market = event
@@ -54,7 +38,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = React.memo(({
   const marketFlag = market ? market.flag : '🌐';
 
   return (
-    <AnimatePresence onExitComplete={restoreBodyScrollIfNoDialogs}>
+    <AnimatePresence>
       {event && (
         <div
           key={event.id}
