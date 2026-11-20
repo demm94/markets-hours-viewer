@@ -3,6 +3,7 @@ import { DateTime } from 'luxon';
 import { Header } from '../components/Header';
 import { AlertsPopover } from '../components/AlertsPopover';
 import { LiveStatusBar } from '../components/LiveStatusBar';
+import { MsciEmStrip } from '../components/MsciEmStrip';
 import { TodayAgendaStrip } from '../components/TodayAgendaStrip';
 import { MarketCards } from '../components/MarketCards';
 import { TimelineGrid } from '../components/TimelineGrid';
@@ -37,6 +38,9 @@ describe('React memoization & render optimization verification', () => {
 
     expect((LiveStatusBar as any).$$typeof).toBe(REACT_MEMO_TYPE);
     expect(LiveStatusBar.displayName).toBe('LiveStatusBar');
+
+    expect((MsciEmStrip as any).$$typeof).toBe(REACT_MEMO_TYPE);
+    expect(MsciEmStrip.displayName).toBe('MsciEmStrip');
 
     expect((TodayAgendaStrip as any).$$typeof).toBe(REACT_MEMO_TYPE);
     expect(TodayAgendaStrip.displayName).toBe('TodayAgendaStrip');

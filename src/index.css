@@ -4,6 +4,7 @@
    class names as prose, and those were being compiled into the production bundle (e.g. a
    stray .shadow-xl rule). Only src/ and index.html may contribute classes. */
 @source not "../odd";
+@source not "../netlify";
 
 /* Typography: JetBrains Mono (latin variable range 500-700) */
 @font-face {

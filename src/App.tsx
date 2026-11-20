@@ -17,6 +17,7 @@ import { useMarketNotifications } from './hooks/useMarketNotifications';
 import { Header } from './components/Header';
 import { AmbientBackground } from './components/AmbientBackground';
 import { LiveStatusBar } from './components/LiveStatusBar';
+import { MsciEmStrip } from './components/MsciEmStrip';
 import { TodayAgendaStrip } from './components/TodayAgendaStrip';
 import { TimelineGrid } from './components/TimelineGrid';
 import { MarketCards } from './components/MarketCards';
@@ -240,6 +241,8 @@ export const App: React.FC = () => {
             summary={liveStatusSummary}
             totalMarkets={MARKETS.length}
           />
+
+          <MsciEmStrip />
 
           <TodayAgendaStrip
             agenda={todayAgenda}
