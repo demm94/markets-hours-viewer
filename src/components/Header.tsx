@@ -1,20 +1,15 @@
 import React from 'react';
-import { DateTime } from 'luxon';
 import { Activity, Calendar } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { AlertsPopover } from './AlertsPopover';
 import { MarketConfig } from '../core/types';
 import { MARKETS } from '../core/markets';
-import { getSantiagoOffsetDescription } from '../core/timezone';
 import { NotificationPermissionState } from '../hooks/useMarketNotifications';
 
 const DEFAULT_SUBSCRIBED_MARKET_IDS: string[] = [];
 const NOOP_MARKET_ALERT_TOGGLE = () => {};
 
 export interface HeaderProps {
-  now: DateTime;
-  timeFormatted: string;
-  dateFormatted: string;
   openMarketsCount: number;
   totalMarketsCount: number;
   onOpenEvents?: () => void;
@@ -28,9 +23,6 @@ export interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = React.memo(({
-  now,
-  timeFormatted,
-  dateFormatted,
   openMarketsCount,
   totalMarketsCount,
   onOpenEvents,
@@ -42,105 +34,77 @@ export const Header: React.FC<HeaderProps> = React.memo(({
   subscribedMarketIds = DEFAULT_SUBSCRIBED_MARKET_IDS,
   onToggleMarketAlert = NOOP_MARKET_ALERT_TOGGLE
 }) => {
-  const santiagoOffset = getSantiagoOffsetDescription(now);
-  const compactOffset = santiagoOffset.split(' ')[0];
   const hasOpenMarkets = openMarketsCount > 0;
 
   return (
-    <header className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2.5 sm:gap-3 px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl border border-border bg-card backdrop-blur-md shadow-neon relative">
-      <div className="flex items-center justify-between gap-2 sm:gap-3 min-w-0 lg:flex-1">
-        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 min-w-0">
-          <div className="flex items-center gap-2 min-w-0">
-            <img
-              src="/favicon.svg"
-              alt=""
-              className="w-5 h-5 rounded shrink-0"
-              width="20"
-              height="20"
-            />
-            <h1 className="text-sm sm:text-base font-bold tracking-tight text-zinc-100 whitespace-nowrap truncate">
-              Horarios Bursátiles
-            </h1>
-          </div>
-
-          <Badge
-            variant={hasOpenMarkets ? 'open' : 'closed'}
-            showDot={false}
-            className="min-h-[28px] sm:min-h-[30px] gap-1.5 px-2 sm:px-2.5 py-1 text-xs font-medium whitespace-nowrap"
-          >
-            <Activity
-              size={12}
-              className={`shrink-0 ${hasOpenMarkets ? 'text-emerald-400' : 'text-zinc-400'}`}
-              aria-hidden="true"
-            />
-            <span>
-              <strong
-                className={`font-semibold tabular-nums ${
-                  hasOpenMarkets ? 'text-emerald-300' : 'text-zinc-200'
-                }`}
-              >
-                {openMarketsCount}
-              </strong>
-              /{totalMarketsCount} abiertas
-            </span>
-          </Badge>
+    <header className="flex items-center justify-between gap-2 sm:gap-3 px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl border border-border bg-card backdrop-blur-md shadow-neon relative">
+      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 min-w-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <img
+            src="/favicon.svg"
+            alt=""
+            className="w-5 h-5 rounded shrink-0"
+            width="20"
+            height="20"
+          />
+          <h1 className="text-sm sm:text-base font-bold tracking-tight text-zinc-100 whitespace-nowrap truncate">
+            Horarios Bursátiles
+          </h1>
         </div>
 
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {onToggleNotifications && (
-            <AlertsPopover
-              markets={markets}
-              notificationsEnabled={notificationsEnabled}
-              notificationPermission={notificationPermission}
-              subscribedMarketIds={subscribedMarketIds}
-              onToggleNotifications={onToggleNotifications}
-              onToggleMarketAlert={onToggleMarketAlert}
-            />
-          )}
-
-          {onOpenEvents && (
-            <button
-              type="button"
-              onClick={onOpenEvents}
-              aria-label="Abrir agenda de eventos y feriados"
-              title="Abrir agenda de eventos y feriados"
-              className="relative inline-flex items-center justify-center gap-1.5 min-h-[36px] sm:min-h-[38px] min-w-[36px] px-2.5 sm:px-3 py-1.5 rounded-lg border border-border bg-white/[0.03] hover:border-border-strong hover:bg-white/[0.06] hover:text-white active:bg-white/[0.08] text-xs font-medium text-zinc-200 transition-colors duration-150 cursor-pointer whitespace-nowrap"
+        <Badge
+          variant={hasOpenMarkets ? 'open' : 'closed'}
+          showDot={false}
+          className="min-h-[28px] sm:min-h-[30px] gap-1.5 px-2 sm:px-2.5 py-1 text-xs font-medium whitespace-nowrap"
+        >
+          <Activity
+            size={12}
+            className={`shrink-0 ${hasOpenMarkets ? 'text-emerald-400' : 'text-zinc-400'}`}
+            aria-hidden="true"
+          />
+          <span>
+            <strong
+              className={`font-semibold tabular-nums ${
+                hasOpenMarkets ? 'text-emerald-300' : 'text-zinc-200'
+              }`}
             >
-              <Calendar className="w-3.5 h-3.5 text-zinc-400 shrink-0" aria-hidden="true" />
-              <span className="hidden min-[460px]:inline">Agenda</span>
-              {hasUpcomingCatalysts && (
-                <span
-                  className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0"
-                  aria-hidden="true"
-                />
-              )}
-            </button>
-          )}
-        </div>
+              {openMarketsCount}
+            </strong>
+            /{totalMarketsCount} abiertas
+          </span>
+        </Badge>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between lg:justify-end gap-x-2.5 gap-y-1 bg-muted border border-border rounded-lg px-2.5 py-1.5 sm:px-3 shrink-0">
-        <div className="flex items-center gap-1.5 font-mono text-xs font-medium text-zinc-400">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" aria-hidden="true" />
-          <span className="text-zinc-200 font-semibold">Santiago</span>
-        </div>
+      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        {onToggleNotifications && (
+          <AlertsPopover
+            markets={markets}
+            notificationsEnabled={notificationsEnabled}
+            notificationPermission={notificationPermission}
+            subscribedMarketIds={subscribedMarketIds}
+            onToggleNotifications={onToggleNotifications}
+            onToggleMarketAlert={onToggleMarketAlert}
+          />
+        )}
 
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          <span className="font-mono text-sm sm:text-base font-bold text-zinc-100 tracking-tight tabular-nums">
-            {timeFormatted}
-          </span>
-          <span
-            className="font-mono text-xs font-medium text-zinc-300 bg-white/[0.04] border border-border px-2 py-0.5 rounded whitespace-nowrap leading-none"
-            title={santiagoOffset}
-            aria-label={santiagoOffset}
+        {onOpenEvents && (
+          <button
+            type="button"
+            onClick={onOpenEvents}
+            aria-label="Abrir agenda de eventos y feriados"
+            title="Abrir agenda de eventos y feriados"
+            className="relative inline-flex items-center justify-center gap-1.5 min-h-[36px] sm:min-h-[38px] min-w-[36px] px-2.5 sm:px-3 py-1.5 rounded-lg border border-border bg-white/[0.03] hover:border-border-strong hover:bg-white/[0.06] hover:text-white active:bg-white/[0.08] text-xs font-medium text-zinc-200 transition-colors duration-150 cursor-pointer whitespace-nowrap"
           >
-            {compactOffset}
-          </span>
-        </div>
-
-        <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">
-          {dateFormatted ? dateFormatted.charAt(0).toUpperCase() + dateFormatted.slice(1) : ''}
-        </span>
+            <Calendar className="w-3.5 h-3.5 text-zinc-400 shrink-0" aria-hidden="true" />
+            <span className="hidden min-[460px]:inline">Agenda</span>
+            {hasUpcomingCatalysts && (
+              <span
+                className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0"
+                aria-hidden="true"
+              />
+            )}
+          </button>
+        )}
       </div>
     </header>
   );

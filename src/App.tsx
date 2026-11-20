@@ -24,7 +24,7 @@ import { hasHighImpactEventsToday, getEventsForChileDay, getRollingDaysWindow } 
 import { getMarketHoliday } from './core/holidays';
 
 export const App: React.FC = () => {
-  const { now, currentMinutes, timeFormatted, dateFormatted, minuteKey } = useCurrentTime();
+  const { now, currentMinutes, minuteKey } = useCurrentTime();
 
   const [isEventsDrawerOpen, setIsEventsDrawerOpen] = React.useState(false);
   const [selectedEventMarket, setSelectedEventMarket] = React.useState('all');
@@ -177,9 +177,6 @@ export const App: React.FC = () => {
 
       <div className="relative z-10 max-w-[1480px] w-full mx-auto flex flex-col gap-3 sm:gap-4 md:gap-5 overflow-x-hidden">
         <Header
-          now={now}
-          timeFormatted={timeFormatted}
-          dateFormatted={dateFormatted}
           openMarketsCount={openMarketsCount}
           totalMarketsCount={MARKETS.length}
           onOpenEvents={handleOpenAllEvents}
