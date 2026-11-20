@@ -140,6 +140,56 @@ body {
   overscroll-behavior-y: contain;
 }
 
+/* Minimalist GPU-composited ambient backdrop utilities */
+.ambient-dot-mask {
+  background-image: radial-gradient(rgba(148, 163, 184, 0.16) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(ellipse 85% 70% at 50% 20%, #000 15%, rgba(0, 0, 0, 0.45) 55%, transparent 92%);
+  -webkit-mask-image: radial-gradient(ellipse 85% 70% at 50% 20%, #000 15%, rgba(0, 0, 0, 0.45) 55%, transparent 92%);
+}
+
+@keyframes ambient-drift-a {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  35% { transform: translate3d(5vw, 4vh, 0) scale(1.07); }
+  70% { transform: translate3d(-3vw, 6vh, 0) scale(0.96); }
+}
+
+@keyframes ambient-drift-b {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  40% { transform: translate3d(-6vw, 5vh, 0) scale(1.08); }
+  75% { transform: translate3d(3vw, -4vh, 0) scale(0.95); }
+}
+
+@keyframes ambient-drift-c {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(6vw, -5vh, 0) scale(1.06); }
+}
+
+@keyframes ambient-horizon-breathe {
+  0%, 100% { opacity: 0.45; transform: scaleX(0.92); }
+  50% { opacity: 0.95; transform: scaleX(1.04); }
+}
+
+.ambient-wash-a {
+  animation: ambient-drift-a 26s ease-in-out infinite;
+  will-change: transform;
+}
+
+.ambient-wash-b {
+  animation: ambient-drift-b 32s ease-in-out infinite;
+  will-change: transform;
+}
+
+.ambient-wash-c {
+  animation: ambient-drift-c 36s ease-in-out infinite;
+  will-change: transform;
+}
+
+.ambient-horizon-sheen {
+  animation: ambient-horizon-breathe 14s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
 /* Subtle specular top border highlight */
 .neon-edge {
   position: relative;
@@ -161,6 +211,14 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .ambient-wash-a,
+  .ambient-wash-b,
+  .ambient-wash-c,
+  .ambient-horizon-sheen {
+    animation: none !important;
+    transform: none !important;
   }
 }
 
