@@ -1,156 +1,193 @@
 import React from 'react';
-import { MarketConfig, MarketEvaluation, TimelineSegment, TimelineEventMarkerData } from '../../core/types';
+import { MarketConfig, TimelineSegment, TimelineEventMarkerData } from '../../core/types';
 import { formatMinutes } from '../../core/timezone';
+import {
+  canShowInlineBarLabel,
+  clampTimelineMinuteFromPointer,
+  formatSegmentBarLabel,
+  getSegmentTooltip
+} from '../../core/timeline-schedule';
 import { TimelineEventMarker } from './TimelineEventMarker';
 
 const HOURS = [0, 3, 6, 9, 12, 15, 18, 21, 24];
 const GRID_LINES = Array.from({ length: 25 }, (_, i) => i);
 
+export interface TimelineSegmentRef {
+  marketId: string;
+  segmentIndex: number;
+}
+
 interface TimelineBarsProps {
-  allMarkets: MarketConfig[];
+  markets: MarketConfig[];
   marketSegments: Record<string, TimelineSegment[]>;
-  scrubberEvaluations: Record<string, MarketEvaluation>;
-  chileScrubberEvaluation: MarketEvaluation;
-  scrubberMinutes: number;
   currentMinutes: number;
-  isHovering: boolean;
-  isPinned?: boolean;
-  isColumnCollapsed: boolean;
-  containerRef: React.RefObject<HTMLDivElement | null>;
   dailyEvents?: Record<string, TimelineEventMarkerData[]>;
   onEventClick?: (event: TimelineEventMarkerData) => void;
-  onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => void;
-  onPointerMove: (e: React.PointerEvent<HTMLDivElement>) => void;
-  onPointerUp: (e: React.PointerEvent<HTMLDivElement>) => void;
-  onPointerCancel?: (e: React.PointerEvent<HTMLDivElement>) => void;
-  onPointerLeave: (e: React.PointerEvent<HTMLDivElement>) => void;
-  onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
   isToday?: boolean;
   isWeekendDay?: boolean;
   simulateWeekday?: boolean;
+  hoverMinute: number | null;
+  hoveredSegment: TimelineSegmentRef | null;
+  pinnedSegment: TimelineSegmentRef | null;
+  onHoverMinuteChange: (minute: number | null) => void;
+  onHoveredSegmentChange: (seg: TimelineSegmentRef | null) => void;
+  onTogglePinnedSegment: (seg: TimelineSegmentRef | null) => void;
 }
 
 export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
-  allMarkets,
+  markets,
   marketSegments,
-  scrubberEvaluations,
-  chileScrubberEvaluation,
-  scrubberMinutes,
   currentMinutes,
-  isHovering,
-  isPinned = false,
-  isColumnCollapsed,
-  containerRef,
-  onPointerDown,
-  onPointerMove,
-  onPointerUp,
-  onPointerCancel,
-  onPointerLeave,
-  onKeyDown,
   dailyEvents = {},
   onEventClick,
   isToday = true,
   isWeekendDay = false,
-  simulateWeekday = false
+  simulateWeekday = false,
+  hoverMinute,
+  hoveredSegment,
+  pinnedSegment,
+  onHoverMinuteChange,
+  onHoveredSegmentChange,
+  onTogglePinnedSegment
 }) => {
   const [hoveredEventId, setHoveredEventId] = React.useState<string | null>(null);
+  const barsRef = React.useRef<HTMLDivElement | null>(null);
+  const pointerDownRef = React.useRef<{
+    x: number;
+    y: number;
+    isSliding: boolean;
+    pointerType: string;
+  } | null>(null);
+  const justSlidRef = React.useRef(false);
 
-  const scrubberPercent = (scrubberMinutes / 1440) * 100;
   const nowPercent = (currentMinutes / 1440) * 100;
-  const isActivelyScrubbing = isPinned || (isHovering && Math.abs(scrubberMinutes - currentMinutes) > 2);
+  const hoverPercent = hoverMinute !== null ? (hoverMinute / 1440) * 100 : null;
   const showNowLine = isToday;
-  const showScrubberLine = isActivelyScrubbing || !isToday || isHovering;
-  const scrubberTimeLabel = scrubberMinutes === 1440 ? '24:00' : formatMinutes(scrubberMinutes);
+  const showLiveHighlight = isToday && !simulateWeekday;
+  const focusedSegment = hoveredSegment ?? pinnedSegment;
 
-  const renderCollapsedFloatingPills = (linePercent: number) => {
-    const edgeTransform =
-      linePercent < 12
-        ? 'translate(6px, -50%)'
-        : linePercent > 88
-        ? 'translate(calc(-100% - 6px), -50%)'
-        : 'translate(-50%, -50%)';
+  const resolveMinuteFromClientX = React.useCallback((clientX: number): number | null => {
+    const rect = barsRef.current?.getBoundingClientRect();
+    if (!rect) return null;
+    return clampTimelineMinuteFromPointer(clientX, rect.left, rect.width);
+  }, []);
 
-    return (
-      <div className="absolute top-0 left-0 w-0 h-full pointer-events-none">
-        {allMarkets.map((market, idx) => {
-          const isChile = market.id === 'chile';
-          const rowEvents = dailyEvents[market.id] ?? [];
-          if (rowEvents.some((evt) => Math.abs(evt.leftPercent - linePercent) < 14)) {
-            return null;
+  const handlePointerDown = React.useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType !== 'mouse') {
+      pointerDownRef.current = {
+        x: e.clientX,
+        y: e.clientY,
+        isSliding: false,
+        pointerType: e.pointerType
+      };
+      justSlidRef.current = false;
+    }
+  }, []);
+
+  const handlePointerMove = React.useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (e.pointerType === 'mouse') {
+        const min = resolveMinuteFromClientX(e.clientX);
+        if (min !== null) {
+          onHoverMinuteChange(min);
+        }
+        return;
+      }
+
+      const down = pointerDownRef.current;
+      if (!down) return;
+
+      const dx = e.clientX - down.x;
+      const dy = e.clientY - down.y;
+
+      if (!down.isSliding) {
+        if (Math.abs(dx) > 6 && Math.abs(dx) > Math.abs(dy)) {
+          down.isSliding = true;
+          justSlidRef.current = true;
+          onHoveredSegmentChange(null);
+          try {
+            e.currentTarget.setPointerCapture(e.pointerId);
+          } catch {
+            // Safe fallback when pointer capture is unavailable
           }
+        } else {
+          return;
+        }
+      }
 
-          const ev = isChile
-            ? chileScrubberEvaluation
-            : (scrubberEvaluations[market.id] ?? {
-                marketId: market.id,
-                status: 'closed',
-                localTimeFormatted: '--:--',
-                localDateFormatted: ''
-              });
+      const min = resolveMinuteFromClientX(e.clientX);
+      if (min !== null) {
+        onHoverMinuteChange(min);
+      }
+    },
+    [resolveMinuteFromClientX, onHoverMinuteChange, onHoveredSegmentChange]
+  );
 
-          const topCalc = `calc(var(--timeline-header-h, 36px) + ${idx + 0.5} * var(--timeline-row-h, 38px))`;
+  const handleTouchRelease = React.useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (e.pointerType === 'mouse') return;
 
-          let statusClasses = 'border-border text-zinc-300';
-          if (ev.holiday && !ev.holiday.isEarlyClose) {
-            statusClasses = 'border-violet-500/45 text-violet-300';
-          } else if (isChile) {
-            statusClasses = 'border-sky-500/45 text-sky-300';
-          } else if (ev.status === 'open') {
-            statusClasses = 'border-emerald-500/45 text-emerald-300';
-          } else if (ev.status === 'lunch') {
-            statusClasses = 'border-amber-500/45 text-amber-300';
-          } else if (ev.status === 'pre_market') {
-            statusClasses = 'border-sky-500/45 text-sky-300';
-          }
+      if (pointerDownRef.current?.isSliding) {
+        onHoverMinuteChange(null);
+        setTimeout(() => {
+          justSlidRef.current = false;
+        }, 60);
+      } else {
+        justSlidRef.current = false;
+      }
+      pointerDownRef.current = null;
 
-          return (
-            <div
-              key={market.id}
-              className={`absolute left-0 inline-flex items-center gap-1.5 bg-popover/95 border rounded-md px-2 py-0.5 font-mono text-[10px] sm:text-xs font-semibold whitespace-nowrap shadow-md z-10 pointer-events-none tabular-nums ${statusClasses}`}
-              style={{
-                top: topCalc,
-                transform: edgeTransform
-              }}
-              title={`${market.name}: ${ev.localTimeFormatted}${ev.holiday ? ` (Feriado: ${ev.holiday.name})` : ''}`}
-            >
-              <span className="text-xs leading-none" aria-hidden="true">{market.flag}</span>
-              <span>{ev.localTimeFormatted}</span>
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
+      try {
+        if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+          e.currentTarget.releasePointerCapture(e.pointerId);
+        }
+      } catch {
+        // Safe fallback
+      }
+    },
+    [onHoverMinuteChange]
+  );
+
+  const handlePointerLeave = React.useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (e.pointerType === 'mouse') {
+        onHoverMinuteChange(null);
+        onHoveredSegmentChange(null);
+      }
+    },
+    [onHoverMinuteChange, onHoveredSegmentChange]
+  );
+
+  const handleContainerClick = React.useCallback(() => {
+    if (justSlidRef.current) return;
+    if (pinnedSegment) {
+      onTogglePinnedSegment(null);
+    }
+  }, [pinnedSegment, onTogglePinnedSegment]);
+
+  const hoverTimeLabel =
+    hoverMinute !== null ? (hoverMinute === 1440 ? '24:00' : formatMinutes(hoverMinute)) : '';
 
   return (
     <div
-      className="timeline-bars-container flex-1 w-full min-w-[460px] sm:min-w-[600px] lg:min-w-0 relative flex flex-col cursor-crosshair touch-pan-y select-none"
-      ref={containerRef}
+      ref={barsRef}
+      className="timeline-bars-container flex-1 w-full min-w-0 relative flex flex-col select-none touch-pan-y"
       role="region"
       aria-label="Grilla horaria de 24 horas en hora de Chile"
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerCancel}
-      onPointerLeave={onPointerLeave}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handleTouchRelease}
+      onPointerCancel={handleTouchRelease}
+      onPointerLeave={handlePointerLeave}
+      onClick={handleContainerClick}
     >
-      {/* Hour Labels & Accessible Keyboard Scrubber Slider (sibling to event buttons to preserve valid ARIA) */}
-      <div
-        tabIndex={0}
-        role="slider"
-        aria-label="Cursor interactivo de línea de tiempo (usa flechas izquierda, derecha, arriba o abajo para mover, Escape para volver a ahora)"
-        aria-valuemin={0}
-        aria-valuemax={1440}
-        aria-valuenow={scrubberMinutes}
-        aria-valuetext={`Hora de Chile ${scrubberTimeLabel}`}
-        onKeyDown={onKeyDown}
-        className="h-9 sm:h-11 relative border-b border-border bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-400/70"
-      >
+      {/* Hour Labels */}
+      <div className="h-7 sm:h-10 relative border-b border-border bg-muted rounded-tr-xl">
         {HOURS.map((h) => {
           const tickPct = (h / 24) * 100;
-          const nearNow = showNowLine && Math.abs(tickPct - nowPercent) < 11;
-          const nearScrubber = showScrubberLine && Math.abs(tickPct - scrubberPercent) < 11;
-          const isTickHidden = nearNow || nearScrubber;
+          const nearNow = showNowLine && Math.abs(tickPct - nowPercent) < 13;
+          const nearHover = hoverPercent !== null && Math.abs(tickPct - hoverPercent) < 13;
+          const isTickHidden = nearNow || nearHover;
 
           const transform =
             h === 0
@@ -163,9 +200,9 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
             <div
               key={h}
               aria-hidden={isTickHidden || undefined}
-              className={`absolute top-1/2 font-mono text-[10px] sm:text-xs font-semibold text-muted-foreground tabular-nums select-none transition-opacity duration-150 ${
-                isTickHidden ? 'opacity-0' : 'opacity-100'
-              }`}
+              className={`absolute top-1/2 font-mono text-[9.5px] sm:text-xs font-semibold text-muted-foreground tabular-nums select-none transition-opacity duration-150 ${
+                h % 6 !== 0 ? 'hidden sm:block' : ''
+              } ${isTickHidden ? 'opacity-0' : 'opacity-100'}`}
               style={{ left: `${tickPct}%`, transform }}
             >
               <span className="hidden sm:inline">{h.toString().padStart(2, '0')}:00</span>
@@ -176,7 +213,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
       </div>
 
       {/* Background Vertical Grid Lines */}
-      <div className="absolute top-9 sm:top-11 bottom-0 left-0 right-0 pointer-events-none z-[1]">
+      <div className="absolute top-7 sm:top-10 bottom-0 left-0 right-0 pointer-events-none z-[1]">
         {GRID_LINES.map((h) => (
           <div
             key={h}
@@ -188,70 +225,45 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
 
       {/* Market Bar Rows */}
       <div className="relative flex flex-col">
-        {allMarkets.map((market, marketIdx) => {
-          const isChile = market.id === 'chile';
-          const segments = isChile ? [] : (marketSegments[market.id] ?? []);
+        {markets.map((market, marketIdx) => {
+          const segments = marketSegments[market.id] ?? [];
           const marketEvents = dailyEvents[market.id] ?? [];
-          const isRowElevated = marketEvents.some((e) => e.id === hoveredEventId);
-          const ev = isChile ? chileScrubberEvaluation : scrubberEvaluations[market.id];
-          const holiday = ev?.holiday;
-          const isChileFullHoliday = Boolean(isChile && holiday && !holiday.isEarlyClose);
+          const isRowElevated =
+            marketEvents.some((e) => e.id === hoveredEventId) ||
+            focusedSegment?.marketId === market.id;
           const isAllDayHoliday =
-            !isChile &&
             segments.length > 0 &&
             segments.every((s) => Boolean(s.holiday && !s.holiday.isEarlyClose));
-          const isHoliday = isAllDayHoliday;
-          const rowHoliday = isAllDayHoliday ? (segments[0]?.holiday ?? holiday) : holiday;
-          const isEmptyWeekendTrack = !isChile && segments.length === 0 && isWeekendDay && !simulateWeekday;
-          const isFuturePreview = !isToday && !isHovering && !isPinned;
+          const rowHoliday = isAllDayHoliday ? segments[0]?.holiday : undefined;
+          const isEmptyWeekendTrack = segments.length === 0 && isWeekendDay && !simulateWeekday;
 
           return (
             <div
               key={market.id}
-              className={`relative h-[38px] sm:h-[46px] md:h-[50px] px-0 flex items-center border-b border-border transition-colors ${
+              className={`relative h-[36px] sm:h-[46px] md:h-[50px] px-0 flex items-center border-b border-border last:border-b-0 transition-colors hover:bg-white/[0.015] ${
                 isRowElevated ? 'z-40' : ''
-              } ${
-                isChile
-                  ? 'bg-white/[0.015]'
-                  : 'hover:bg-white/[0.015]'
-              } ${isHoliday ? 'opacity-75 hover:opacity-90 transition-opacity' : ''}`}
+              } ${isAllDayHoliday ? 'opacity-80 hover:opacity-95 transition-opacity' : ''}`}
             >
               <div
-                className={`relative w-full h-[22px] sm:h-[26px] md:h-[28px] border-y rounded-none transition-colors ${
-                  (isHoliday || isChileFullHoliday)
+                className={`relative w-full h-[20px] sm:h-[26px] md:h-[28px] border-y rounded-none transition-colors ${
+                  isAllDayHoliday
                     ? 'border-violet-500/25 bg-violet-950/15'
                     : 'border-border bg-card/70'
                 }`}
               >
-                {/* Session blocks container */}
-                <div className="absolute inset-0 overflow-hidden pointer-events-none z-[2]">
-                  {isChile && (
-                    holiday ? (
-                      <div className="w-full h-full flex items-center justify-center bg-violet-500/10">
-                        <span className="font-mono text-[10px] sm:text-[11px] font-semibold text-violet-300 tracking-wider uppercase px-2 truncate">
-                          Eje 24h Santiago · {holiday.isEarlyClose ? holiday.name : `Feriado: ${holiday.name}`}
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-white/[0.02]">
-                        <span className="font-mono text-[10px] sm:text-[11px] font-medium text-zinc-400 tracking-widest uppercase">
-                          Eje 24h Santiago · Chile
-                        </span>
-                      </div>
-                    )
-                  )}
-
+                {/* Interactive Session Blocks Layer */}
+                <div className="absolute inset-0 overflow-visible z-[2]">
                   {isEmptyWeekendTrack && (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <span className="font-mono text-[10px] text-zinc-400">
+                    <div className="w-full h-full flex items-center justify-center pointer-events-none">
+                      <span className="font-mono text-[9.5px] sm:text-[10px] text-zinc-400">
                         Cerrado · Fin de semana
                       </span>
                     </div>
                   )}
 
-                  {isHoliday && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-violet-950/40 z-[3]">
-                      <span className="font-mono text-[10px] font-medium text-violet-200 tracking-wider px-2 py-0.5 rounded bg-violet-950/80 border border-violet-500/30 truncate max-w-[180px] sm:max-w-none">
+                  {isAllDayHoliday && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-violet-950/40 z-[3] pointer-events-none">
+                      <span className="font-mono text-[9.5px] sm:text-[10px] font-medium text-violet-200 tracking-wider px-2 py-0.5 rounded bg-violet-950/80 border border-violet-500/30 truncate max-w-[160px] sm:max-w-none">
                         Feriado: {rowHoliday?.name}
                       </span>
                     </div>
@@ -264,14 +276,28 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                     const isSegFullHoliday = Boolean(segHoliday && !segHoliday.isEarlyClose);
                     const isActive =
                       !isSegFullHoliday &&
-                      !isFuturePreview &&
-                      scrubberMinutes >= seg.startMinute &&
-                      scrubberMinutes < seg.endMinute;
+                      showLiveHighlight &&
+                      currentMinutes >= seg.startMinute &&
+                      currentMinutes < seg.endMinute;
                     const isUpcoming =
-                      !isSegFullHoliday && (isFuturePreview || scrubberMinutes < seg.startMinute);
+                      !isSegFullHoliday && (!showLiveHighlight || currentMinutes < seg.startMinute);
+
+                    const isDirectlyFocused = Boolean(
+                      focusedSegment &&
+                        focusedSegment.marketId === market.id &&
+                        focusedSegment.segmentIndex === idx
+                    );
+                    const isCrossedByHover =
+                      !isSegFullHoliday &&
+                      hoverMinute !== null &&
+                      (hoverMinute === 1440
+                        ? seg.endMinute === 1440
+                        : hoverMinute >= seg.startMinute && hoverMinute < seg.endMinute);
+                    const isDimmed = Boolean(
+                      focusedSegment && focusedSegment.marketId !== market.id
+                    );
 
                     let blockClasses = '';
-
                     if (isSegFullHoliday) {
                       blockClasses = isAllDayHoliday
                         ? 'bg-zinc-800/40 border border-white/5 opacity-30'
@@ -286,42 +312,105 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                       }
                     } else if (isUpcoming) {
                       if (seg.type === 'lunch') {
-                        blockClasses = 'bg-amber-500/20 border border-amber-500/45 text-amber-300';
+                        blockClasses = 'bg-amber-500/20 border border-amber-500/45 text-amber-200';
                       } else if (seg.type === 'pre_market') {
-                        blockClasses = 'bg-sky-500/20 border border-sky-500/45 text-sky-300';
+                        blockClasses = 'bg-sky-500/20 border border-sky-500/45 text-sky-200';
                       } else {
-                        blockClasses = 'bg-emerald-500/20 border border-emerald-500/45 text-emerald-300';
+                        blockClasses = 'bg-emerald-500/20 border border-emerald-500/45 text-emerald-100';
                       }
                     } else {
                       if (seg.type === 'lunch') {
-                        blockClasses = 'bg-amber-500/[0.08] border border-amber-500/20 text-amber-500/40';
+                        blockClasses = 'bg-amber-500/[0.08] border border-amber-500/20 text-amber-400/60';
                       } else if (seg.type === 'pre_market') {
-                        blockClasses = 'bg-sky-500/[0.08] border border-sky-500/20 text-sky-500/40';
+                        blockClasses = 'bg-sky-500/[0.08] border border-sky-500/20 text-sky-400/60';
                       } else {
-                        blockClasses = 'bg-emerald-500/[0.08] border border-emerald-500/20 text-emerald-500/40';
+                        blockClasses = 'bg-emerald-500/[0.08] border border-emerald-500/20 text-emerald-300/60';
                       }
                     }
 
+                    let glowClass = '';
+                    if (isSegFullHoliday) {
+                      glowClass = 'shadow-[0_0_12px_rgba(168,85,247,0.45)]';
+                    } else if (seg.type === 'lunch') {
+                      glowClass = isDirectlyFocused
+                        ? 'shadow-[0_0_14px_rgba(245,158,11,0.5)]'
+                        : 'shadow-[0_0_10px_rgba(245,158,11,0.35)]';
+                    } else if (seg.type === 'pre_market') {
+                      glowClass = isDirectlyFocused
+                        ? 'shadow-[0_0_14px_rgba(56,189,248,0.5)]'
+                        : 'shadow-[0_0_10px_rgba(56,189,248,0.35)]';
+                    } else {
+                      glowClass = isDirectlyFocused
+                        ? 'shadow-[0_0_14px_rgba(16,185,129,0.5)]'
+                        : 'shadow-[0_0_10px_rgba(16,185,129,0.35)]';
+                    }
+
+                    let interactiveStateClass = '';
+                    if (isDirectlyFocused) {
+                      interactiveStateClass = `scale-y-[1.18] brightness-125 z-20 ring-1 ring-white/80 ${glowClass}`;
+                    } else if (isCrossedByHover) {
+                      interactiveStateClass = `scale-y-[1.10] brightness-115 z-10 ring-1 ring-white/45 ${glowClass}`;
+                    } else if (isDimmed) {
+                      interactiveStateClass = 'opacity-65';
+                    }
+
+                    const earlyCloseBorderClass =
+                      !isSegFullHoliday && segHoliday?.isEarlyClose
+                        ? 'border-r-2 border-r-amber-400'
+                        : '';
+
+                    const inlineVisibility = canShowInlineBarLabel(seg, marketEvents);
+                    const tooltipText = getSegmentTooltip(market.name, seg);
+
                     return (
-                      <div
+                      <button
                         key={idx}
-                        className={`absolute top-0 bottom-0 flex items-center justify-center text-[11px] font-semibold rounded-xs overflow-hidden whitespace-nowrap transition-colors duration-150 ${blockClasses}`}
+                        type="button"
+                        title={tooltipText}
+                        aria-label={tooltipText}
+                        aria-pressed={
+                          Boolean(
+                            pinnedSegment &&
+                              pinnedSegment.marketId === market.id &&
+                              pinnedSegment.segmentIndex === idx
+                          )
+                        }
+                        onMouseEnter={() =>
+                          onHoveredSegmentChange({ marketId: market.id, segmentIndex: idx })
+                        }
+                        onMouseLeave={() => onHoveredSegmentChange(null)}
+                        onFocus={() =>
+                          onHoveredSegmentChange({ marketId: market.id, segmentIndex: idx })
+                        }
+                        onBlur={() => onHoveredSegmentChange(null)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (justSlidRef.current) return;
+                          onTogglePinnedSegment({ marketId: market.id, segmentIndex: idx });
+                        }}
+                        className={`absolute top-0 bottom-0 flex items-center justify-center text-[11px] font-semibold rounded-xs overflow-hidden whitespace-nowrap origin-center transition-[transform,filter,box-shadow,background-color,border-color,opacity] duration-150 ease-out cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${blockClasses} ${earlyCloseBorderClass} ${interactiveStateClass}`}
                         style={{
                           left: `${leftPercent}%`,
                           width: `${widthPercent}%`
                         }}
                       >
-                        {isSegFullHoliday && !isAllDayHoliday && (
-                          <span className="font-mono text-[10px] font-medium text-violet-200 tracking-wider px-1.5 truncate">
+                        {isSegFullHoliday && !isAllDayHoliday ? (
+                          <span className="font-mono text-[9.5px] sm:text-[10px] font-medium text-violet-200 tracking-wider px-1.5 truncate pointer-events-none">
                             Feriado: {segHoliday?.name}
                           </span>
+                        ) : (
+                          inlineVisibility.desktop && (
+                            <span className="hidden sm:inline font-mono text-[10px] font-semibold tracking-tight tabular-nums px-1.5 truncate pointer-events-none">
+                              {formatSegmentBarLabel(seg)}
+                            </span>
+                          )
                         )}
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
 
-                {/* Event markers layer (sibling to slider, elevated above vertical lines) */}
+                {/* Event markers layer */}
                 {marketEvents.length > 0 && (
                   <div className="absolute inset-0 pointer-events-none z-[15]">
                     {marketEvents.map((evt, evtIdx) => {
@@ -341,7 +430,7 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
                           key={evt.id}
                           event={evt}
                           marketFlag={market.flag}
-                          isTopRow={marketIdx <= 2}
+                          isTopRow={marketIdx <= 1}
                           isHovered={hoveredEventId === evt.id}
                           onHoverChange={(hovered) => setHoveredEventId(hovered ? evt.id : null)}
                           onEventClick={onEventClick}
@@ -364,67 +453,48 @@ export const TimelineBars: React.FC<TimelineBarsProps> = React.memo(({
           style={{ left: `${nowPercent}%` }}
         >
           <div
-            className="absolute top-1 sm:top-1.5 left-0 inline-flex items-center gap-1 sm:gap-1.5 bg-rose-600 text-white font-mono text-[10px] sm:text-[11px] font-bold px-2 sm:px-2.5 py-0.5 rounded shadow-sm whitespace-nowrap tabular-nums"
+            className="absolute top-0.5 sm:top-1.5 left-0 inline-flex items-center gap-1 sm:gap-1.5 bg-rose-600 text-white font-mono text-[9.5px] sm:text-[11px] font-bold px-1.5 sm:px-2.5 py-0.5 rounded shadow-sm whitespace-nowrap tabular-nums"
             style={{
               transform:
                 nowPercent < 12
-                  ? 'translate(6px, 0)'
+                  ? 'translate(4px, 0)'
                   : nowPercent > 88
-                  ? 'translate(calc(-100% - 6px), 0)'
+                  ? 'translate(calc(-100% - 4px), 0)'
                   : 'translateX(-50%)'
             }}
           >
             <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
             <span>
               <span className="hidden sm:inline">
-                {isActivelyScrubbing
-                  ? 'AHORA'
-                  : <>AHORA <span aria-hidden="true">🇨🇱</span> {formatMinutes(currentMinutes)}</>}
+                AHORA {formatMinutes(currentMinutes)}
               </span>
-              <span className="sm:hidden text-[10px] font-bold">
-                {isActivelyScrubbing
-                  ? 'AHORA'
-                  : `${formatMinutes(currentMinutes)}`}
+              <span className="sm:hidden text-[9.5px] font-bold">
+                {formatMinutes(currentMinutes)}
               </span>
             </span>
           </div>
-
-          {isColumnCollapsed && !isActivelyScrubbing && renderCollapsedFloatingPills(nowPercent)}
         </div>
       )}
 
-      {/* Interactive Scrubber Line */}
-      {showScrubberLine && (
+      {/* Ephemeral Hover / Touch-Slide Inspection Hairline */}
+      {hoverPercent !== null && (
         <div
-          className="absolute top-0 bottom-0 -translate-x-1/2 w-[2px] bg-sky-400 z-[14] pointer-events-none"
-          style={{ left: `${scrubberPercent}%` }}
+          className="absolute top-0 bottom-0 -translate-x-1/2 w-[1.5px] bg-sky-400/85 shadow-[0_0_8px_rgba(56,189,248,0.55)] z-[13] pointer-events-none"
+          style={{ left: `${hoverPercent}%` }}
         >
           <div
-            className="absolute top-1 sm:top-1.5 left-0 inline-flex items-center gap-1 bg-sky-500 text-zinc-950 font-mono text-[10px] sm:text-[11px] font-bold px-2 sm:px-2.5 py-0.5 rounded shadow-sm whitespace-nowrap tabular-nums"
+            className="absolute top-0.5 sm:top-1.5 left-0 inline-flex items-center bg-sky-400 text-zinc-950 font-mono text-[9.5px] sm:text-[11px] font-bold px-1.5 sm:px-2 py-0.5 rounded shadow-sm whitespace-nowrap tabular-nums"
             style={{
               transform:
-                scrubberPercent < 12
-                  ? 'translate(6px, 0)'
-                  : scrubberPercent > 88
-                  ? 'translate(calc(-100% - 6px), 0)'
+                hoverPercent < 12
+                  ? 'translate(4px, 0)'
+                  : hoverPercent > 88
+                  ? 'translate(calc(-100% - 4px), 0)'
                   : 'translateX(-50%)'
             }}
           >
-            <span className="hidden sm:inline" aria-hidden="true">🇨🇱</span>
-            <span>{scrubberTimeLabel}</span>
-            {isPinned && (
-              <span className="hidden sm:inline text-[10px] font-semibold bg-zinc-950/20 px-1 rounded">
-                fijado
-              </span>
-            )}
-            {!isToday && !isPinned && (
-              <span className="text-[10px] font-medium text-zinc-900">
-                día futuro
-              </span>
-            )}
+            {hoverTimeLabel}
           </div>
-
-          {isColumnCollapsed && renderCollapsedFloatingPills(scrubberPercent)}
         </div>
       )}
     </div>

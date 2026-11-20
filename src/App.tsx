@@ -4,15 +4,12 @@ import {
   CHILE_TZ,
   projectMarketToTimeline,
   evaluateMarketAt,
-  minuteOffsetToDateTime,
-  formatMinutes,
   isWeekend,
   getSantiagoOffsetDescription
 } from './core/timezone';
 import { getLiveStatusSummary, getTodayAgenda } from './core/market-summary';
 import { MarketEvaluation, TimelineEventMarkerData, RollingDayInfo } from './core/types';
 import { useCurrentTime } from './hooks/useCurrentTime';
-import { useScrubber } from './hooks/useScrubber';
 import { useMarketNotifications } from './hooks/useMarketNotifications';
 import { Header } from './components/Header';
 import { AmbientBackground } from './components/AmbientBackground';
@@ -55,21 +52,6 @@ export const App: React.FC = () => {
     setSimulateWeekday((prev) => !prev);
   }, []);
 
-  const {
-    scrubberMinutes,
-    isHovering,
-    isDragging,
-    isPinned,
-    containerRef,
-    handlePointerDown,
-    handlePointerMove,
-    handlePointerUp,
-    handlePointerCancel,
-    handlePointerLeave,
-    handleKeyDown,
-    resetToNow
-  } = useScrubber(currentMinutes);
-
   const referenceDayKey = `${now.year}-${now.month}-${now.day}`;
   const referenceHourKey = `${referenceDayKey}-${now.hour}`;
 
@@ -85,20 +67,15 @@ export const App: React.FC = () => {
     return rollingDays.find((d) => d.isoDate === selectedDayIso) ?? rollingDays[0];
   }, [rollingDays, selectedDayIso]);
 
-  const handleSelectDay = React.useCallback(
-    (day: RollingDayInfo) => {
-      setSelectedDayIso(day.isoDate);
-      setSimulateWeekday(false);
-      resetToNow();
-    },
-    [resetToNow]
-  );
+  const handleSelectDay = React.useCallback((day: RollingDayInfo) => {
+    setSelectedDayIso(day.isoDate);
+    setSimulateWeekday(false);
+  }, []);
 
-  const handleResetToNow = React.useCallback(() => {
-    resetToNow();
+  const handleResetToToday = React.useCallback(() => {
     setSelectedDayIso(rollingDays[0].isoDate);
     setSimulateWeekday(false);
-  }, [resetToNow, rollingDays]);
+  }, [rollingDays]);
 
   const isViewingToday = activeDay.isToday;
   const activeDate = activeDay.date;
@@ -149,32 +126,11 @@ export const App: React.FC = () => {
     toggleMarketSubscription
   } = useMarketNotifications(MARKETS, evaluationsNow);
 
-  // Scrubber evaluation at selected minute offset against activeDate (respects explicit simulation toggle)
-  const scrubberInstant = useMemo(() => {
-    return minuteOffsetToDateTime(scrubberMinutes, activeDate);
-  }, [scrubberMinutes, activeDayKey]);
-
-  const evaluationsScrubber = useMemo(() => {
-    const map: Record<string, MarketEvaluation> = {};
-    for (const m of MARKETS) {
-      map[m.id] = evaluateMarketAt(m, scrubberInstant, { isSimulation: simulateWeekday });
-    }
-    return map;
-  }, [scrubberInstant, simulateWeekday]);
-
-  const chileScrubberEvaluation: MarketEvaluation = useMemo(() => {
-    const holiday = getMarketHoliday('chile', scrubberInstant.toISODate()!);
-    return {
-      marketId: 'chile',
-      status: 'closed',
-      localTimeFormatted: formatMinutes(scrubberMinutes),
-      localDateFormatted: scrubberInstant.toFormat('ccc d MMM', { locale: 'es' }),
-      ...(holiday ? { holiday, activeSegmentLabel: `Feriado: ${holiday.name}` } : {})
-    };
-  }, [scrubberMinutes, scrubberInstant]);
-
   const openMarketsCount = liveStatusSummary.openMarkets.length;
-  const isScrubbing = isPinned || isHovering || isDragging || Math.abs(scrubberMinutes - currentMinutes) > 2;
+
+  const chileHolidayForSelectedDay = useMemo(() => {
+    return getMarketHoliday('chile', activeDay.isoDate);
+  }, [activeDayKey]);
 
   const catalystsMap = useMemo(() => {
     const map: Record<string, boolean> = {};
@@ -253,25 +209,15 @@ export const App: React.FC = () => {
           <TimelineGrid
             markets={MARKETS}
             marketSegments={marketSegments}
-            scrubberEvaluations={!isViewingToday || isScrubbing || simulateWeekday ? evaluationsScrubber : evaluationsNow}
-            chileScrubberEvaluation={chileScrubberEvaluation}
-            scrubberMinutes={scrubberMinutes}
+            liveEvaluations={evaluationsNow}
             currentMinutes={currentMinutes}
-            isHovering={isScrubbing}
-            isPinned={isPinned}
-            containerRef={containerRef}
             dailyEvents={dailyEvents}
+            chileHoliday={chileHolidayForSelectedDay}
             onEventClick={setSelectedEventForModal}
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            onPointerCancel={handlePointerCancel}
-            onPointerLeave={handlePointerLeave}
-            onKeyDown={handleKeyDown}
-            onResetScrubber={handleResetToNow}
             rollingDays={rollingDays}
             selectedIsoDate={activeDay.isoDate}
             onSelectDay={handleSelectDay}
+            onResetToToday={handleResetToToday}
             isToday={isViewingToday}
             isWeekendDay={isSelectedDayWeekend}
             simulateWeekday={simulateWeekday}

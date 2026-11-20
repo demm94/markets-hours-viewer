@@ -1,42 +1,38 @@
-import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { CalendarOff, Eye, RotateCcw } from 'lucide-react';
-import { MarketConfig, MarketEvaluation, TimelineSegment, TimelineEventMarkerData, RollingDayInfo } from '../core/types';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { AlertCircle, Calendar, CalendarOff, Eye, Flame, RotateCcw, X } from 'lucide-react';
+import {
+  MarketConfig,
+  MarketEvaluation,
+  MarketHoliday,
+  TimelineSegment,
+  TimelineEventMarkerData,
+  RollingDayInfo
+} from '../core/types';
 import { CHILE_CONFIG } from '../core/markets';
+import { formatMinutes } from '../core/timezone';
+import {
+  formatSegmentInspectionText,
+  getSelectedDayEventsList,
+  getTimelineActivityAtMinute
+} from '../core/timeline-schedule';
 import { TimelineHeader } from './timeline/TimelineHeader';
 import { TimelineLeftColumn } from './timeline/TimelineLeftColumn';
-import { TimelineBars } from './timeline/TimelineBars';
+import { TimelineBars, TimelineSegmentRef } from './timeline/TimelineBars';
 import { TimelineLegend } from './timeline/TimelineLegend';
 import { Button } from './ui/button';
-
-const CHILE_MARKET: MarketConfig = {
-  ...CHILE_CONFIG,
-  name: CHILE_CONFIG.country,
-  code: 'Santiago',
-  sessions: []
-};
 
 interface TimelineGridProps {
   markets: MarketConfig[];
   marketSegments: Record<string, TimelineSegment[]>;
-  scrubberEvaluations: Record<string, MarketEvaluation>;
-  chileScrubberEvaluation: MarketEvaluation;
-  scrubberMinutes: number;
+  liveEvaluations: Record<string, MarketEvaluation>;
   currentMinutes: number;
-  isHovering: boolean;
-  isPinned?: boolean;
-  containerRef: React.RefObject<HTMLDivElement | null>;
   dailyEvents?: Record<string, TimelineEventMarkerData[]>;
+  chileHoliday?: MarketHoliday;
   onEventClick?: (event: TimelineEventMarkerData) => void;
-  onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => void;
-  onPointerMove: (e: React.PointerEvent<HTMLDivElement>) => void;
-  onPointerUp: (e: React.PointerEvent<HTMLDivElement>) => void;
-  onPointerCancel?: (e: React.PointerEvent<HTMLDivElement>) => void;
-  onPointerLeave: (e: React.PointerEvent<HTMLDivElement>) => void;
-  onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
-  onResetScrubber?: () => void;
   rollingDays: RollingDayInfo[];
   selectedIsoDate: string;
   onSelectDay: (day: RollingDayInfo) => void;
+  onResetToToday?: () => void;
   isToday?: boolean;
   isWeekendDay?: boolean;
   simulateWeekday?: boolean;
@@ -47,109 +43,125 @@ interface TimelineGridProps {
 export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
   markets,
   marketSegments,
-  scrubberEvaluations,
-  chileScrubberEvaluation,
-  scrubberMinutes,
+  liveEvaluations,
   currentMinutes,
-  isHovering,
-  isPinned = false,
-  containerRef,
   dailyEvents,
+  chileHoliday,
   onEventClick,
-  onPointerDown,
-  onPointerMove,
-  onPointerUp,
-  onPointerCancel,
-  onPointerLeave,
-  onKeyDown,
-  onResetScrubber,
   rollingDays,
   selectedIsoDate,
   onSelectDay,
+  onResetToToday,
   isToday = true,
   isWeekendDay = false,
   simulateWeekday = false,
   onToggleSimulateWeekday,
   nextReopenLabel
 }) => {
-  const userToggledRef = useRef(false);
-  const scrollWrapperRef = useRef<HTMLDivElement | null>(null);
-  const hasCenteredNowRef = useRef(false);
+  const [hoverMinute, setHoverMinute] = useState<number | null>(null);
+  const [hoveredSegment, setHoveredSegment] = useState<TimelineSegmentRef | null>(null);
+  const [pinnedSegment, setPinnedSegment] = useState<TimelineSegmentRef | null>(null);
 
-  // Center horizontal scroll around current Chile time on mobile/scrollable viewports when viewing Today
+  // Clear ephemeral inspection state when switching day or weekend simulation mode
   useEffect(() => {
-    if (!isToday) {
-      hasCenteredNowRef.current = false;
-      return;
-    }
-    if (hasCenteredNowRef.current) return;
+    setHoverMinute(null);
+    setHoveredSegment(null);
+    setPinnedSegment(null);
+  }, [selectedIsoDate, simulateWeekday]);
 
-    const wrapper = scrollWrapperRef.current;
-    if (!wrapper || wrapper.scrollWidth <= wrapper.clientWidth) return;
-
-    const leftCol = wrapper.querySelector<HTMLElement>('.timeline-left-column');
-    const leftColWidth = leftCol ? leftCol.offsetWidth : 0;
-    const barsWidth = wrapper.scrollWidth - leftColWidth;
-    const visibleBarsWidth = wrapper.clientWidth - leftColWidth;
-    if (barsWidth <= visibleBarsWidth) return;
-
-    const nowX = (currentMinutes / 1440) * barsWidth;
-    wrapper.scrollLeft = Math.max(0, Math.min(barsWidth - visibleBarsWidth, nowX - visibleBarsWidth / 2));
-    hasCenteredNowRef.current = true;
-  }, [isToday, currentMinutes]);
-
-  // Default to collapsed on mobile viewports (<= 768px) to maximize 24h bar space
-  const [isColumnCollapsed, setIsColumnCollapsed] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return window.innerWidth <= 768;
-    }
-    return false;
-  });
-
+  // Allow dismissing a pinned bar detail with Escape
   useEffect(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
-    const mql = window.matchMedia('(max-width: 768px)');
-    const handleMediaChange = (e: MediaQueryListEvent) => {
-      if (!userToggledRef.current) {
-        setIsColumnCollapsed(e.matches);
+    if (!pinnedSegment) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setPinnedSegment(null);
       }
     };
-    mql.addEventListener('change', handleMediaChange);
-    return () => mql.removeEventListener('change', handleMediaChange);
-  }, []);
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [pinnedSegment]);
 
-  const toggleColumn = useCallback(() => {
-    userToggledRef.current = true;
-    setIsColumnCollapsed((prev) => !prev);
+  const handleTogglePinnedSegment = useCallback((seg: TimelineSegmentRef | null) => {
+    if (!seg) {
+      setPinnedSegment(null);
+      return;
+    }
+    setPinnedSegment((prev) =>
+      prev && prev.marketId === seg.marketId && prev.segmentIndex === seg.segmentIndex ? null : seg
+    );
   }, []);
-
-  const allMarkets = useMemo(() => [CHILE_MARKET, ...markets], [markets]);
 
   const hasAnyRealSegment = useMemo(
     () => markets.some((m) => (marketSegments[m.id]?.length ?? 0) > 0),
     [markets, marketSegments]
   );
 
+  const selectedDayEvents = useMemo(
+    () => getSelectedDayEventsList(dailyEvents),
+    [dailyEvents]
+  );
+
+  const selectedDayLabel = useMemo(
+    () => rollingDays.find((d) => d.isoDate === selectedIsoDate)?.label ?? 'Hoy',
+    [rollingDays, selectedIsoDate]
+  );
+
+  const marketLookup = useMemo(
+    () => ({
+      [CHILE_CONFIG.id]: { flag: CHILE_CONFIG.flag, name: CHILE_CONFIG.country },
+      ...Object.fromEntries(markets.map((m) => [m.id, { flag: m.flag, name: m.name }]))
+    }),
+    [markets]
+  );
+
+  const highImpactCount = useMemo(
+    () => selectedDayEvents.filter((evt) => evt.importance === 'high').length,
+    [selectedDayEvents]
+  );
+
+  const activeSegmentRef = hoveredSegment ?? pinnedSegment;
+  const activeMarket = activeSegmentRef
+    ? markets.find((m) => m.id === activeSegmentRef.marketId)
+    : undefined;
+  const activeSegment =
+    activeSegmentRef && activeMarket
+      ? marketSegments[activeMarket.id]?.[activeSegmentRef.segmentIndex]
+      : undefined;
+
+  const hourSnapshot = useMemo(
+    () =>
+      hoverMinute !== null
+        ? getTimelineActivityAtMinute(hoverMinute, markets, marketSegments)
+        : null,
+    [hoverMinute, markets, marketSegments]
+  );
+
+  const activeMarketIds = useMemo(
+    () => new Set(hourSnapshot?.activeMarketIds ?? []),
+    [hourSnapshot]
+  );
+
+  const focusedMarketId = activeSegmentRef?.marketId ?? null;
+  const hasActiveInspection = Boolean((activeMarket && activeSegment) || hourSnapshot);
+
   return (
     <section
       aria-label="Línea de tiempo bursátil de 24 horas"
-      className="rounded-xl border border-border bg-card backdrop-blur-md shadow-neon p-3 sm:p-4 md:p-5 flex flex-col gap-3"
+      className="rounded-xl border border-border bg-card backdrop-blur-md shadow-neon p-2.5 sm:p-4 md:p-5 flex flex-col gap-2 sm:gap-3"
     >
       <TimelineHeader
-        isColumnCollapsed={isColumnCollapsed}
-        onToggleColumn={toggleColumn}
-        isPinned={isPinned}
         isToday={isToday}
-        onResetScrubber={onResetScrubber}
+        onResetToToday={onResetToToday}
         days={rollingDays}
         selectedIsoDate={selectedIsoDate}
         onSelectDay={onSelectDay}
+        chileHoliday={chileHoliday}
       />
 
       {/* Honest Weekend Banner with explicit Weekday Reference Simulation Toggle */}
       {isWeekendDay && onToggleSimulateWeekday && (
         <div
-          className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 py-2 rounded-lg border text-xs ${
+          className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg border text-xs ${
             simulateWeekday
               ? 'border-sky-500/35 bg-sky-500/10 text-sky-100'
               : 'border-border-strong bg-white/[0.03] text-zinc-200'
@@ -164,7 +176,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
             <span className="leading-snug">
               {simulateWeekday ? (
                 <>
-                  <strong>Jornada hábil de referencia:</strong> mostrando horarios habituales de lunes a viernes en hora Chile.
+                  <strong>Horario habitual de referencia:</strong> mostrando aperturas y cierres de lunes a viernes en hora Chile.
                 </>
               ) : hasAnyRealSegment ? (
                 <>
@@ -186,7 +198,7 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
             size="sm"
             onClick={onToggleSimulateWeekday}
             aria-pressed={simulateWeekday}
-            className="gap-1.5 min-h-[40px] px-3 text-xs font-medium shrink-0 self-start sm:self-auto cursor-pointer"
+            className="gap-1.5 min-h-[34px] sm:min-h-[38px] px-2.5 sm:px-3 text-xs font-medium shrink-0 self-start sm:self-auto cursor-pointer"
           >
             {simulateWeekday ? (
               <>
@@ -196,49 +208,211 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
             ) : (
               <>
                 <Eye size={13} aria-hidden="true" />
-                <span>Ver jornada hábil de referencia</span>
+                <span>Ver horario habitual</span>
               </>
             )}
           </Button>
         </div>
       )}
 
-      {/* Horizontal Table with Left Sticky Column + 24h Bars */}
-      <div
-        ref={scrollWrapperRef}
-        className="timeline-table-wrapper relative flex w-full overflow-x-auto select-none rounded-xl border border-border bg-muted/40 touch-pan-y [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
-        <TimelineLeftColumn
-          allMarkets={allMarkets}
-          isColumnCollapsed={isColumnCollapsed}
-          scrubberEvaluations={scrubberEvaluations}
-          chileScrubberEvaluation={chileScrubberEvaluation}
-        />
+      {/* Unified 24h Table + Zero-CLS Single-Line Inspection Footer */}
+      <div className="rounded-xl border border-border bg-muted/40">
+        <div className="relative flex w-full select-none">
+          <TimelineLeftColumn
+            markets={markets}
+            marketSegments={marketSegments}
+            liveEvaluations={liveEvaluations}
+            isToday={isToday}
+            simulateWeekday={simulateWeekday}
+            activeMarketIds={activeMarketIds}
+            focusedMarketId={focusedMarketId}
+          />
 
-        <TimelineBars
-          allMarkets={allMarkets}
-          marketSegments={marketSegments}
-          scrubberEvaluations={scrubberEvaluations}
-          chileScrubberEvaluation={chileScrubberEvaluation}
-          scrubberMinutes={scrubberMinutes}
-          currentMinutes={currentMinutes}
-          isHovering={isHovering}
-          isPinned={isPinned}
-          isColumnCollapsed={isColumnCollapsed}
-          containerRef={containerRef}
-          dailyEvents={dailyEvents}
-          onEventClick={onEventClick}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerCancel={onPointerCancel}
-          onPointerLeave={onPointerLeave}
-          onKeyDown={onKeyDown}
-          isToday={isToday}
-          isWeekendDay={isWeekendDay}
-          simulateWeekday={simulateWeekday}
-        />
+          <TimelineBars
+            markets={markets}
+            marketSegments={marketSegments}
+            currentMinutes={currentMinutes}
+            dailyEvents={dailyEvents}
+            onEventClick={onEventClick}
+            isToday={isToday}
+            isWeekendDay={isWeekendDay}
+            simulateWeekday={simulateWeekday}
+            hoverMinute={hoverMinute}
+            hoveredSegment={hoveredSegment}
+            pinnedSegment={pinnedSegment}
+            onHoverMinuteChange={setHoverMinute}
+            onHoveredSegmentChange={setHoveredSegment}
+            onTogglePinnedSegment={handleTogglePinnedSegment}
+          />
+        </div>
+
+        {/* Fixed-height single-line inspection bar (0px layout shift) */}
+        <div
+          aria-live="polite"
+          className={`h-8 sm:h-9 px-2.5 sm:px-3 border-t flex items-center justify-between gap-2 text-[11px] sm:text-xs transition-colors duration-150 rounded-b-xl ${
+            activeMarket && activeSegment
+              ? 'border-sky-500/30 bg-sky-500/[0.08] text-zinc-100'
+              : hasActiveInspection
+              ? 'border-sky-500/25 bg-sky-500/[0.06] text-zinc-100'
+              : 'border-border bg-muted/30 text-muted-foreground'
+          }`}
+        >
+          {activeMarket && activeSegment ? (
+            <>
+              <span className="font-mono font-medium truncate">
+                {formatSegmentInspectionText(activeMarket, activeSegment)}
+              </span>
+              {hourSnapshot ? (
+                <span className="font-mono text-[10px] sm:text-[11px] font-semibold text-sky-300 tabular-nums shrink-0">
+                  {hourSnapshot.timeLabel}
+                </span>
+              ) : (
+                pinnedSegment &&
+                !hoveredSegment && (
+                  <button
+                    type="button"
+                    onClick={() => setPinnedSegment(null)}
+                    aria-label="Cerrar detalle de sesión"
+                    className="inline-flex items-center justify-center w-6 h-6 rounded-md text-zinc-400 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer shrink-0"
+                  >
+                    <X size={13} aria-hidden="true" />
+                  </button>
+                )
+              )}
+            </>
+          ) : hourSnapshot ? (
+            <div className="flex items-center gap-1.5 min-w-0 w-full truncate">
+              <span className="font-mono font-bold text-sky-300 tabular-nums shrink-0">
+                {hourSnapshot.timeLabel}
+              </span>
+              <span className="text-zinc-500 shrink-0" aria-hidden="true">
+                ·
+              </span>
+              {hourSnapshot.openMarkets.length > 0 ||
+              hourSnapshot.lunchMarkets.length > 0 ||
+              hourSnapshot.preMarketMarkets.length > 0 ? (
+                <div className="flex items-center gap-2 min-w-0 truncate">
+                  {hourSnapshot.openMarkets.length > 0 && (
+                    <span className="inline-flex items-center gap-1 text-emerald-200 truncate">
+                      <span className="text-emerald-300 font-medium">Abiertas:</span>
+                      <span className="sm:hidden">
+                        {hourSnapshot.openMarkets.map((m) => m.flag).join(' ')}
+                      </span>
+                      <span className="hidden sm:inline truncate">
+                        {hourSnapshot.openMarkets.map((m) => `${m.flag} ${m.name}`).join(', ')}
+                      </span>
+                    </span>
+                  )}
+                  {hourSnapshot.lunchMarkets.length > 0 && (
+                    <span className="inline-flex items-center gap-1 text-amber-200 truncate">
+                      <span className="text-amber-300 font-medium">Almuerzo:</span>
+                      <span className="sm:hidden">
+                        {hourSnapshot.lunchMarkets.map((m) => m.flag).join(' ')}
+                      </span>
+                      <span className="hidden sm:inline truncate">
+                        {hourSnapshot.lunchMarkets.map((m) => `${m.flag} ${m.name}`).join(', ')}
+                      </span>
+                    </span>
+                  )}
+                  {hourSnapshot.preMarketMarkets.length > 0 && (
+                    <span className="inline-flex items-center gap-1 text-sky-200 truncate">
+                      <span className="text-sky-300 font-medium">Pre:</span>
+                      <span className="sm:hidden">
+                        {hourSnapshot.preMarketMarkets.map((m) => m.flag).join(' ')}
+                      </span>
+                      <span className="hidden sm:inline truncate">
+                        {hourSnapshot.preMarketMarkets.map((m) => `${m.flag} ${m.name}`).join(', ')}
+                      </span>
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <span className="text-zinc-400 truncate">Sin bolsas abiertas</span>
+              )}
+            </div>
+          ) : (
+            <>
+              <span className="sm:hidden truncate">
+                Toca o desliza sobre las barras para inspeccionar
+              </span>
+              <span className="hidden sm:inline truncate">
+                Pasa el cursor o haz clic en una barra para inspeccionar sesiones
+              </span>
+            </>
+          )}
+        </div>
       </div>
+
+      {/* Selected-Day Important Events Strip (includes Chile macro events) */}
+      {selectedDayEvents.length > 0 ? (
+        <div
+          aria-label={`Eventos importantes para ${selectedDayLabel}`}
+          className="rounded-lg border border-border bg-white/[0.02] px-2.5 py-1.5 sm:px-3 sm:py-2 flex flex-col gap-1.5 sm:gap-2"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+              <Calendar className="w-3.5 h-3.5 text-sky-400 shrink-0" aria-hidden="true" />
+              <span className="text-[11px] sm:text-xs font-semibold text-zinc-100">
+                Eventos · {selectedDayLabel}
+              </span>
+              {highImpactCount > 0 && (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-rose-500/15 border border-rose-500/30 text-[10px] sm:text-[11px] font-medium text-rose-300">
+                  <Flame className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-rose-400 shrink-0" aria-hidden="true" />
+                  <span>{highImpactCount} de impacto alto</span>
+                </span>
+              )}
+            </div>
+            <span className="hidden sm:inline text-[11px] text-muted-foreground">
+              Toca un evento para ver detalles
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-1.5">
+            {selectedDayEvents.map((evt) => {
+              const isHigh = evt.importance === 'high';
+              const marketInfo = marketLookup[evt.marketId] ?? {
+                flag: '🌐',
+                name: evt.marketId.toUpperCase()
+              };
+              const timeLabel = `${formatMinutes(evt.minuteInChile)} CL`;
+
+              return (
+                <button
+                  key={evt.id}
+                  type="button"
+                  onClick={() => onEventClick?.(evt)}
+                  title={`${timeLabel} · ${marketInfo.name}: ${evt.title}`}
+                  className={`inline-flex items-center gap-1.5 min-h-[30px] sm:min-h-[34px] max-w-full px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg border text-[11px] sm:text-xs transition-colors cursor-pointer text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
+                    isHigh
+                      ? 'border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/15 text-zinc-100'
+                      : 'border-amber-500/25 bg-amber-500/10 hover:bg-amber-500/15 text-zinc-100'
+                  }`}
+                >
+                  {isHigh ? (
+                    <Flame className="w-3 h-3 text-rose-400 shrink-0" aria-hidden="true" />
+                  ) : (
+                    <AlertCircle className="w-3 h-3 text-amber-400 shrink-0" aria-hidden="true" />
+                  )}
+                  <span
+                    className={`font-mono text-[10px] sm:text-[11px] font-semibold tabular-nums shrink-0 ${
+                      isHigh ? 'text-rose-300' : 'text-amber-300'
+                    }`}
+                  >
+                    {timeLabel}
+                  </span>
+                  <span className="shrink-0" aria-hidden="true">{marketInfo.flag}</span>
+                  <span className="truncate">{evt.title}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-lg border border-border/70 bg-white/[0.015] px-2.5 py-1.5 sm:px-3 sm:py-2 text-[11px] sm:text-xs text-muted-foreground flex items-center gap-2">
+          <Calendar className="w-3.5 h-3.5 text-zinc-500 shrink-0" aria-hidden="true" />
+          <span>Sin eventos importantes programados para este día.</span>
+        </div>
+      )}
 
       <TimelineLegend />
     </section>

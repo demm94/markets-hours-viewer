@@ -63,7 +63,7 @@ export const TimelineEventMarker: React.FC<TimelineEventMarkerProps> = React.mem
           onHoverChange(false);
           onEventClick?.(event);
         }}
-        className={`group relative flex items-center gap-0.5 sm:gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold font-mono tracking-tight transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-white cursor-pointer before:absolute before:-inset-y-2.5 before:-inset-x-1.5 before:content-[''] ${
+        className={`group relative flex items-center gap-0.5 sm:gap-1 rounded px-1 sm:px-1.5 py-0.5 text-[10px] font-bold font-mono tracking-tight transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-white cursor-pointer before:absolute before:-inset-y-2.5 before:-inset-x-2 before:content-[''] ${
           isHigh
             ? 'bg-rose-600 text-white border border-rose-400/50 hover:bg-rose-500'
             : 'bg-amber-500 text-zinc-950 border border-amber-300/60 hover:bg-amber-400'
@@ -74,7 +74,7 @@ export const TimelineEventMarker: React.FC<TimelineEventMarkerProps> = React.mem
         ) : (
           <AlertCircle className="w-2.5 h-2.5 text-zinc-950 flex-shrink-0" aria-hidden="true" />
         )}
-        <span className="leading-none text-[10px] font-mono font-bold tabular-nums">
+        <span className="hidden sm:inline leading-none text-[10px] font-mono font-bold tabular-nums">
           {timeOnly}
         </span>
       </button>
@@ -116,10 +116,6 @@ export const TimelineEventMarker: React.FC<TimelineEventMarkerProps> = React.mem
             <div className="flex justify-between items-center text-foreground">
               <span className="text-muted-foreground">Hora Chile:</span>
               <span className="font-bold text-sky-400 tabular-nums">{event.chileTimeFormatted}</span>
-            </div>
-            <div className="flex justify-between items-center text-foreground">
-              <span className="text-muted-foreground">Hora local:</span>
-              <span className="font-semibold tabular-nums">{event.exchangeTimeFormatted}</span>
             </div>
             {(event.forecast || event.previous) && (
               <div className="flex justify-between items-center pt-1 border-t border-border/50 text-[10px] text-muted-foreground">

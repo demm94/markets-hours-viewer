@@ -11,12 +11,7 @@ import { TimelineHeader } from '../components/timeline/TimelineHeader';
 import { TimelineLeftColumn } from '../components/timeline/TimelineLeftColumn';
 import { TimelineBars } from '../components/timeline/TimelineBars';
 import { TimelineLegend } from '../components/timeline/TimelineLegend';
-import {
-  calculateScrubberMinutesFromBounds,
-  resolveScrubberKeyAction,
-  shouldClearScrubberOnLeave,
-  resolveScrubberCancelState
-} from '../hooks/useScrubber';
+import { TimelineWeekSelector } from '../components/timeline/TimelineWeekSelector';
 import { evaluateMarketAt } from './timezone';
 import { MARKETS } from './markets';
 
@@ -58,6 +53,9 @@ describe('React memoization & render optimization verification', () => {
 
     expect((TimelineLegend as any).$$typeof).toBe(REACT_MEMO_TYPE);
     expect(TimelineLegend.displayName).toBe('TimelineLegend');
+
+    expect((TimelineWeekSelector as any).$$typeof).toBe(REACT_MEMO_TYPE);
+    expect(TimelineWeekSelector.displayName).toBe('TimelineWeekSelector');
   });
 
   it('verifies market evaluation stability across seconds within the same minute', () => {
@@ -108,106 +106,13 @@ describe('React memoization & render optimization verification', () => {
       pullToRefreshExists = false;
     }
     expect(pullToRefreshExists).toBe(false);
-  });
 
-  describe('useScrubber behavioral interaction logic', () => {
-    it('maps pointer clientX coordinates accurately into clamped [0, 1440] minutes', () => {
-      // Container from x=100 to x=900 (width 800)
-      expect(calculateScrubberMinutesFromBounds(100, 100, 800)).toBe(0);
-      expect(calculateScrubberMinutesFromBounds(500, 100, 800)).toBe(720);
-      expect(calculateScrubberMinutesFromBounds(900, 100, 800)).toBe(1440);
-
-      // Out-of-bounds pointer clamping
-      expect(calculateScrubberMinutesFromBounds(20, 100, 800)).toBe(0);
-      expect(calculateScrubberMinutesFromBounds(1200, 100, 800)).toBe(1440);
-
-      // Degenerate zero-width container
-      expect(calculateScrubberMinutesFromBounds(300, 100, 0)).toBeNull();
-    });
-
-    it('resolves keyboard scrubber navigation steps and clamping', () => {
-      expect(resolveScrubberKeyAction('ArrowRight', null, 720)).toEqual({
-        handled: true,
-        nextMinutes: 735,
-        isHovering: true
-      });
-      expect(resolveScrubberKeyAction('ArrowLeft', 10, 720)).toEqual({
-        handled: true,
-        nextMinutes: 0,
-        isHovering: true
-      });
-      expect(resolveScrubberKeyAction('ArrowUp', 720, 720)).toEqual({
-        handled: true,
-        nextMinutes: 735,
-        isHovering: true
-      });
-      expect(resolveScrubberKeyAction('ArrowDown', 720, 720)).toEqual({
-        handled: true,
-        nextMinutes: 705,
-        isHovering: true
-      });
-      expect(resolveScrubberKeyAction('ArrowDown', 5, 720)).toEqual({
-        handled: true,
-        nextMinutes: 0,
-        isHovering: true
-      });
-      expect(resolveScrubberKeyAction('ArrowUp', 1435, 720)).toEqual({
-        handled: true,
-        nextMinutes: 1440,
-        isHovering: true
-      });
-      expect(resolveScrubberKeyAction('PageUp', 1400, 720)).toEqual({
-        handled: true,
-        nextMinutes: 1440,
-        isHovering: true
-      });
-      expect(resolveScrubberKeyAction('PageDown', 120, 720)).toEqual({
-        handled: true,
-        nextMinutes: 60,
-        isHovering: true
-      });
-      expect(resolveScrubberKeyAction('Home', 720, 720)).toEqual({
-        handled: true,
-        nextMinutes: 0,
-        isHovering: true
-      });
-      expect(resolveScrubberKeyAction('End', 720, 720)).toEqual({
-        handled: true,
-        nextMinutes: 1440,
-        isHovering: true
-      });
-      expect(resolveScrubberKeyAction('Escape', 800, 720)).toEqual({
-        handled: true,
-        nextMinutes: null,
-        isHovering: false,
-        isDragging: false
-      });
-      expect(resolveScrubberKeyAction('Tab', 800, 720).handled).toBe(false);
-    });
-
-    it('preserves pinned or touch scrubber positions on pointer leave and clears unpinned mouse hover', () => {
-      // Unpinned mouse leave clears preview
-      expect(shouldClearScrubberOnLeave('mouse', false, false)).toBe(true);
-      // Pinned mouse leave preserves position so desktop users can click "Volver a Ahora"
-      expect(shouldClearScrubberOnLeave('mouse', false, true)).toBe(false);
-      // Active drag preserves position
-      expect(shouldClearScrubberOnLeave('mouse', true, false)).toBe(false);
-      // Touch/pen pointer leave preserves scrubbed position
-      expect(shouldClearScrubberOnLeave('touch', false, false)).toBe(false);
-      expect(shouldClearScrubberOnLeave('pen', false, false)).toBe(false);
-    });
-
-    it('restores prior pin state on pointercancel so vertical scrolling does not accidentally pin', () => {
-      expect(resolveScrubberCancelState(false, null)).toEqual({
-        isPinned: false,
-        scrubberMinutes: null,
-        isHovering: false
-      });
-      expect(resolveScrubberCancelState(true, 600)).toEqual({
-        isPinned: true,
-        scrubberMinutes: 600,
-        isHovering: true
-      });
-    });
+    let scrubberHookExists = true;
+    try {
+      await import('../hooks/useScrubber' as any);
+    } catch {
+      scrubberHookExists = false;
+    }
+    expect(scrubberHookExists).toBe(false);
   });
 });

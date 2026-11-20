@@ -1,211 +1,141 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Globe } from 'lucide-react';
-import { MarketConfig, MarketEvaluation, MarketStatus } from '../../core/types';
-import { Badge } from '../ui/badge';
-
-const STATUS_LABELS: Record<MarketStatus, string> = {
-  open: 'Abierto',
-  lunch: 'Almuerzo',
-  pre_market: 'Pre-apertura',
-  closed: 'Cerrado'
-};
+import { MarketConfig, MarketEvaluation, TimelineSegment } from '../../core/types';
+import {
+  getTimelineLeftColumnSublabel,
+  summarizeTimelineDaySegments
+} from '../../core/timeline-schedule';
 
 interface TimelineLeftColumnProps {
-  allMarkets: MarketConfig[];
-  isColumnCollapsed: boolean;
-  scrubberEvaluations: Record<string, MarketEvaluation>;
-  chileScrubberEvaluation: MarketEvaluation;
+  markets: MarketConfig[];
+  marketSegments: Record<string, TimelineSegment[]>;
+  liveEvaluations: Record<string, MarketEvaluation>;
+  isToday: boolean;
+  simulateWeekday: boolean;
+  activeMarketIds?: ReadonlySet<string>;
+  focusedMarketId?: string | null;
 }
 
 export const TimelineLeftColumn: React.FC<TimelineLeftColumnProps> = React.memo(({
-  allMarkets,
-  isColumnCollapsed,
-  scrubberEvaluations,
-  chileScrubberEvaluation
+  markets,
+  marketSegments,
+  liveEvaluations,
+  isToday,
+  simulateWeekday,
+  activeMarketIds,
+  focusedMarketId = null
 }) => {
-  const getStatusBadge = (marketId: string, evaluation: MarketEvaluation) => {
-    const holiday = evaluation.holiday;
-    const isFullHoliday = Boolean(holiday && !holiday.isEarlyClose);
-    if (marketId === 'chile') {
-      if (isFullHoliday && holiday) {
-        return (
-          <Badge
-            variant="holiday"
-            showDot={false}
-            className="text-[10px] px-1.5 py-0.5 border-purple-400/40 text-purple-300 font-mono font-bold leading-none"
-            title={`Feriado en Chile: ${holiday.name}`}
-          >
-            Feriado
-          </Badge>
-        );
-      }
-      return (
-        <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 border-sky-400/40 text-sky-300 font-mono font-bold leading-none">
-          Ref
-        </Badge>
-      );
-    }
-    if (isFullHoliday && holiday) {
-      return (
-        <Badge
-          variant="holiday"
-          showDot={false}
-          className="text-[10px] px-1.5 py-0.5 font-mono font-bold leading-none"
-          title={`Feriado bursátil: ${holiday.name}`}
-        >
-          Feriado
-        </Badge>
-      );
-    }
-    const variant =
-      evaluation.status === 'open'
-        ? 'open'
-        : evaluation.status === 'lunch'
-        ? 'lunch'
-        : evaluation.status === 'pre_market'
-        ? 'pre'
-        : 'closed';
-
-    return (
-      <Badge variant={variant} showDot={false} className="text-[10px] px-1.5 py-0.5 font-mono font-bold leading-none">
-        {STATUS_LABELS[evaluation.status] ?? 'Cerrado'}
-      </Badge>
-    );
-  };
-
   return (
-    <motion.div
-      layout
-      className={`timeline-left-column sticky left-0 bg-card border-r border-border shadow-[4px_0_16px_rgba(0,0,0,0.45)] flex flex-col z-30 transition-[width,min-width] duration-200 ease-out ${
-        isColumnCollapsed
-          ? 'w-11 min-w-[44px] sm:w-14 sm:min-w-[56px]'
-          : 'w-[96px] min-w-[96px] sm:w-52 sm:min-w-[208px] md:w-[252px] md:min-w-[252px]'
-      }`}
-    >
-      <div
-        className={`h-9 sm:h-11 flex items-center border-b border-border bg-muted font-mono text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground ${
-          isColumnCollapsed ? 'justify-center px-0' : 'justify-between px-2.5 sm:px-3'
-        }`}
-      >
-        {isColumnCollapsed ? (
-          <Globe size={14} className="text-zinc-400" aria-hidden="true" />
-        ) : (
-          <>
-            <span className="text-[10px] sm:text-[11px] font-semibold">Mercado</span>
-            <span className="hidden sm:inline text-[10px] font-normal text-zinc-400">Hora local</span>
-          </>
-        )}
+    <div className="timeline-left-column w-[104px] min-w-[104px] sm:w-[164px] sm:min-w-[164px] md:w-[192px] md:min-w-[192px] rounded-tl-xl bg-card border-r border-border flex flex-col z-20 shrink-0">
+      <div className="h-7 sm:h-10 flex items-center justify-between px-1.5 sm:px-3 border-b border-border bg-muted rounded-tl-xl font-mono text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <span>Bolsa</span>
+        <span className="hidden sm:inline text-[10px] font-normal text-zinc-400">Hora CL</span>
       </div>
 
-      {allMarkets.map((market) => {
-        const isChile = market.id === 'chile';
-        const ev = isChile
-          ? chileScrubberEvaluation
-          : (scrubberEvaluations[market.id] ?? {
-              marketId: market.id,
-              status: 'closed',
-              localTimeFormatted: '--:--',
-              localDateFormatted: ''
-            });
-        const holiday = ev.holiday;
-        const isHoliday = Boolean(holiday && !holiday.isEarlyClose && !isChile);
-        const spanishStatus = STATUS_LABELS[ev.status] ?? 'Cerrado';
+      {markets.map((market) => {
+        const segments = marketSegments[market.id] ?? [];
+        const summary = summarizeTimelineDaySegments(segments);
+        const liveEv = liveEvaluations[market.id];
+        const isHoliday = summary.kind === 'holiday';
+        const isClosedDay = summary.kind === 'closed';
+        const showLiveStatus = isToday && !simulateWeekday;
+        const sublabel = getTimelineLeftColumnSublabel(summary, liveEv, showLiveStatus);
+
+        const isFocusedRow = focusedMarketId === market.id;
+        const isActiveAtHover = !isFocusedRow && Boolean(activeMarketIds?.has(market.id));
+        const isDimmedRow = Boolean(focusedMarketId && focusedMarketId !== market.id);
+
+        let dotClass = 'bg-zinc-600';
+        if (isHoliday) {
+          dotClass = 'bg-violet-400';
+        } else if (showLiveStatus) {
+          if (liveEv?.status === 'open') {
+            dotClass = 'bg-emerald-400 animate-pulse';
+          } else if (liveEv?.status === 'lunch') {
+            dotClass = 'bg-amber-400';
+          } else if (liveEv?.status === 'pre_market') {
+            dotClass = 'bg-sky-400';
+          }
+        } else if (!isClosedDay) {
+          dotClass = 'bg-emerald-400/70';
+        }
+
+        let summaryColorClass = 'text-zinc-300';
+        if (isHoliday) {
+          summaryColorClass = 'text-violet-300';
+        } else if (isClosedDay) {
+          summaryColorClass = 'text-zinc-500';
+        } else if (summary.isEarlyClose) {
+          summaryColorClass = 'text-amber-300';
+        } else if (showLiveStatus && liveEv?.status === 'open') {
+          summaryColorClass = 'text-emerald-300';
+        } else if (showLiveStatus && liveEv?.status === 'lunch') {
+          summaryColorClass = 'text-amber-300';
+        } else if (showLiveStatus && liveEv?.status === 'pre_market') {
+          summaryColorClass = 'text-sky-300';
+        }
+
+        const ariaLabel = isHoliday
+          ? `${market.name}: Feriado${summary.holidayName ? ` (${summary.holidayName})` : ''}`
+          : isClosedDay
+          ? `${market.name}: Cerrado`
+          : sublabel !== summary.label
+          ? `${market.name}: ${sublabel} (${summary.label} hora Chile)`
+          : summary.isEarlyClose
+          ? `${market.name}: ${summary.label} hora Chile (cierre temprano${
+              summary.holidayName ? `: ${summary.holidayName}` : ''
+            })`
+          : `${market.name}: ${summary.label} hora Chile`;
+
+        const rowHighlightClass = isFocusedRow
+          ? 'bg-white/[0.06] shadow-[inset_2px_0_0_0_#38bdf8]'
+          : isActiveAtHover
+          ? 'bg-emerald-500/[0.07] shadow-[inset_2px_0_0_0_rgba(16,185,129,0.75)]'
+          : 'hover:bg-white/[0.02]';
 
         return (
-          <motion.div
-            layout
+          <div
             key={market.id}
-            className={`h-[38px] sm:h-[46px] md:h-[50px] flex items-center border-b border-border transition-colors ${
-              isChile ? 'bg-white/[0.02]' : 'hover:bg-white/[0.02]'
-            } ${isHoliday ? 'opacity-75' : ''} ${isColumnCollapsed ? 'justify-center px-0' : 'justify-between px-2 sm:px-3'}`}
-            title={
-              isColumnCollapsed
-                ? `${market.name} (${market.code}) — ${ev.localTimeFormatted}${
-                    holiday
-                      ? isChile
-                        ? ` · Feriado en Chile: ${holiday.name}`
-                        : ` · Feriado: ${holiday.name}`
-                      : ev.nextTransition
-                      ? ` · ${ev.nextTransition.formattedCountdown}`
-                      : ''
-                  }`
-                : isChile && holiday
-                ? `Chile: Feriado (${holiday.name})`
-                : undefined
-            }
-            aria-label={`${market.name}: ${
-              holiday
-                ? `Feriado (${holiday.name})`
-                : isChile
-                ? 'Eje de referencia 24h'
-                : spanishStatus
+            className={`h-[36px] sm:h-[46px] md:h-[50px] flex flex-col justify-center px-1.5 sm:px-3 border-b border-border last:border-b-0 transition-[background-color,box-shadow,opacity] duration-150 ${rowHighlightClass} ${
+              isDimmedRow ? 'opacity-70' : isHoliday ? 'opacity-80' : ''
             }`}
+            title={ariaLabel}
+            aria-label={ariaLabel}
           >
-            <div className={`flex items-center ${isColumnCollapsed ? 'justify-center gap-0' : 'gap-1.5 sm:gap-2'} min-w-0`}>
-              <span
-                aria-hidden="true"
-                className={`leading-none select-none flex-shrink-0 ${isColumnCollapsed ? 'text-lg sm:text-xl' : 'text-sm sm:text-lg'}`}
-              >
-                {market.flag}
-              </span>
-              {!isColumnCollapsed && (
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[11px] sm:text-xs font-semibold text-zinc-100 whitespace-nowrap hidden sm:inline">
-                    {market.name}
-                  </span>
-                  <span className="text-[10px] font-medium text-muted-foreground font-mono leading-none whitespace-nowrap hidden sm:inline">
-                    {market.code}
-                  </span>
-
-                  <div className="flex items-center gap-1 sm:hidden">
-                    <span className="text-[10px] font-bold text-zinc-100 font-mono leading-none tracking-tight">
-                      {market.code.split(' ')[0]}
-                    </span>
-                    <span
-                      className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                        isChile && holiday
-                          ? 'bg-violet-400'
-                          : isChile
-                          ? 'bg-sky-400'
-                          : isHoliday
-                          ? 'bg-violet-400'
-                          : ev.status === 'open'
-                          ? 'bg-emerald-400'
-                          : ev.status === 'lunch'
-                          ? 'bg-amber-400'
-                          : ev.status === 'pre_market'
-                          ? 'bg-sky-400'
-                          : 'bg-zinc-600'
-                      }`}
-                    />
-                  </div>
-                  <span className="font-mono text-[10px] font-medium text-muted-foreground tabular-nums leading-none mt-0.5 sm:hidden">
-                    {ev.localTimeFormatted}
-                  </span>
-                </div>
-              )}
+            <div className="flex items-center justify-between gap-1 min-w-0">
+              <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
+                <span aria-hidden="true" className="text-xs sm:text-base leading-none select-none shrink-0">
+                  {market.flag}
+                </span>
+                <span className="text-[10.5px] sm:text-xs font-semibold text-zinc-100 truncate">
+                  {market.id === 'krx' ? (
+                    <>
+                      <span className="sm:hidden">Corea</span>
+                      <span className="hidden sm:inline">{market.name}</span>
+                    </>
+                  ) : (
+                    market.name
+                  )}
+                </span>
+              </div>
+              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotClass}`} aria-hidden="true" />
             </div>
 
-            {!isColumnCollapsed && (
-              <div className="hidden sm:flex flex-col items-end justify-center gap-1 flex-shrink-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-mono text-xs md:text-sm font-bold text-zinc-100 tabular-nums leading-none">
-                    {ev.localTimeFormatted}
-                  </span>
-                  {getStatusBadge(market.id, ev)}
-                </div>
-                {ev.nextTransition?.formattedCountdown && (
-                  <span className="text-[10px] font-mono text-muted-foreground leading-none tabular-nums whitespace-nowrap">
-                    {ev.nextTransition.formattedCountdown}
-                  </span>
-                )}
-              </div>
-            )}
-          </motion.div>
+            <div className="flex items-center gap-1 min-w-0 mt-0.5">
+              <span
+                className={`font-mono text-[9px] sm:text-[11px] font-semibold tabular-nums tracking-tight sm:tracking-normal leading-none truncate ${summaryColorClass}`}
+              >
+                {sublabel}
+              </span>
+              {summary.isEarlyClose && (
+                <span className="hidden sm:inline text-[10px] font-normal text-amber-300/80 whitespace-nowrap shrink-0">
+                  · temprano
+                </span>
+              )}
+            </div>
+          </div>
         );
       })}
-    </motion.div>
+    </div>
   );
 });
 

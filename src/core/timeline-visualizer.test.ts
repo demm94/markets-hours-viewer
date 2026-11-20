@@ -153,15 +153,20 @@ describe('timeline-visualizer & pwa-shell compliance', () => {
     expect(normalChileEvaluation.activeSegmentLabel).toBeUndefined();
   });
 
-  it('uses CSS custom properties for floating timeline pills and safe-area-inset-bottom on fixed overlays', () => {
-    const css = readRepoFile('src/index.css');
-    expect(css).toContain('--timeline-header-h');
-    expect(css).toContain('--timeline-row-h');
-
+  it('keeps simplified timeline layout without floating pills, slider scrubber, or foreign local clocks', () => {
     const timelineBars = readRepoFile('src/components/timeline/TimelineBars.tsx');
-    expect(timelineBars).toContain('var(--timeline-header-h');
-    expect(timelineBars).toContain('var(--timeline-row-h');
     expect(timelineBars).not.toContain('window.innerWidth');
+    expect(timelineBars).not.toContain('renderCollapsedFloatingPills');
+    expect(timelineBars).not.toContain('role="slider"');
+    expect(timelineBars).not.toContain('min-w-[460px]');
+    expect(timelineBars).not.toContain('min-w-[600px]');
+
+    const timelineGrid = readRepoFile('src/components/TimelineGrid.tsx');
+    expect(timelineGrid).not.toContain('window.innerWidth');
+
+    const timelineLeftCol = readRepoFile('src/components/timeline/TimelineLeftColumn.tsx');
+    expect(timelineLeftCol).not.toContain('Hora local');
+    expect(timelineLeftCol).not.toContain('localTimeFormatted');
 
     const drawer = readRepoFile('src/components/EventsDrawer.tsx');
     expect(drawer).toContain('env(safe-area-inset-bottom)');
