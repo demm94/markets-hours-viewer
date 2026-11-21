@@ -37,17 +37,17 @@ export const Header: React.FC<HeaderProps> = React.memo(({
   const hasOpenMarkets = openMarketsCount > 0;
 
   return (
-    <header className="flex items-center justify-between gap-2 sm:gap-3 px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl border border-border bg-card backdrop-blur-md shadow-neon relative">
-      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 min-w-0">
-        <div className="flex items-center gap-2 min-w-0">
+    <header className="flex items-center justify-between gap-1.5 sm:gap-3 px-2.5 py-2 sm:px-4 sm:py-3 rounded-xl border border-border bg-card backdrop-blur-md shadow-neon relative">
+      <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
           <img
             src="/favicon.svg"
             alt=""
-            className="w-5 h-5 rounded shrink-0"
+            className="w-4 h-4 sm:w-5 sm:h-5 rounded shrink-0"
             width="20"
             height="20"
           />
-          <h1 className="text-sm sm:text-base font-bold tracking-tight text-zinc-100 whitespace-nowrap truncate">
+          <h1 className="text-[13px] sm:text-base font-bold tracking-tight text-zinc-100 whitespace-nowrap truncate">
             Horarios Bursátiles
           </h1>
         </div>
@@ -55,7 +55,7 @@ export const Header: React.FC<HeaderProps> = React.memo(({
         <Badge
           variant={hasOpenMarkets ? 'open' : 'closed'}
           showDot={false}
-          className="min-h-[28px] sm:min-h-[30px] gap-1.5 px-2 sm:px-2.5 py-1 text-xs font-medium whitespace-nowrap"
+          className="shrink-0 min-h-[24px] sm:min-h-[28px] gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 py-0.5 sm:py-1 text-[11px] sm:text-xs font-medium whitespace-nowrap"
         >
           <Activity
             size={12}
@@ -70,7 +70,8 @@ export const Header: React.FC<HeaderProps> = React.memo(({
             >
               {openMarketsCount}
             </strong>
-            /{totalMarketsCount} abiertas
+            /{totalMarketsCount}
+            <span className="hidden min-[375px]:inline"> abiertas</span>
           </span>
         </Badge>
       </div>

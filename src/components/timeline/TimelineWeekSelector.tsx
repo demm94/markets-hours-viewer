@@ -85,7 +85,7 @@ export const TimelineWeekSelector: React.FC<TimelineWeekSelectorProps> = React.m
           ref={scrollRef}
           role="group"
           aria-label="Selector de día para la línea de tiempo"
-          className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto select-none py-0.5 px-0.5 w-full [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x"
+          className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto select-none py-px px-0.5 w-full [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x"
         >
           {days.map((day) => {
             const isSelected = day.isoDate === selectedIsoDate;
@@ -105,7 +105,7 @@ export const TimelineWeekSelector: React.FC<TimelineWeekSelectorProps> = React.m
                 aria-pressed={isSelected}
                 aria-label={`${dayDescriptor}${eventSummary}`}
                 onClick={() => onSelectDay(day)}
-                className={`group relative flex items-center gap-1 sm:gap-1.5 min-h-[34px] sm:min-h-[40px] px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-lg border text-[11px] sm:text-xs font-medium transition-colors duration-150 cursor-pointer whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
+                className={`group relative flex items-center gap-1 sm:gap-1.5 min-h-[28px] sm:min-h-[32px] px-2 sm:px-2.5 py-0.5 rounded-md sm:rounded-lg border text-[11px] sm:text-xs font-medium transition-colors duration-150 cursor-pointer whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
                   isSelected
                     ? 'border-sky-500/45 bg-sky-500/12 text-zinc-50 font-semibold'
                     : day.isToday
@@ -118,7 +118,7 @@ export const TimelineWeekSelector: React.FC<TimelineWeekSelectorProps> = React.m
 
                 {day.hasEvents && (
                   <span
-                    className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-mono text-[10px] font-bold leading-none tabular-nums border shrink-0 ${
+                    className={`inline-flex items-center gap-0.5 sm:gap-1 px-1 py-0.5 rounded font-mono text-[9.5px] sm:text-[10px] font-bold leading-none tabular-nums border shrink-0 ${
                       day.hasHighImpact
                         ? 'bg-rose-500/15 border-rose-500/30 text-rose-300'
                         : 'bg-amber-500/15 border-amber-500/30 text-amber-300'
