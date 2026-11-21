@@ -1,72 +1,92 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0e1726" />
-      <stop offset="50%" stop-color="#080d1a" />
-      <stop offset="100%" stop-color="#02040a" />
+    <linearGradient id="bgGrad" gradientUnits="userSpaceOnUse" x1="256" y1="0" x2="256" y2="512">
+      <stop offset="0%" stop-color="#101728" />
+      <stop offset="50%" stop-color="#070a12" />
+      <stop offset="100%" stop-color="#04060b" />
     </linearGradient>
-    <linearGradient id="emeraldGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-      <stop offset="0%" stop-color="#059669" />
+
+    <radialGradient id="ambientGlow" gradientUnits="userSpaceOnUse" cx="372" cy="142" r="245">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.16" />
+      <stop offset="48%" stop-color="#38bdf8" stop-opacity="0.06" />
+      <stop offset="100%" stop-color="#04060b" stop-opacity="0" />
+    </radialGradient>
+
+    <linearGradient id="rimGrad" gradientUnits="userSpaceOnUse" x1="256" y1="0" x2="256" y2="512">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.22" />
+      <stop offset="45%" stop-color="#ffffff" stop-opacity="0.06" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.02" />
+    </linearGradient>
+
+    <linearGradient id="activeArcGrad" gradientUnits="userSpaceOnUse" x1="300" y1="79" x2="431" y2="306">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="55%" stop-color="#10b981" />
       <stop offset="100%" stop-color="#34d399" />
     </linearGradient>
-    <linearGradient id="cyanGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-      <stop offset="0%" stop-color="#0284c7" />
-      <stop offset="100%" stop-color="#38bdf8" />
+
+    <linearGradient id="quietArcGrad" gradientUnits="userSpaceOnUse" x1="80" y1="209" x2="152" y2="405">
+      <stop offset="0%" stop-color="#94a3b8" stop-opacity="0.12" />
+      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.34" />
     </linearGradient>
-    <linearGradient id="amberGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-      <stop offset="0%" stop-color="#d97706" />
-      <stop offset="100%" stop-color="#fbbf24" />
+
+    <radialGradient id="beaconGlow" gradientUnits="userSpaceOnUse" cx="430.95" cy="306.17" r="28">
+      <stop offset="0%" stop-color="#34d399" stop-opacity="0.5" />
+      <stop offset="50%" stop-color="#10b981" stop-opacity="0.16" />
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0" />
+    </radialGradient>
+
+    <linearGradient id="platinumGrad" gradientUnits="userSpaceOnUse" x1="256" y1="178" x2="256" y2="338">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="52%" stop-color="#e2e8f0" />
+      <stop offset="100%" stop-color="#94a3b8" />
     </linearGradient>
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="10" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over" />
-    </filter>
-    <filter id="subtleGlow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="5" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over" />
-    </filter>
   </defs>
 
-  <!-- Squircle Base -->
-  <rect width="512" height="512" rx="120" fill="url(#bgGrad)" />
-  <rect width="508" height="508" x="2" y="2" rx="118" fill="none" stroke="rgba(56, 189, 248, 0.25)" stroke-width="3" />
+  <!-- Obsidian Squircle Base -->
+  <rect id="squircle-bg" width="512" height="512" rx="116" fill="url(#bgGrad)" />
+  <rect id="squircle-ambient" width="512" height="512" rx="116" fill="url(#ambientGlow)" />
+  <rect id="squircle-rim" x="1.5" y="1.5" width="509" height="509" rx="114.5" fill="none" stroke="url(#rimGrad)" stroke-width="3" />
 
-  <!-- Outer Dial Track -->
-  <circle cx="256" cy="256" r="190" fill="none" stroke="rgba(51, 65, 85, 0.45)" stroke-width="14" />
-  <!-- Active Market Arc -->
-  <circle cx="256" cy="256" r="190" fill="none" stroke="url(#cyanGrad)" stroke-width="14" stroke-dasharray="320 880" stroke-linecap="round" transform="rotate(-70 256 256)" filter="url(#subtleGlow)" />
+  <!-- Minimalist 24h Chronograph Dial & Platinum Monogram -->
+  <g id="logo-artwork">
+    <!-- Fine Orbital Ring -->
+    <circle cx="256" cy="256" r="182" fill="none" stroke="rgba(226, 232, 240, 0.14)" stroke-width="7" />
 
-  <!-- Major Hour Ticks -->
-  <circle cx="256" cy="66" r="6" fill="#94a3b8" />
-  <circle cx="446" cy="256" r="6" fill="#94a3b8" />
-  <circle cx="256" cy="446" r="6" fill="#94a3b8" />
-  <circle cx="66" cy="256" r="6" fill="#94a3b8" />
+    <!-- Zenith & Nadir Horological Ticks (12 & 6) -->
+    <line x1="256" y1="64" x2="256" y2="84" stroke="#cbd5e1" stroke-opacity="0.55" stroke-width="4.5" stroke-linecap="round" />
+    <line x1="256" y1="428" x2="256" y2="448" stroke="#94a3b8" stroke-opacity="0.30" stroke-width="4.5" stroke-linecap="round" />
 
-  <!-- Inner Subtle Timeline Rings -->
-  <circle cx="256" cy="256" r="140" fill="none" stroke="rgba(51, 65, 85, 0.3)" stroke-width="2.5" stroke-dasharray="6 8" />
+    <!-- Secondary Quiet Session Arc (125deg to 195deg) -->
+    <path
+      d="M 151.61 405.09 A 182 182 0 0 1 80.20 208.89"
+      fill="none"
+      stroke="url(#quietArcGrad)"
+      stroke-width="9"
+      stroke-linecap="round"
+    />
 
-  <!-- Market Trading Session Bars -->
-  <!-- Bar 1 (Asia Session - Amber) -->
-  <line x1="170" y1="195" x2="170" y2="335" stroke="#f59e0b" stroke-width="3" stroke-linecap="round" opacity="0.8" />
-  <rect x="156" y="220" width="28" height="90" rx="6" fill="url(#amberGrad)" filter="url(#subtleGlow)" />
+    <!-- Active Trading Session Arc (-76deg to +16deg) -->
+    <path
+      d="M 300.03 79.41 A 182 182 0 0 1 430.95 306.17"
+      fill="none"
+      stroke="url(#activeArcGrad)"
+      stroke-width="14"
+      stroke-linecap="round"
+    />
 
-  <!-- Bar 2 (Pre-market - Cyan) -->
-  <line x1="220" y1="140" x2="220" y2="345" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" opacity="0.8" />
-  <rect x="206" y="170" width="28" height="150" rx="6" fill="url(#cyanGrad)" filter="url(#subtleGlow)" />
+    <!-- Live Market Beacon -->
+    <circle cx="430.95" cy="306.17" r="28" fill="url(#beaconGlow)" />
+    <circle cx="430.95" cy="306.17" r="11" fill="#34d399" />
+    <circle cx="430.95" cy="306.17" r="4.5" fill="#ecfdf5" />
 
-  <!-- Bar 3 (Main Session - Emerald) -->
-  <line x1="270" y1="100" x2="270" y2="355" stroke="#10b981" stroke-width="3.5" stroke-linecap="round" />
-  <rect x="256" y="130" width="28" height="200" rx="6" fill="url(#emeraldGrad)" filter="url(#glow)" />
-
-  <!-- Bar 4 (Extended Session - Emerald/Cyan) -->
-  <line x1="320" y1="170" x2="320" y2="335" stroke="#34d399" stroke-width="3" stroke-linecap="round" opacity="0.8" />
-  <rect x="306" y="195" width="28" height="120" rx="6" fill="url(#emeraldGrad)" opacity="0.9" filter="url(#subtleGlow)" />
-
-  <!-- Dynamic Timeline Scrubber Line -->
-  <line x1="270" y1="62" x2="270" y2="450" stroke="#38bdf8" stroke-width="4.5" filter="url(#glow)" />
-  
-  <!-- Scrubber Indicator Arrow & Beacon -->
-  <polygon points="270,64 258,82 282,82" fill="#38bdf8" />
-  <circle cx="270" cy="280" r="10" fill="#f8fafc" filter="url(#glow)" />
-  <circle cx="270" cy="280" r="5" fill="#0284c7" />
+    <!-- Sculpted Platinum Monogram (M) -->
+    <path
+      d="M 168 320 L 168 196 L 256 274 L 344 196 L 344 320"
+      fill="none"
+      stroke="url(#platinumGrad)"
+      stroke-width="36"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </g>
 </svg>

@@ -43,12 +43,12 @@ export const Header: React.FC<HeaderProps> = React.memo(({
           <img
             src="/favicon.svg"
             alt=""
-            className="w-4 h-4 sm:w-5 sm:h-5 rounded shrink-0"
-            width="20"
-            height="20"
+            className="w-5 h-5 sm:w-6 sm:h-6 rounded-[5px] shrink-0"
+            width="24"
+            height="24"
           />
           <h1 className="text-[13px] sm:text-base font-bold tracking-tight text-zinc-100 whitespace-nowrap truncate">
-            Horarios Bursátiles
+            Markets
           </h1>
         </div>
 

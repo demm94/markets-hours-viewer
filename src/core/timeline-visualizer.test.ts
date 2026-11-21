@@ -99,7 +99,8 @@ describe('timeline-visualizer & pwa-shell compliance', () => {
     ).toBe(themeBackground);
 
     expect(pwaManifest.icons?.length).toBeGreaterThanOrEqual(2);
-    expect(pwaManifest.name).toBe('Markets View');
+    expect(pwaManifest.name).toBe('Markets');
+    expect(pwaManifest.short_name).toBe('Markets');
   });
 
   it('verifies PWA static icon assets exist in public folder', () => {

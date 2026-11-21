@@ -1,8 +1,8 @@
 import type { ManifestOptions } from 'vite-plugin-pwa';
 
 export const pwaManifest: Partial<ManifestOptions> = {
-  name: 'Markets View',
-  short_name: 'Markets View',
+  name: 'Markets',
+  short_name: 'Markets',
   description: 'Comparador en tiempo real de horarios de apertura y cierre bursátil contra hora de Chile',
   theme_color: '#05060a',
   background_color: '#05060a',
