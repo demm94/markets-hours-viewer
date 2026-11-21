@@ -56,14 +56,13 @@ export const MsciEmStrip: React.FC = React.memo(() => {
       <section
         aria-label="Indicador MSCI EM Net USD"
         aria-busy="true"
-        className="rounded-xl border border-border bg-card backdrop-blur-md shadow-neon px-3 py-2.5 sm:px-4 sm:py-2.5 min-h-[52px] flex items-center justify-between gap-3"
+        className="rounded-xl border border-border bg-card backdrop-blur-md shadow-neon px-2.5 py-2 sm:px-4 sm:py-2 min-h-[50px] flex items-center justify-between gap-2"
       >
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="h-4 w-32 rounded bg-white/[0.06] animate-pulse" />
-          <div className="h-5 w-20 rounded bg-white/[0.08] animate-pulse" />
-          <div className="h-5 w-24 rounded-md bg-white/[0.06] animate-pulse" />
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="h-4 w-28 rounded bg-white/[0.06] animate-pulse" />
+          <div className="h-5 w-16 rounded bg-white/[0.08] animate-pulse" />
         </div>
-        <div className="hidden sm:block h-7 w-28 rounded bg-white/[0.05] animate-pulse" />
+        <div className="h-7 w-24 sm:w-32 rounded bg-white/[0.05] animate-pulse" />
       </section>
     );
   }
@@ -72,11 +71,11 @@ export const MsciEmStrip: React.FC = React.memo(() => {
     return (
       <section
         aria-label="Indicador MSCI EM Net USD"
-        className="rounded-xl border border-border bg-card backdrop-blur-md shadow-neon px-3 py-2 sm:px-4 sm:py-2.5 flex flex-wrap items-center justify-between gap-2"
+        className="rounded-xl border border-border bg-card backdrop-blur-md shadow-neon px-2.5 py-2 sm:px-4 sm:py-2 min-h-[50px] flex items-center justify-between gap-2"
       >
         <div className="flex items-center gap-2 min-w-0 text-xs text-zinc-300">
           <Activity className="w-3.5 h-3.5 text-zinc-400 shrink-0" aria-hidden="true" />
-          <span>No se pudo cargar MSCI EM Net USD</span>
+          <span className="truncate">No se pudo cargar MSCI EM Net USD</span>
           {error && (
             <span className="hidden sm:inline text-muted-foreground font-mono">
               ({error})
@@ -88,7 +87,7 @@ export const MsciEmStrip: React.FC = React.memo(() => {
             type="button"
             onClick={refresh}
             disabled={isRefreshing}
-            className="inline-flex items-center gap-1.5 min-h-[36px] px-2.5 py-1 rounded-lg border border-border bg-white/[0.03] hover:border-border-strong hover:bg-white/[0.06] text-xs font-medium text-zinc-200 transition-colors cursor-pointer disabled:opacity-50"
+            className="relative inline-flex items-center gap-1.5 h-7 sm:h-8 px-2.5 rounded-lg border border-border bg-white/[0.03] hover:border-border-strong hover:bg-white/[0.06] text-xs font-medium text-zinc-200 transition-colors cursor-pointer disabled:opacity-50 before:absolute before:-inset-1 before:content-['']"
           >
             <RefreshCw
               className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`}
@@ -102,7 +101,7 @@ export const MsciEmStrip: React.FC = React.memo(() => {
             rel="noopener noreferrer"
             aria-label="Abrir MSCI EM Net USD en Yahoo Finance"
             title="Ver en Yahoo Finance"
-            className="inline-flex items-center justify-center min-h-[36px] min-w-[36px] rounded-lg border border-border bg-white/[0.03] hover:border-border-strong hover:bg-white/[0.06] text-zinc-300 hover:text-white transition-colors"
+            className="relative inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg border border-border bg-white/[0.03] hover:border-border-strong hover:bg-white/[0.06] text-zinc-300 hover:text-white transition-colors before:absolute before:-inset-1 before:content-['']"
           >
             <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
           </a>
@@ -123,157 +122,130 @@ export const MsciEmStrip: React.FC = React.memo(() => {
 
   const showLivePill = quote.marketState === 'live' && !isStale;
   const showStalePill = isStale || quote.marketState === 'stale';
+  const primaryChangeLabel = formattedPercent ?? formattedPoints;
+  const statusLabel = showLivePill ? 'En vivo' : showStalePill ? 'Último dato' : 'Cierre';
 
-  const dayRangeAvailable =
-    quote.dayLow !== null &&
-    quote.dayHigh !== null &&
-    Number.isFinite(quote.dayLow) &&
-    Number.isFinite(quote.dayHigh);
-
-  const deltaLabel =
-    formattedPoints && formattedPercent
-      ? `${formattedPoints} (${formattedPercent})`
-      : formattedPercent ?? formattedPoints;
+  const refreshTooltip = updatedChileTime
+    ? `Actualizar cotización (último dato: ${updatedChileTime} CL)`
+    : 'Actualizar cotización';
 
   return (
     <section
       aria-label="Indicador MSCI EM Net USD"
-      className="rounded-xl border border-border bg-card backdrop-blur-md shadow-neon px-3 py-2.5 sm:px-4 sm:py-2.5 flex flex-col md:flex-row md:items-center md:justify-between gap-2.5 md:gap-4"
+      className="rounded-xl border border-border bg-card backdrop-blur-md shadow-neon px-2.5 py-2 sm:px-4 sm:py-2 flex items-center justify-between gap-2 sm:gap-3"
     >
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 min-w-0">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="text-xs font-semibold tracking-wide text-zinc-100 whitespace-nowrap">
+      <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3 min-w-0">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span
+            className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+              showLivePill
+                ? 'bg-emerald-400 animate-pulse'
+                : showStalePill
+                ? 'bg-amber-400'
+                : 'bg-zinc-400'
+            }`}
+            aria-hidden="true"
+          />
+          <span className="sr-only">{statusLabel}</span>
+          <span className="text-[11px] sm:text-xs font-semibold text-zinc-200 whitespace-nowrap truncate">
             {quote.name}
           </span>
-          <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded border border-border bg-white/[0.03] font-mono text-[11px] text-muted-foreground whitespace-nowrap">
-            {quote.symbol}
-          </span>
-          {showLivePill ? (
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border border-emerald-500/30 bg-emerald-500/10 text-[11px] font-medium text-emerald-300 whitespace-nowrap">
-              <span
-                className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0"
-                aria-hidden="true"
-              />
-              <span>En vivo</span>
-            </span>
-          ) : showStalePill ? (
+          {showStalePill ? (
             <span
               title={
                 error
                   ? `Mostrando último dato en caché (${error})`
                   : 'Cotización con demora respecto al último tick'
               }
-              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border border-amber-500/30 bg-amber-500/10 text-[11px] font-medium text-amber-300 whitespace-nowrap"
+              className="inline-flex items-center px-1.5 py-px rounded border border-amber-500/30 bg-amber-500/10 text-[10px] font-medium text-amber-300 whitespace-nowrap shrink-0"
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" aria-hidden="true" />
-              <span>Último dato</span>
+              Último dato
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border border-border bg-white/[0.04] text-[11px] font-medium text-zinc-300 whitespace-nowrap">
-              <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" aria-hidden="true" />
-              <span>Cierre</span>
+            <span
+              className={`hidden sm:inline-flex items-center px-1.5 py-px rounded border text-[10px] font-medium whitespace-nowrap shrink-0 ${
+                showLivePill
+                  ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                  : 'border-border bg-white/[0.04] text-zinc-400'
+              }`}
+            >
+              {statusLabel}
             </span>
           )}
         </div>
 
-        <div className="flex items-baseline gap-1.5">
-          <span className="font-mono text-base sm:text-lg font-bold tracking-tight text-zinc-50 tabular-nums">
+        <div className="flex items-baseline gap-2 min-w-0">
+          {primaryChangeLabel && (
+            <span
+              className={`inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md border font-mono text-sm sm:text-base font-bold tabular-nums leading-none whitespace-nowrap ${styles.badge}`}
+            >
+              <DirectionIcon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+              <span>{primaryChangeLabel}</span>
+            </span>
+          )}
+          <span className="font-mono text-[11px] sm:text-xs font-medium text-muted-foreground tabular-nums whitespace-nowrap">
             {formattedPrice}
-          </span>
-          <span className="font-mono text-[11px] font-medium text-muted-foreground">
-            {quote.currency}
+            <span className="hidden min-[375px]:inline text-[10px] text-zinc-500 ml-1">
+              {quote.currency}
+            </span>
           </span>
         </div>
-
-        {deltaLabel && (
-          <span
-            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border font-mono text-xs font-semibold tabular-nums whitespace-nowrap ${styles.badge}`}
-          >
-            <DirectionIcon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-            <span>{deltaLabel}</span>
-          </span>
-        )}
       </div>
 
-      <div className="flex items-center justify-between md:justify-end gap-3 min-w-0">
-        <div className="flex items-center gap-3 min-w-0">
-          <svg
-            viewBox="0 0 120 32"
-            role="img"
-            aria-label="Tendencia intradía 1D de MSCI EM Net USD"
-            className="w-28 sm:w-36 h-8 shrink-0 overflow-visible"
-          >
-            <defs>
-              <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={styles.fillStart} />
-                <stop offset="100%" stopColor={styles.fillEnd} />
-              </linearGradient>
-            </defs>
-            {geometry ? (
-              <>
-                {geometry.previousCloseY !== null && (
-                  <line
-                    x1="0"
-                    y1={geometry.previousCloseY}
-                    x2="120"
-                    y2={geometry.previousCloseY}
-                    stroke="rgba(148, 163, 184, 0.35)"
-                    strokeWidth="1"
-                    strokeDasharray="2 3"
-                  />
-                )}
-                <path d={geometry.areaPath} fill={`url(#${gradientId})`} />
-                <path
-                  d={geometry.linePath}
-                  fill="none"
-                  stroke={styles.stroke}
-                  strokeWidth="1.75"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+      <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+        <svg
+          viewBox="0 0 120 32"
+          role="img"
+          aria-label="Tendencia intradía 1D de MSCI EM Net USD"
+          className="w-16 min-[375px]:w-24 sm:w-32 md:w-36 h-7 sm:h-8 shrink-0 overflow-visible"
+        >
+          <defs>
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={styles.fillStart} />
+              <stop offset="100%" stopColor={styles.fillEnd} />
+            </linearGradient>
+          </defs>
+          {geometry ? (
+            <>
+              {geometry.previousCloseY !== null && (
+                <line
+                  x1="0"
+                  y1={geometry.previousCloseY}
+                  x2="120"
+                  y2={geometry.previousCloseY}
+                  stroke="rgba(148, 163, 184, 0.35)"
+                  strokeWidth="1"
+                  strokeDasharray="2 3"
                 />
-                <circle
-                  cx={geometry.lastPoint.x}
-                  cy={geometry.lastPoint.y}
-                  r="2.25"
-                  fill={styles.dot}
-                />
-              </>
-            ) : (
-              <line
-                x1="0"
-                y1="16"
-                x2="120"
-                y2="16"
-                stroke="rgba(148, 163, 184, 0.25)"
-                strokeWidth="1"
-                strokeDasharray="3 3"
+              )}
+              <path d={geometry.areaPath} fill={`url(#${gradientId})`} />
+              <path
+                d={geometry.linePath}
+                fill="none"
+                stroke={styles.stroke}
+                strokeWidth="1.75"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               />
-            )}
-          </svg>
-
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] sm:text-xs font-mono tabular-nums text-zinc-400 min-w-0">
-            {dayRangeAvailable && (
-              <span className="whitespace-nowrap">
-                <span className="text-muted-foreground">Rango: </span>
-                <span className="text-zinc-200">
-                  {formatIndexPrice(quote.dayLow!)} – {formatIndexPrice(quote.dayHigh!)}
-                </span>
-              </span>
-            )}
-            {quote.previousClose !== null && Number.isFinite(quote.previousClose) && (
-              <span className="hidden xl:inline whitespace-nowrap">
-                <span className="text-muted-foreground">Cierre ant.: </span>
-                <span className="text-zinc-300">{formatIndexPrice(quote.previousClose)}</span>
-              </span>
-            )}
-            {updatedChileTime && (
-              <span className="whitespace-nowrap">
-                <span className="text-muted-foreground">Act. </span>
-                <span className="text-zinc-300">{updatedChileTime} CL</span>
-              </span>
-            )}
-          </div>
-        </div>
+              <circle
+                cx={geometry.lastPoint.x}
+                cy={geometry.lastPoint.y}
+                r="2.25"
+                fill={styles.dot}
+              />
+            </>
+          ) : (
+            <line
+              x1="0"
+              y1="16"
+              x2="120"
+              y2="16"
+              stroke="rgba(148, 163, 184, 0.25)"
+              strokeWidth="1"
+              strokeDasharray="3 3"
+            />
+          )}
+        </svg>
 
         <div className="flex items-center gap-1.5 shrink-0">
           <button
@@ -281,8 +253,8 @@ export const MsciEmStrip: React.FC = React.memo(() => {
             onClick={refresh}
             disabled={isRefreshing}
             aria-label="Actualizar MSCI EM Net USD"
-            title="Actualizar cotización"
-            className="inline-flex items-center justify-center min-h-[36px] min-w-[36px] rounded-lg border border-border bg-white/[0.03] hover:border-border-strong hover:bg-white/[0.06] text-zinc-300 hover:text-white transition-colors cursor-pointer disabled:opacity-50"
+            title={refreshTooltip}
+            className="relative inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg border border-border bg-white/[0.03] hover:border-border-strong hover:bg-white/[0.06] text-zinc-300 hover:text-white transition-colors cursor-pointer disabled:opacity-50 before:absolute before:-inset-1 before:content-['']"
           >
             <RefreshCw
               className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`}
@@ -296,7 +268,7 @@ export const MsciEmStrip: React.FC = React.memo(() => {
             rel="noopener noreferrer"
             aria-label="Abrir MSCI EM Net USD en Yahoo Finance"
             title="Ver en Yahoo Finance"
-            className="inline-flex items-center justify-center min-h-[36px] min-w-[36px] rounded-lg border border-border bg-white/[0.03] hover:border-border-strong hover:bg-white/[0.06] text-zinc-300 hover:text-white transition-colors"
+            className="relative inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg border border-border bg-white/[0.03] hover:border-border-strong hover:bg-white/[0.06] text-zinc-300 hover:text-white transition-colors before:absolute before:-inset-1 before:content-['']"
           >
             <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
           </a>
