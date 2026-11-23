@@ -22,6 +22,77 @@ function firstFinite(...values) {
   return null;
 }
 
+function isValidTradingPeriod(period) {
+  return (
+    period != null &&
+    typeof period === 'object' &&
+    typeof period.start === 'number' &&
+    Number.isFinite(period.start) &&
+    typeof period.end === 'number' &&
+    Number.isFinite(period.end) &&
+    period.end > period.start
+  );
+}
+
+function extractTradingPeriods(tradingPeriods) {
+  if (!Array.isArray(tradingPeriods)) {
+    return [];
+  }
+
+  const periods = [];
+  for (const item of tradingPeriods) {
+    if (Array.isArray(item)) {
+      for (const nested of item) {
+        if (isValidTradingPeriod(nested)) {
+          periods.push(nested);
+        }
+      }
+    } else if (isValidTradingPeriod(item)) {
+      periods.push(item);
+    }
+  }
+  return periods;
+}
+
+function resolveSessionWindow(meta, series) {
+  const periods = extractTradingPeriods(meta.tradingPeriods);
+  const regular = meta.currentTradingPeriod?.regular;
+
+  if (series.length > 0) {
+    let minT = series[0].t;
+    let maxT = series[0].t;
+    for (let i = 1; i < series.length; i += 1) {
+      const t = series[i].t;
+      if (t < minT) minT = t;
+      if (t > maxT) maxT = t;
+    }
+
+    for (let i = periods.length - 1; i >= 0; i -= 1) {
+      const period = periods[i];
+      if (maxT >= period.start && minT <= period.end) {
+        return { sessionStart: period.start, sessionEnd: period.end };
+      }
+    }
+
+    if (isValidTradingPeriod(regular) && maxT >= regular.start && minT <= regular.end) {
+      return { sessionStart: regular.start, sessionEnd: regular.end };
+    }
+
+    return { sessionStart: null, sessionEnd: null };
+  }
+
+  if (periods.length > 0) {
+    const lastPeriod = periods[periods.length - 1];
+    return { sessionStart: lastPeriod.start, sessionEnd: lastPeriod.end };
+  }
+
+  if (isValidTradingPeriod(regular)) {
+    return { sessionStart: regular.start, sessionEnd: regular.end };
+  }
+
+  return { sessionStart: null, sessionEnd: null };
+}
+
 export function downsampleSeries(points, maxPoints = 96) {
   if (!Array.isArray(points) || maxPoints <= 0) {
     return [];
@@ -136,6 +207,8 @@ export function parseYahooChartResponse(payload, nowUnixSec = Math.floor(Date.no
         ? 'stale'
         : 'closed';
 
+  const { sessionStart, sessionEnd } = resolveSessionWindow(meta, series);
+
   return {
     symbol: MSCI_EM_SYMBOL,
     name: MSCI_EM_NAME,
@@ -148,6 +221,8 @@ export function parseYahooChartResponse(payload, nowUnixSec = Math.floor(Date.no
     dayLow,
     marketTime,
     marketState,
+    sessionStart,
+    sessionEnd,
     fetchedAt: new Date(nowUnixSec * 1000).toISOString(),
     series,
     source: 'yahoo'

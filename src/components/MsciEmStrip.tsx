@@ -48,7 +48,10 @@ export const MsciEmStrip: React.FC = React.memo(() => {
 
   const geometry = useMemo(() => {
     if (!quote) return null;
-    return buildSparklineGeometry(quote.series, quote.previousClose);
+    return buildSparklineGeometry(quote.series, quote.previousClose, 120, 32, 4, {
+      start: quote.sessionStart,
+      end: quote.sessionEnd
+    });
   }, [quote]);
 
   if (isLoading && !quote) {
@@ -207,6 +210,14 @@ export const MsciEmStrip: React.FC = React.memo(() => {
           </defs>
           {geometry ? (
             <>
+              <line
+                x1="0"
+                y1="31.5"
+                x2="120"
+                y2="31.5"
+                stroke="rgba(148, 163, 184, 0.16)"
+                strokeWidth="1"
+              />
               {geometry.previousCloseY !== null && (
                 <line
                   x1="0"

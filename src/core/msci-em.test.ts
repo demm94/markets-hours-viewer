@@ -78,7 +78,52 @@ describe('MSCI EM Net USD Netlify function helpers', () => {
     expect(parsed.marketState).toBe('live');
     expect(parsed.source).toBe('yahoo');
     expect(parsed.series).toHaveLength(3);
+    expect(parsed.sessionStart).toBe(1795150800);
+    expect(parsed.sessionEnd).toBe(1795237140);
     expect(parsed.fetchedAt).toBe(new Date(nowUnix * 1000).toISOString());
+  });
+
+  it('resolves sessionStart and sessionEnd from tradingPeriods on rollover and nulls when missing or disjoint', () => {
+    const rolloverPayload = createYahooPayload({
+      meta: {
+        currentTradingPeriod: {
+          regular: { start: 1795237200, end: 1795323540 }
+        },
+        tradingPeriods: [
+          [{ start: 1795064400, end: 1795150740 }],
+          [{ start: 1795150800, end: 1795237140 }]
+        ]
+      }
+    });
+    const rolloverParsed = parseYahooChartResponse(rolloverPayload, 1795237300);
+    expect(rolloverParsed.sessionStart).toBe(1795150800);
+    expect(rolloverParsed.sessionEnd).toBe(1795237140);
+
+    const missingPeriodsParsed = parseYahooChartResponse(
+      createYahooPayload({
+        meta: {
+          currentTradingPeriod: undefined,
+          tradingPeriods: undefined
+        }
+      }),
+      1795152000
+    );
+    expect(missingPeriodsParsed.sessionStart).toBeNull();
+    expect(missingPeriodsParsed.sessionEnd).toBeNull();
+
+    const disjointPeriodsParsed = parseYahooChartResponse(
+      createYahooPayload({
+        meta: {
+          currentTradingPeriod: {
+            regular: { start: 1795237200, end: 1795323540 }
+          },
+          tradingPeriods: [[{ start: 1795237200, end: 1795323540 }]]
+        }
+      }),
+      1795237300
+    );
+    expect(disjointPeriodsParsed.sessionStart).toBeNull();
+    expect(disjointPeriodsParsed.sessionEnd).toBeNull();
   });
 
   it('computes fallback change, percent, and day high/low from series when meta fields are omitted', () => {
@@ -212,6 +257,15 @@ describe('MSCI EM Net USD client domain helpers', () => {
   it('validates normalized payloads with parseMsciEmQuote', () => {
     const valid = parseYahooChartResponse(createYahooPayload(), 1795152000);
     expect(parseMsciEmQuote(valid)).toEqual(valid);
+    expect(parseMsciEmQuote(valid)?.sessionStart).toBe(1795150800);
+    expect(parseMsciEmQuote(valid)?.sessionEnd).toBe(1795237140);
+
+    const { sessionStart: _omitStart, sessionEnd: _omitEnd, ...legacyCached } = valid;
+    expect(parseMsciEmQuote(legacyCached)).toEqual({
+      ...valid,
+      sessionStart: null,
+      sessionEnd: null
+    });
 
     expect(parseMsciEmQuote(null)).toBeNull();
     expect(parseMsciEmQuote([])).toBeNull();
@@ -219,6 +273,8 @@ describe('MSCI EM Net USD client domain helpers', () => {
     expect(parseMsciEmQuote({ ...valid, marketState: 'unknown' })).toBeNull();
     expect(parseMsciEmQuote({ ...valid, source: 'other' })).toBeNull();
     expect(parseMsciEmQuote({ ...valid, series: [{ t: 10, v: 'bad' }] })).toBeNull();
+    expect(parseMsciEmQuote({ ...valid, sessionStart: 'bad' })).toBeNull();
+    expect(parseMsciEmQuote({ ...valid, sessionEnd: Number.NaN })).toBeNull();
   });
 
   it('builds sparkline geometry, handles previousClose bounds, flat series, and short series', () => {
@@ -270,6 +326,85 @@ describe('MSCI EM Net USD client domain helpers', () => {
       4
     );
     expect(outOfRangePrevClose!.previousCloseY).toBeNull();
+  });
+
+  it('scales sparkline X-axis proportionally across sessionWindow and uneven timestamps', () => {
+    const proportional = buildSparklineGeometry(
+      [
+        { t: 1000, v: 780 },
+        { t: 1010, v: 790 },
+        { t: 1025, v: 800 }
+      ],
+      null,
+      120,
+      32,
+      4,
+      { start: 1000, end: 1100 }
+    );
+    expect(proportional).not.toBeNull();
+    expect(proportional!.linePath).toBe('M 0 28 L 12 16 L 30 4');
+    expect(proportional!.areaPath).toBe('M 0 28 L 12 16 L 30 4 L 30 32 L 0 32 Z');
+    expect(proportional!.lastPoint).toEqual({ x: 30, y: 4 });
+
+    const offsetStart = buildSparklineGeometry(
+      [
+        { t: 1010, v: 780 },
+        { t: 1050, v: 800 }
+      ],
+      null,
+      120,
+      32,
+      4,
+      { start: 1000, end: 1100 }
+    );
+    expect(offsetStart).not.toBeNull();
+    expect(offsetStart!.linePath).toBe('M 12 28 L 60 4');
+    expect(offsetStart!.areaPath).toBe('M 12 28 L 60 4 L 60 32 L 12 32 Z');
+
+    const unevenNoWindow = buildSparklineGeometry(
+      [
+        { t: 0, v: 780 },
+        { t: 25, v: 790 },
+        { t: 100, v: 800 }
+      ],
+      null,
+      120,
+      32,
+      4
+    );
+    expect(unevenNoWindow).not.toBeNull();
+    expect(unevenNoWindow!.linePath).toBe('M 0 28 L 30 16 L 120 4');
+
+    const clampedEnd = buildSparklineGeometry(
+      [
+        { t: 1000, v: 780 },
+        { t: 1105, v: 800 }
+      ],
+      null,
+      120,
+      32,
+      4,
+      { start: 1000, end: 1100 }
+    );
+    expect(clampedEnd).not.toBeNull();
+    expect(clampedEnd!.linePath).toBe('M 0 28 L 120 4');
+    expect(clampedEnd!.lastPoint).toEqual({ x: 120, y: 4 });
+
+    const disjointFallback = buildSparklineGeometry(
+      [
+        { t: 1000, v: 780 },
+        { t: 1100, v: 800 }
+      ],
+      null,
+      120,
+      32,
+      4,
+      { start: 2000, end: 3000 }
+    );
+    expect(disjointFallback).not.toBeNull();
+    expect(disjointFallback!.linePath).toBe('M 0 28 L 120 4');
+    expect(disjointFallback!.areaPath).toBe('M 0 28 L 120 4 L 120 32 L 0 32 Z');
+    expect(disjointFallback!.lastPoint).toEqual({ x: 120, y: 4 });
   });
 
   it('formats index values, signed deltas, direction, and Chile timestamp', () => {

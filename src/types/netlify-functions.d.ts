@@ -18,6 +18,8 @@ declare module '*/netlify/functions/msci-em.mjs' {
     dayLow: number | null;
     marketTime: number | null;
     marketState: MsciEmFunctionMarketState;
+    sessionStart: number | null;
+    sessionEnd: number | null;
     fetchedAt: string;
     series: MsciEmFunctionPoint[];
     source: 'yahoo';

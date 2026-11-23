@@ -21,9 +21,16 @@ export interface MsciEmQuote {
   dayLow: number | null;
   marketTime: number | null;
   marketState: MsciEmMarketState;
+  sessionStart: number | null;
+  sessionEnd: number | null;
   fetchedAt: string;
   series: MsciEmPoint[];
   source: 'yahoo';
+}
+
+export interface SparklineSessionWindow {
+  start: number | null;
+  end: number | null;
 }
 
 export interface SparklineGeometry {
@@ -82,6 +89,8 @@ export function parseMsciEmQuote(raw: unknown): MsciEmQuote | null {
     !isNullableFiniteNumber(record.dayLow) ||
     !isNullableFiniteNumber(record.marketTime) ||
     !isValidMarketState(record.marketState) ||
+    (record.sessionStart !== undefined && !isNullableFiniteNumber(record.sessionStart)) ||
+    (record.sessionEnd !== undefined && !isNullableFiniteNumber(record.sessionEnd)) ||
     !isNonEmptyString(record.fetchedAt) ||
     record.source !== 'yahoo' ||
     !Array.isArray(record.series)
@@ -113,6 +122,8 @@ export function parseMsciEmQuote(raw: unknown): MsciEmQuote | null {
     dayLow: record.dayLow,
     marketTime: record.marketTime,
     marketState: record.marketState,
+    sessionStart: isFiniteNumber(record.sessionStart) ? record.sessionStart : null,
+    sessionEnd: isFiniteNumber(record.sessionEnd) ? record.sessionEnd : null,
     fetchedAt: record.fetchedAt,
     series,
     source: 'yahoo'
@@ -166,7 +177,8 @@ export function buildSparklineGeometry(
   previousClose: number | null,
   width = 120,
   height = 32,
-  padY = 4
+  padY = 4,
+  sessionWindow?: SparklineSessionWindow | null
 ): SparklineGeometry | null {
   if (series.length < 2) {
     return null;
@@ -174,15 +186,44 @@ export function buildSparklineGeometry(
 
   let minVal = series[0].v;
   let maxVal = series[0].v;
+  let minT = series[0].t;
+  let maxT = series[0].t;
   for (let i = 1; i < series.length; i += 1) {
     const val = series[i].v;
+    const t = series[i].t;
     if (val < minVal) minVal = val;
     if (val > maxVal) maxVal = val;
+    if (t < minT) minT = t;
+    if (t > maxT) maxT = t;
   }
 
   const lastIndex = series.length - 1;
   const span = maxVal - minVal;
   const usableHeight = Math.max(1, height - padY * 2);
+
+  const sessionStart = sessionWindow?.start;
+  const sessionEnd = sessionWindow?.end;
+  const activeSessionWindow =
+    isFiniteNumber(sessionStart) &&
+    isFiniteNumber(sessionEnd) &&
+    sessionEnd > sessionStart &&
+    maxT >= sessionStart &&
+    minT <= sessionEnd
+      ? { start: sessionStart, span: sessionEnd - sessionStart }
+      : null;
+  const timeSpan = maxT - minT;
+
+  const mapX = (t: number, index: number): number => {
+    if (activeSessionWindow) {
+      const ratio = Math.min(1, Math.max(0, (t - activeSessionWindow.start) / activeSessionWindow.span));
+      return Number((ratio * width).toFixed(2));
+    }
+    if (timeSpan > 0) {
+      const ratio = (t - minT) / timeSpan;
+      return Number((ratio * width).toFixed(2));
+    }
+    return Number(((index / lastIndex) * width).toFixed(2));
+  };
 
   const mapY = (val: number): number => {
     if (span <= 0) {
@@ -192,15 +233,16 @@ export function buildSparklineGeometry(
   };
 
   const coords: Array<{ x: number; y: number }> = series.map((point, index) => ({
-    x: Number(((index / lastIndex) * width).toFixed(2)),
+    x: mapX(point.t, index),
     y: mapY(point.v)
   }));
 
   const linePath = coords
     .map((pt, index) => `${index === 0 ? 'M' : 'L'} ${pt.x} ${pt.y}`)
     .join(' ');
-  const areaPath = `${linePath} L ${width} ${height} L 0 ${height} Z`;
+  const firstPoint = coords[0];
   const lastPoint = coords[coords.length - 1];
+  const areaPath = `${linePath} L ${lastPoint.x} ${height} L ${firstPoint.x} ${height} Z`;
 
   const previousCloseY =
     span > 0 &&
