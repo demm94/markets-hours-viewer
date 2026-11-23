@@ -28,7 +28,7 @@ interface WindowTemplate {
   targetMarketIds: string[];
 }
 
-const BUILT_IN_MARKET_IDS = new Set(['twse', 'krx', 'sse', 'nse', 'nyse']);
+const BUILT_IN_MARKET_IDS = new Set(['twse', 'krx', 'sse', 'nse', 'nyse', 'chile']);
 
 function formatDuration(minutes: number): string {
   const h = Math.floor(minutes / 60);
@@ -112,17 +112,17 @@ export function getTradingWindows(
       startMinute: nseEnd,
       endMinute: nyseStart, // 07:00 to 10:30
       description: 'Mercados asiáticos concluidos. Período de asimilación de noticias macro antes de la campana en Nueva York.',
-      targetMarketIds: []
+      targetMarketIds: ['chile']
     },
     {
       id: 'us_session',
       name: 'Sesión Americana (Wall Street)',
-      subtitle: 'NYSE & NASDAQ en sincronía con horario hábil de Chile',
+      subtitle: 'NYSE, NASDAQ y Bolsa de Santiago (BCS) en horario hábil de Chile',
       icon: '🗽',
       startMinute: nyseStart,
       endMinute: nyseEnd, // 10:30 to 17:00
       description: 'Máximo volumen institucional global. Total convergencia operativa con el horario laboral y financiero de Chile.',
-      targetMarketIds: ['nyse']
+      targetMarketIds: ['nyse', 'chile']
     },
     {
       id: 'evening_pause',

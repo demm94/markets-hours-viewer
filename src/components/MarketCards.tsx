@@ -287,7 +287,7 @@ export const MarketCards: React.FC<MarketCardsProps> = React.memo(({
 
       {/* Desktop Spacious Clickable Cards (md+) */}
       <motion.div
-        className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 lg:gap-3.5"
+        className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-3 lg:gap-3.5"
         variants={containerVariants}
         initial="hidden"
         animate="visible"

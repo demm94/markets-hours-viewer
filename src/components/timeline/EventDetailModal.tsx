@@ -29,9 +29,8 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = React.memo(({
 
   const isHigh = event?.importance === 'high';
   const market = event
-    ? event.marketId === 'chile'
-      ? CHILE_CONFIG
-      : MARKETS.find((m) => m.id === event.marketId)
+    ? MARKETS.find((m) => m.id === event.marketId) ??
+      (event.marketId === CHILE_CONFIG.id ? CHILE_CONFIG : undefined)
     : undefined;
 
   const marketName = event ? (market ? market.name : event.marketId.toUpperCase()) : '';

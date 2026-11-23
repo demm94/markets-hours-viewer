@@ -158,32 +158,47 @@ describe('trading-windows engine', () => {
     expect(usSession?.startMinute).toBe(690);
     expect(usSession?.endMinute).toBe(900);
     expect(usSession?.activeMarkets.some((m) => m.id === 'nyse')).toBe(true);
-    expect(usSession?.concurrencyCount).toBe(1);
+    expect(usSession?.activeMarkets.some((m) => m.id === 'chile')).toBe(true);
+    expect(usSession?.concurrencyCount).toBe(2);
     expect(usSession?.liquidityLevel).toBe('high');
   });
 
   it('automatically includes custom extensible markets in overlapping windows and reuses precomputed segments', () => {
     const testDate = DateTime.fromISO('2026-09-15T12:00:00', { zone: CHILE_TZ });
-    const customBcsMarket = {
-      id: 'bcs',
-      name: 'Santiago',
-      code: 'BCS',
-      country: 'Chile',
-      flag: '🇨🇱',
-      timezone: 'America/Santiago',
-      sessions: [{ type: 'regular' as const, start: '09:30', end: '16:00', label: 'Sesión regular' }]
+    const customB3Market = {
+      id: 'b3',
+      name: 'Brasil',
+      code: 'B3',
+      country: 'Brasil',
+      flag: '🇧🇷',
+      timezone: 'America/Sao_Paulo',
+      sessions: [{ type: 'regular' as const, start: '10:00', end: '17:00', label: 'Sesión regular' }]
     };
 
-    const extendedMarkets = [...MARKETS, customBcsMarket];
+    const extendedMarkets = [...MARKETS, customB3Market];
     const windows = getTradingWindows(testDate, extendedMarkets, 720);
 
     const morningPause = windows.find((w) => w.id === 'morning_pause');
     const usSession = windows.find((w) => w.id === 'us_session');
 
-    // BCS opens at 09:30 (570m), so it overlaps morning_pause (420-630m) and us_session (630-1020m)
-    expect(morningPause?.activeMarkets.some((m) => m.id === 'bcs')).toBe(true);
-    expect(usSession?.activeMarkets.some((m) => m.id === 'bcs')).toBe(true);
-    expect(usSession?.concurrencyCount).toBe(2); // NYSE + BCS
+    // Chile (09:30, 570m) and B3 (10:00, 600m) overlap morning_pause (420-630m) and us_session (630-1020m)
+    expect(morningPause?.activeMarkets.some((m) => m.id === 'chile')).toBe(true);
+    expect(morningPause?.activeMarkets.some((m) => m.id === 'b3')).toBe(true);
+    expect(usSession?.activeMarkets.some((m) => m.id === 'nyse')).toBe(true);
+    expect(usSession?.activeMarkets.some((m) => m.id === 'chile')).toBe(true);
+    expect(usSession?.activeMarkets.some((m) => m.id === 'b3')).toBe(true);
+    expect(usSession?.concurrencyCount).toBe(3); // NYSE + Chile + B3
+  });
+
+  it('excludes Chile from activeMarkets and records its holiday on Fiestas Patrias while keeping NYSE active', () => {
+    const fiestasPatrias = DateTime.fromISO('2026-09-18T12:00:00', { zone: CHILE_TZ });
+    const windows = getTradingWindows(fiestasPatrias, MARKETS, 720);
+
+    const usSession = windows.find((w) => w.id === 'us_session');
+    expect(usSession).toBeDefined();
+    expect(usSession?.activeMarkets.some((m) => m.id === 'nyse')).toBe(true);
+    expect(usSession?.activeMarkets.some((m) => m.id === 'chile')).toBe(false);
+    expect(usSession?.holidayNames?.some((h) => h.includes('Chile'))).toBe(true);
   });
 
   it('maintains strictly positive continuous windows on Chile spring-forward DST Sunday (2026-09-06)', () => {

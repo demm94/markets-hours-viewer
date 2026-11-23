@@ -72,5 +72,17 @@ export const MARKETS: MarketConfig[] = [
       { type: 'regular', start: '09:30', end: '16:00', label: 'Sesión regular' }
     ],
     notes: 'Cambio de hora estacional opuesto al de Chile.'
+  },
+  {
+    id: 'chile',
+    name: 'Chile',
+    code: 'BCS',
+    country: 'Chile',
+    flag: '🇨🇱',
+    timezone: 'America/Santiago',
+    sessions: [
+      { type: 'regular', start: '09:30', end: '16:00', label: 'Sesión regular' }
+    ],
+    notes: 'Bolsa de Santiago (hora local de Chile). Rueda continua de 09:30 a 16:00 (subasta de apertura desde las 09:00), sin pausa de almuerzo.'
   }
 ];

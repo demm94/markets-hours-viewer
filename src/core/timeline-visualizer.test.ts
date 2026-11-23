@@ -3,7 +3,12 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DateTime } from 'luxon';
-import { CHILE_TZ, formatMinutes, getSantiagoOffsetDescription } from './timezone';
+import {
+  CHILE_TZ,
+  formatMinutes,
+  getSantiagoOffsetDescription,
+  projectMarketToTimeline
+} from './timezone';
 import { MARKETS } from './markets';
 import { pwaManifest } from './pwa-manifest';
 import { getMarketHoliday } from './holidays';
@@ -54,13 +59,55 @@ describe('timeline-visualizer & pwa-shell compliance', () => {
     expect(desc).toContain('Horario de Verano');
   });
 
-  it('contains all 5 specified international markets plus Chile reference', () => {
+  it('contains all 5 international markets plus Chile (BCS)', () => {
     const marketIds = MARKETS.map((m) => m.id);
     expect(marketIds).toContain('twse');
     expect(marketIds).toContain('krx');
     expect(marketIds).toContain('sse');
     expect(marketIds).toContain('nse');
     expect(marketIds).toContain('nyse');
+    expect(marketIds).toContain('chile');
+
+    const chileMarket = MARKETS.find((m) => m.id === 'chile');
+    expect(chileMarket).toBeDefined();
+    expect(chileMarket?.code).toBe('BCS');
+    expect(chileMarket?.timezone).toBe('America/Santiago');
+  });
+
+  it('projects Chile (BCS) regular sessions, early closes, and full holidays onto timeline', () => {
+    const chileMarket = MARKETS.find((m) => m.id === 'chile');
+    expect(chileMarket).toBeDefined();
+
+    // Regular weekday: 09:30–16:00 CL (570..960)
+    const regularSegments = projectMarketToTimeline(
+      chileMarket!,
+      DateTime.fromISO('2026-09-15T12:00:00', { zone: CHILE_TZ })
+    );
+    expect(regularSegments).toHaveLength(1);
+    expect(regularSegments[0]).toMatchObject({
+      type: 'regular',
+      startMinute: 570,
+      endMinute: 960
+    });
+
+    // Early close: 2026-12-31 Víspera de Año Nuevo closes at 12:30 CL (570..750)
+    const earlyCloseSegments = projectMarketToTimeline(
+      chileMarket!,
+      DateTime.fromISO('2026-12-31T10:00:00', { zone: CHILE_TZ })
+    );
+    expect(earlyCloseSegments).toHaveLength(1);
+    expect(earlyCloseSegments[0].startMinute).toBe(570);
+    expect(earlyCloseSegments[0].endMinute).toBe(750);
+    expect(earlyCloseSegments[0].holiday?.isEarlyClose).toBe(true);
+
+    // Full holiday: 2026-09-18 Fiestas Patrias
+    const holidaySegments = projectMarketToTimeline(
+      chileMarket!,
+      DateTime.fromISO('2026-09-18T12:00:00', { zone: CHILE_TZ })
+    );
+    expect(holidaySegments.length).toBeGreaterThanOrEqual(1);
+    expect(holidaySegments[0].holiday?.name).toBe('Fiestas Patrias');
+    expect(holidaySegments[0].holiday?.isEarlyClose).toBeFalsy();
   });
 
   it('validates PWA web app manifest requirements without depending on dist build', () => {

@@ -84,9 +84,12 @@ export function getTodayAgenda(
   const holidays: TodayHolidayItem[] = [];
   const earlyCloses: TodayHolidayItem[] = [];
 
+  const hasChileMarket = markets.some((m) => m.id === CHILE_CONFIG.id);
   const checkEntities = [
     ...markets.map((m) => ({ id: m.id, name: m.name, flag: m.flag, timezone: m.timezone })),
-    { id: CHILE_CONFIG.id, name: CHILE_CONFIG.country, flag: CHILE_CONFIG.flag, timezone: referenceZone }
+    ...(hasChileMarket
+      ? []
+      : [{ id: CHILE_CONFIG.id, name: CHILE_CONFIG.country, flag: CHILE_CONFIG.flag, timezone: referenceZone }])
   ];
 
   for (const entity of checkEntities) {

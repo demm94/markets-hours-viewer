@@ -138,10 +138,13 @@ export const EventsDrawer: React.FC<EventsDrawerProps> = ({
   }, [chileNow]);
 
   const marketTabs = useMemo(() => {
+    const hasChileMarket = MARKETS.some((m) => m.id === CHILE_CONFIG.id);
     return [
       { id: 'all', name: 'Todos', flag: '🌐' },
       ...MARKETS.map((m) => ({ id: m.id, name: m.name, flag: m.flag })),
-      { id: CHILE_CONFIG.id, name: CHILE_CONFIG.name.split(' ')[0], flag: CHILE_CONFIG.flag }
+      ...(hasChileMarket
+        ? []
+        : [{ id: CHILE_CONFIG.id, name: CHILE_CONFIG.name.split(' ')[0], flag: CHILE_CONFIG.flag }])
     ];
   }, []);
 

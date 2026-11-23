@@ -53,10 +53,21 @@ export const TimelineHeader: React.FC<TimelineHeaderProps> = React.memo(({
       {chileHoliday && (
         <div className="flex items-center">
           <span
-            className="text-[10px] sm:text-[11px] font-medium text-violet-200 bg-violet-500/12 px-1.5 sm:px-2 py-0.5 rounded border border-violet-500/35 truncate max-w-full"
-            title={`Feriado en Chile: ${chileHoliday.name}`}
+            className={
+              chileHoliday.isEarlyClose
+                ? 'text-[10px] sm:text-[11px] font-medium text-amber-200 bg-amber-500/12 px-1.5 sm:px-2 py-0.5 rounded border border-amber-500/35 truncate max-w-full'
+                : 'text-[10px] sm:text-[11px] font-medium text-violet-200 bg-violet-500/12 px-1.5 sm:px-2 py-0.5 rounded border border-violet-500/35 truncate max-w-full'
+            }
+            title={
+              chileHoliday.isEarlyClose
+                ? `Cierre temprano en Chile${chileHoliday.closeTime ? ` (${chileHoliday.closeTime})` : ''}: ${chileHoliday.name}`
+                : `Feriado en Chile: ${chileHoliday.name}`
+            }
           >
-            <span aria-hidden="true">🇨🇱</span> Feriado: {chileHoliday.name}
+            <span aria-hidden="true">🇨🇱</span>{' '}
+            {chileHoliday.isEarlyClose
+              ? `Cierre temprano${chileHoliday.closeTime ? ` (${chileHoliday.closeTime})` : ''}: ${chileHoliday.name}`
+              : `Feriado: ${chileHoliday.name}`}
           </span>
         </div>
       )}

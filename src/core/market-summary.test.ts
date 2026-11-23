@@ -6,23 +6,23 @@ import { getLiveStatusSummary, getTodayAgenda } from './market-summary';
 import { MarketEvent } from './types';
 
 describe('market-summary domain helpers', () => {
-  it('summarizes open markets and identifies the nearest upcoming bell during US session', () => {
-    // Tuesday 2026-09-15 15:00 Chile (UTC-3) -> NYSE is open (closes 17:00 CL = 120m)
+  it('summarizes open markets and identifies the nearest upcoming bell during US and Chile overlap', () => {
+    // Tuesday 2026-09-15 15:00 Chile (UTC-3) -> NYSE (closes 17:00 CL = 120m) and Chile (closes 16:00 CL = 60m)
     const nowChile = DateTime.fromISO('2026-09-15T15:00:00', { zone: CHILE_TZ });
     const evaluations = Object.fromEntries(MARKETS.map((m) => [m.id, evaluateMarketAt(m, nowChile)]));
 
     const summary = getLiveStatusSummary(MARKETS, evaluations);
 
     expect(summary.isGlobalWeekend).toBe(false);
-    expect(summary.openMarkets.map((m) => m.id)).toEqual(['nyse']);
+    expect(summary.openMarkets.map((m) => m.id)).toEqual(['nyse', 'chile']);
     expect(summary.nextBell).toBeDefined();
-    expect(summary.nextBell?.market.id).toBe('nyse');
+    expect(summary.nextBell?.market.id).toBe('chile');
     expect(summary.nextBell?.type).toBe('close');
-    expect(summary.nextBell?.atChileFormatted).toBe('17:00 CL');
+    expect(summary.nextBell?.atChileFormatted).toBe('16:00 CL');
   });
 
   it('detects global weekend and points to the earliest Sunday-night Asian opening in Chile time', () => {
-    // Saturday 2026-10-17 12:00 Chile (UTC-3) -> all 5 markets closed for weekend
+    // Saturday 2026-10-17 12:00 Chile (UTC-3) -> all markets closed for weekend
     // Earliest reopening is KRX (Mon 09:00 KST = Sun 21:00 CL)
     const satChile = DateTime.fromISO('2026-10-17T12:00:00', { zone: CHILE_TZ });
     const evaluations = Object.fromEntries(MARKETS.map((m) => [m.id, evaluateMarketAt(m, satChile)]));
@@ -77,5 +77,21 @@ describe('market-summary domain helpers', () => {
     expect(agenda.earlyCloses).toHaveLength(0);
     expect(agenda.events).toHaveLength(0);
     expect(agenda.highImpactCount).toBe(0);
+  });
+
+  it('does not duplicate Chile holidays or early closes when chile is included in MARKETS and falls back when omitted', () => {
+    const fiestasPatrias = DateTime.fromISO('2026-09-18T12:00:00', { zone: CHILE_TZ });
+    const holidayAgenda = getTodayAgenda(MARKETS, fiestasPatrias, CHILE_TZ, []);
+    expect(holidayAgenda.holidays.filter((h) => h.marketId === 'chile')).toHaveLength(1);
+
+    const newYearsEve = DateTime.fromISO('2026-12-31T10:00:00', { zone: CHILE_TZ });
+    const earlyCloseAgenda = getTodayAgenda(MARKETS, newYearsEve, CHILE_TZ, []);
+    const chileEarlyCloses = earlyCloseAgenda.earlyCloses.filter((h) => h.marketId === 'chile');
+    expect(chileEarlyCloses).toHaveLength(1);
+    expect(chileEarlyCloses[0].holiday.closeTime).toBe('12:30');
+
+    const withoutChile = MARKETS.filter((m) => m.id !== 'chile');
+    const fallbackAgenda = getTodayAgenda(withoutChile, fiestasPatrias, CHILE_TZ, []);
+    expect(fallbackAgenda.holidays.filter((h) => h.marketId === 'chile')).toHaveLength(1);
   });
 });
