@@ -8,7 +8,14 @@ import {
   getSantiagoOffsetDescription
 } from './core/timezone';
 import { getLiveStatusSummary, getTodayAgenda } from './core/market-summary';
-import { MarketEvaluation, TimelineEventMarkerData, RollingDayInfo } from './core/types';
+import {
+  AgendaKindFilter,
+  AgendaOpenOptions,
+  AgendaTimeRange,
+  MarketEvaluation,
+  TimelineEventMarkerData,
+  RollingDayInfo
+} from './core/types';
 import { useCurrentTime } from './hooks/useCurrentTime';
 import { useMarketNotifications } from './hooks/useMarketNotifications';
 import { Header } from './components/Header';
@@ -22,23 +29,53 @@ import { EventsDrawer } from './components/EventsDrawer';
 import { EventDetailModal } from './components/timeline/EventDetailModal';
 import { hasHighImpactEventsToday, getEventsForChileDay, getRollingDaysWindow } from './core/events';
 import { getMarketHoliday } from './core/holidays';
+import { getHolidaysForIsoDate, getUpcomingStripPreview } from './core/agenda';
 
 export const App: React.FC = () => {
   const { now, currentMinutes, minuteKey } = useCurrentTime();
 
   const [isEventsDrawerOpen, setIsEventsDrawerOpen] = React.useState(false);
   const [selectedEventMarket, setSelectedEventMarket] = React.useState('all');
+  const [drawerInitialKind, setDrawerInitialKind] = React.useState<AgendaKindFilter>('all');
+  const [drawerInitialRange, setDrawerInitialRange] = React.useState<AgendaTimeRange>('week');
+  const [drawerFocusDate, setDrawerFocusDate] = React.useState<string | null>(null);
+  const [drawerOpenToken, setDrawerOpenToken] = React.useState(0);
   const [selectedEventForModal, setSelectedEventForModal] = React.useState<TimelineEventMarkerData | null>(null);
   const [simulateWeekday, setSimulateWeekday] = React.useState(false);
 
-  const handleOpenEvents = React.useCallback((marketId: string = 'all') => {
-    setSelectedEventMarket(marketId);
+  const handleOpenAgenda = React.useCallback((options: AgendaOpenOptions = {}) => {
+    setSelectedEventMarket(options.marketId ?? 'all');
+    setDrawerInitialKind(options.kind ?? 'all');
+    setDrawerInitialRange(options.range ?? 'week');
+    setDrawerFocusDate(options.focusIsoDate ?? null);
+    setDrawerOpenToken((t) => t + 1);
     setIsEventsDrawerOpen(true);
   }, []);
 
   const handleOpenAllEvents = React.useCallback(() => {
-    handleOpenEvents('all');
-  }, [handleOpenEvents]);
+    handleOpenAgenda({ marketId: 'all', kind: 'all', range: 'week' });
+  }, [handleOpenAgenda]);
+
+  const handleOpenMarketAgenda = React.useCallback(
+    (marketId: string) => {
+      handleOpenAgenda({ marketId, kind: 'all', range: 'month' });
+    },
+    [handleOpenAgenda]
+  );
+
+  const handleOpenHolidayDrawer = React.useCallback(
+    (marketId: string, isoDate: string) => {
+      handleOpenAgenda({ marketId, kind: 'holidays', range: 'week', focusIsoDate: isoDate });
+    },
+    [handleOpenAgenda]
+  );
+
+  const handleOpenEventMarketDrawer = React.useCallback(
+    (marketId: string) => {
+      handleOpenAgenda({ marketId, kind: 'events', range: 'month' });
+    },
+    [handleOpenAgenda]
+  );
 
   const handleCloseEvents = React.useCallback(() => {
     setIsEventsDrawerOpen(false);
@@ -119,6 +156,11 @@ export const App: React.FC = () => {
     [referenceHourKey]
   );
 
+  const upcomingStripPreview = useMemo(
+    () => getUpcomingStripPreview(chileNowMinute),
+    [referenceHourKey]
+  );
+
   const {
     permission: notificationPermission,
     preferences: notificationPreferences,
@@ -130,6 +172,10 @@ export const App: React.FC = () => {
 
   const chileHolidayForSelectedDay = useMemo(() => {
     return getMarketHoliday('chile', activeDay.isoDate);
+  }, [activeDayKey]);
+
+  const selectedDayHolidays = useMemo(() => {
+    return getHolidaysForIsoDate(activeDay.isoDate);
   }, [activeDayKey]);
 
   const catalystsMap = useMemo(() => {
@@ -199,8 +245,10 @@ export const App: React.FC = () => {
 
           <TodayAgendaStrip
             agenda={todayAgenda}
+            upcomingWeekItems={upcomingStripPreview.weekItemsAfterToday}
+            nextUpcomingItem={upcomingStripPreview.nextUpcomingItem}
             onEventClick={setSelectedEventForModal}
-            onOpenDrawer={handleOpenEvents}
+            onOpenDrawer={handleOpenAgenda}
           />
 
           <TimelineGrid
@@ -209,8 +257,10 @@ export const App: React.FC = () => {
             liveEvaluations={evaluationsNow}
             currentMinutes={currentMinutes}
             dailyEvents={dailyEvents}
+            selectedDayHolidays={selectedDayHolidays}
             chileHoliday={chileHolidayForSelectedDay}
             onEventClick={setSelectedEventForModal}
+            onOpenHolidayDrawer={handleOpenHolidayDrawer}
             rollingDays={rollingDays}
             selectedIsoDate={activeDay.isoDate}
             onSelectDay={handleSelectDay}
@@ -234,7 +284,7 @@ export const App: React.FC = () => {
             <MarketCards
               markets={MARKETS}
               evaluations={evaluationsNow}
-              onSelectMarketEvents={handleOpenEvents}
+              onSelectMarketEvents={handleOpenMarketAgenda}
               catalystsMap={catalystsMap}
               referenceDate={chileNowMinute}
             />
@@ -259,12 +309,16 @@ export const App: React.FC = () => {
         selectedMarketId={selectedEventMarket}
         onSelectMarketId={setSelectedEventMarket}
         chileNow={chileNowMinute}
+        initialKind={drawerInitialKind}
+        initialRange={drawerInitialRange}
+        initialFocusIsoDate={drawerFocusDate}
+        openToken={drawerOpenToken}
       />
 
       <EventDetailModal
         event={selectedEventForModal}
         onClose={handleCloseEventModal}
-        onOpenMarketDrawer={handleOpenEvents}
+        onOpenMarketDrawer={handleOpenEventMarketDrawer}
       />
     </div>
   );

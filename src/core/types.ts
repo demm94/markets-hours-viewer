@@ -104,6 +104,9 @@ export interface RollingDayInfo {
   hasEvents: boolean;
   eventCount: number;
   hasHighImpact: boolean;
+  holidayCount: number;
+  earlyCloseCount: number;
+  hasHoliday: boolean;
 }
 
 export type LiquidityLevel = 'high' | 'moderate' | 'quiet';
@@ -159,4 +162,78 @@ export interface TodayAgendaSummary {
   events: TimelineEventMarkerData[];
   highImpactCount: number;
   hasItems: boolean;
+}
+
+export type AgendaTimeRange = 'week' | 'month' | 'quarter';
+export type AgendaKindFilter = 'all' | 'events' | 'holidays';
+
+export interface AgendaOpenOptions {
+  marketId?: string;
+  kind?: AgendaKindFilter;
+  range?: AgendaTimeRange;
+  focusIsoDate?: string;
+}
+
+export interface UnifiedHolidayAgendaItem {
+  kind: 'holiday';
+  id: string;
+  isoDate: string;
+  marketId: string;
+  marketName: string;
+  marketFlag: string;
+  relativeDays: number;
+  relativeDescriptor: string;
+  isEarlyClose: boolean;
+  holiday: MarketHoliday;
+  closeTimeChile?: string;
+}
+
+export interface UnifiedEventAgendaItem {
+  kind: 'event';
+  id: string;
+  isoDate: string;
+  marketId: string;
+  marketName: string;
+  marketFlag: string;
+  relativeDays: number;
+  relativeDescriptor: string;
+  minuteInChile: number;
+  event: FormattedMarketEvent;
+}
+
+export type UnifiedAgendaItem = UnifiedHolidayAgendaItem | UnifiedEventAgendaItem;
+
+export interface AgendaDayGroup {
+  isoDate: string;
+  dayLabel: string;
+  relativeDescriptor: string;
+  relativeDays: number;
+  isToday: boolean;
+  isWeekend: boolean;
+  holidays: UnifiedHolidayAgendaItem[];
+  events: UnifiedEventAgendaItem[];
+  totalCount: number;
+  hasHighImpact: boolean;
+  hasFullHoliday: boolean;
+  hasEarlyClose: boolean;
+}
+
+export interface MonthCalendarDayCell {
+  isoDate: string;
+  dayOfMonth: number;
+  isCurrentMonth: boolean;
+  isToday: boolean;
+  isPast: boolean;
+  holidayCount: number;
+  earlyCloseCount: number;
+  highImpactCount: number;
+  mediumImpactCount: number;
+  totalCount: number;
+}
+
+export interface MonthCalendarGrid {
+  year: number;
+  month: number;
+  monthLabel: string;
+  cells: MonthCalendarDayCell[];
 }

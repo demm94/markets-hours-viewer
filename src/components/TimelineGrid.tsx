@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { AlertCircle, Calendar, CalendarOff, Eye, Flame, RotateCcw, X } from 'lucide-react';
+import { AlertCircle, Calendar, CalendarOff, Clock, Eye, Flame, RotateCcw, X } from 'lucide-react';
 import {
   MarketConfig,
   MarketEvaluation,
   MarketHoliday,
   TimelineSegment,
   TimelineEventMarkerData,
-  RollingDayInfo
+  RollingDayInfo,
+  TodayHolidayItem
 } from '../core/types';
 import { CHILE_CONFIG } from '../core/markets';
 import { formatMinutes } from '../core/timezone';
@@ -27,8 +28,10 @@ interface TimelineGridProps {
   liveEvaluations: Record<string, MarketEvaluation>;
   currentMinutes: number;
   dailyEvents?: Record<string, TimelineEventMarkerData[]>;
+  selectedDayHolidays?: TodayHolidayItem[];
   chileHoliday?: MarketHoliday;
   onEventClick?: (event: TimelineEventMarkerData) => void;
+  onOpenHolidayDrawer?: (marketId: string, isoDate: string) => void;
   rollingDays: RollingDayInfo[];
   selectedIsoDate: string;
   onSelectDay: (day: RollingDayInfo) => void;
@@ -46,8 +49,10 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
   liveEvaluations,
   currentMinutes,
   dailyEvents,
+  selectedDayHolidays = [],
   chileHoliday,
   onEventClick,
+  onOpenHolidayDrawer,
   rollingDays,
   selectedIsoDate,
   onSelectDay,
@@ -343,18 +348,25 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
         </div>
       </div>
 
-      {/* Selected-Day Important Events Strip (includes Chile macro events) */}
-      {selectedDayEvents.length > 0 ? (
+      {/* Selected-Day Agenda Strip for non-today days (holidays, early closes, and macro events) */}
+      {!isToday && (selectedDayHolidays.length > 0 || selectedDayEvents.length > 0 ? (
         <div
-          aria-label={`Eventos importantes para ${selectedDayLabel}`}
+          aria-label={`Agenda para ${selectedDayLabel}`}
           className="rounded-lg border border-border bg-white/[0.02] px-2.5 py-1.5 sm:px-3 sm:py-2 flex flex-col gap-1.5 sm:gap-2"
         >
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
               <Calendar className="w-3.5 h-3.5 text-sky-400 shrink-0" aria-hidden="true" />
               <span className="text-[11px] sm:text-xs font-semibold text-zinc-100">
-                Eventos · {selectedDayLabel}
+                Agenda · {selectedDayLabel}
               </span>
+              {selectedDayHolidays.length > 0 && (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-violet-500/15 border border-violet-500/30 text-[10px] sm:text-[11px] font-medium text-violet-300">
+                  <span>
+                    {selectedDayHolidays.length} {selectedDayHolidays.length === 1 ? 'feriado' : 'feriados'}
+                  </span>
+                </span>
+              )}
               {highImpactCount > 0 && (
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-rose-500/15 border border-rose-500/30 text-[10px] sm:text-[11px] font-medium text-rose-300">
                   <Flame className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-rose-400 shrink-0" aria-hidden="true" />
@@ -363,11 +375,43 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
               )}
             </div>
             <span className="hidden sm:inline text-[11px] text-muted-foreground">
-              Toca un evento para ver detalles
+              Toca un elemento para ver detalles
             </span>
           </div>
 
           <div className="flex flex-wrap items-center gap-1.5">
+            {selectedDayHolidays.map((item) => {
+              const isEarly = Boolean(item.holiday.isEarlyClose);
+              return (
+                <button
+                  key={`day-hol-${item.marketId}-${item.holiday.date}`}
+                  type="button"
+                  onClick={() => onOpenHolidayDrawer?.(item.marketId, item.holiday.date)}
+                  title={`${item.marketName}: ${item.holiday.name}${
+                    isEarly && item.holiday.closeTime ? ` (${item.holiday.closeTime} local)` : ''
+                  }`}
+                  className={`inline-flex items-center gap-1.5 min-h-[30px] sm:min-h-[34px] max-w-full px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg border text-[11px] sm:text-xs transition-colors cursor-pointer text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
+                    isEarly
+                      ? 'border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/15 text-amber-200'
+                      : 'border-violet-500/30 bg-violet-500/10 hover:bg-violet-500/15 text-violet-200'
+                  }`}
+                >
+                  {isEarly ? (
+                    <Clock className="w-3 h-3 text-amber-400 shrink-0" aria-hidden="true" />
+                  ) : (
+                    <Calendar className="w-3 h-3 text-violet-400 shrink-0" aria-hidden="true" />
+                  )}
+                  <span className="shrink-0" aria-hidden="true">{item.flag}</span>
+                  <span className={`font-semibold shrink-0 ${isEarly ? 'text-amber-300' : 'text-violet-300'}`}>
+                    {isEarly ? 'Cierre temprano' : 'Feriado'}
+                  </span>
+                  <span className="truncate opacity-90">
+                    {item.marketName} · {item.holiday.name}
+                  </span>
+                </button>
+              );
+            })}
+
             {selectedDayEvents.map((evt) => {
               const isHigh = evt.importance === 'high';
               const marketInfo = marketLookup[evt.marketId] ?? {
@@ -410,9 +454,9 @@ export const TimelineGrid: React.FC<TimelineGridProps> = React.memo(({
       ) : (
         <div className="rounded-lg border border-border/70 bg-white/[0.015] px-2.5 py-1.5 sm:px-3 sm:py-2 text-[11px] sm:text-xs text-muted-foreground flex items-center gap-2">
           <Calendar className="w-3.5 h-3.5 text-zinc-500 shrink-0" aria-hidden="true" />
-          <span>Sin eventos importantes programados para este día.</span>
+          <span>Sin eventos ni feriados programados para este día.</span>
         </div>
-      )}
+      ))}
 
       <TimelineLegend />
     </section>

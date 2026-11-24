@@ -161,6 +161,30 @@ describe('events engine', () => {
       expect(days.map((d) => d.isoDate)).toEqual(['2026-09-16', '2026-09-17', '2026-09-18']);
     });
 
+    it('should detect full holidays and early-close days in the rolling 7-day window', () => {
+      const nov23Now = DateTime.fromISO('2026-11-23T12:00:00', { zone: 'America/Santiago' });
+      const days = getRollingDaysWindow(nov23Now);
+
+      expect(days[0].isoDate).toBe('2026-11-23');
+      expect(days[0].hasHoliday).toBe(false);
+      expect(days[0].holidayCount).toBe(0);
+      expect(days[0].earlyCloseCount).toBe(0);
+
+      // Nov 26: NYSE Thanksgiving (full closure)
+      const thanksgivingDay = days.find((d) => d.isoDate === '2026-11-26');
+      expect(thanksgivingDay).toBeDefined();
+      expect(thanksgivingDay?.hasHoliday).toBe(true);
+      expect(thanksgivingDay?.holidayCount).toBe(1);
+      expect(thanksgivingDay?.earlyCloseCount).toBe(0);
+
+      // Nov 27: NYSE Black Friday (early close)
+      const blackFriday = days.find((d) => d.isoDate === '2026-11-27');
+      expect(blackFriday).toBeDefined();
+      expect(blackFriday?.hasHoliday).toBe(true);
+      expect(blackFriday?.holidayCount).toBe(0);
+      expect(blackFriday?.earlyCloseCount).toBe(1);
+    });
+
     it('should provide upcoming macroeconomic catalysts across Q4 2026 and Q1 2027 for all markets', () => {
       const oct16Now = DateTime.fromISO('2026-10-16T00:00:00', { zone: 'America/Santiago' });
       const upcoming = getUpcomingEvents(oct16Now, { maxDaysAhead: 120 });

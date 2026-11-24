@@ -1,6 +1,7 @@
 import { DateTime } from 'luxon';
 import {
   MarketEvent,
+  MarketHoliday,
   FormattedMarketEvent,
   EventImportance,
   TimelineEventMarkerData,
@@ -8,6 +9,7 @@ import {
 } from './types';
 import { MARKETS, CHILE_CONFIG } from './markets';
 import { inferCategory } from './event-category';
+import { MARKET_HOLIDAYS } from './holidays';
 
 export { inferCategory };
 
@@ -157,7 +159,8 @@ export function getRollingDaysWindow(
   referenceDate: DateTime = DateTime.now().setZone(CHILE_CONFIG.timezone),
   daysCount: number = 7,
   events: MarketEvent[] = MARKET_EVENTS,
-  referenceZone: string = CHILE_CONFIG.timezone
+  referenceZone: string = CHILE_CONFIG.timezone,
+  holidays: MarketHoliday[] = MARKET_HOLIDAYS
 ): RollingDayInfo[] {
   const refNow = referenceDate.setZone(referenceZone);
   const startOfRefToday = refNow.startOf('day');
@@ -189,6 +192,11 @@ export function getRollingDaysWindow(
     const hasEvents = eventCount > 0;
     const hasHighImpact = dayEvents.some((e) => e.importance === 'high');
 
+    const dayHolidays = holidays.filter((h) => h.date === isoDate);
+    const holidayCount = dayHolidays.filter((h) => !h.isEarlyClose).length;
+    const earlyCloseCount = dayHolidays.filter((h) => Boolean(h.isEarlyClose)).length;
+    const hasHoliday = holidayCount > 0 || earlyCloseCount > 0;
+
     result.push({
       date: targetDay,
       isoDate,
@@ -198,7 +206,10 @@ export function getRollingDaysWindow(
       isToday,
       hasEvents,
       eventCount,
-      hasHighImpact
+      hasHighImpact,
+      holidayCount,
+      earlyCloseCount,
+      hasHoliday
     });
   }
 
