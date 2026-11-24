@@ -15,3 +15,8 @@ dist-ssr
 # Local Pi runtime state (auto-generated, machine-local paths)
 .atl/
 .pi/
+
+# Python virtual environments & bytecode (holiday sync pipeline)
+.venv/
+__pycache__/
+*.pyc

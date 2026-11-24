@@ -1,4 +1,4 @@
-name: Sync Macroeconomic Events
+name: Sync Market Holidays & Macro Events
 
 on:
   schedule:
@@ -16,24 +16,45 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python holiday calendar dependencies
+        run: pip install exchange_calendars
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: 'npm'
 
-      - name: Run events sync script
+      - name: Install Node.js dependencies
+        run: npm ci
+
+      - name: Sync official exchange holidays
+        run: python scripts/sync-holidays.py
+
+      - name: Sync macroeconomic events
         env:
-          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
         run: node scripts/sync-events.js
+
+      - name: Validate calendar datasets
+        run: npm run validate:data
+
+      - name: Run unit tests
+        run: npm test
 
       - name: Commit and push changes
         run: |
-          if git diff --quiet src/data/events.json src/data/holidays.json; then
-            echo "No changes in events or holidays calendar. Working tree is clean."
+          if git diff --quiet src/data/events.json src/data/holidays.json src/data/calendar-meta.json; then
+            echo "No changes in calendar datasets. Working tree is clean."
           else
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add src/data/events.json src/data/holidays.json
+            git add src/data/events.json src/data/holidays.json src/data/calendar-meta.json
             git commit -m "chore(data): sync macroeconomic events and market holidays"
             git push origin main
           fi

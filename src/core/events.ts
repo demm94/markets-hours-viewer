@@ -230,27 +230,57 @@ export function getDataFreshnessStatus(
   referenceNow: DateTime = DateTime.now().setZone(CHILE_CONFIG.timezone),
   referenceZone: string = CHILE_CONFIG.timezone
 ): DataFreshnessStatus {
-  const latestEventUtc =
-    MARKET_EVENTS.length > 0
-      ? MARKET_EVENTS.reduce(
-          (max, e) => (e.timestampUtc > max ? e.timestampUtc : max),
-          MARKET_EVENTS[0].timestampUtc
-        )
-      : '2026-01-01';
+  const refToday = referenceNow.setZone(referenceZone).startOf('day');
+  const trackedMarketIds = MARKETS.map((m) => m.id);
 
-  const latestEventDate = DateTime.fromISO(latestEventUtc, { zone: referenceZone });
-  const daysUntilExpiry = Math.round(latestEventDate.diff(referenceNow.setZone(referenceZone), 'days').days);
+  let minEventHorizonStr: string | null = null;
+  let minHolidayHorizonStr: string | null = null;
+
+  for (const marketId of trackedMarketIds) {
+    let marketMaxEventDate = '2026-01-01';
+    for (const e of MARKET_EVENTS) {
+      if (e.marketId !== marketId) continue;
+      const localDate = DateTime.fromISO(e.timestampUtc, { zone: 'utc' })
+        .setZone(referenceZone)
+        .toFormat('yyyy-MM-dd');
+      if (localDate > marketMaxEventDate) {
+        marketMaxEventDate = localDate;
+      }
+    }
+    if (minEventHorizonStr === null || marketMaxEventDate < minEventHorizonStr) {
+      minEventHorizonStr = marketMaxEventDate;
+    }
+
+    let marketMaxHolidayDate = '2026-01-01';
+    for (const h of MARKET_HOLIDAYS) {
+      if (h.marketId !== marketId) continue;
+      if (h.date > marketMaxHolidayDate) {
+        marketMaxHolidayDate = h.date;
+      }
+    }
+    if (minHolidayHorizonStr === null || marketMaxHolidayDate < minHolidayHorizonStr) {
+      minHolidayHorizonStr = marketMaxHolidayDate;
+    }
+  }
+
+  const latestEventDateStr = minEventHorizonStr ?? '2026-01-01';
+  const latestHolidayDateStr = minHolidayHorizonStr ?? '2026-01-01';
+  const effectiveHorizonStr =
+    latestEventDateStr <= latestHolidayDateStr ? latestEventDateStr : latestHolidayDateStr;
+
+  const effectiveHorizonDate = DateTime.fromISO(effectiveHorizonStr, { zone: referenceZone }).startOf('day');
+  const daysUntilExpiry = Math.round(effectiveHorizonDate.diff(refToday, 'days').days);
   const isStale = daysUntilExpiry <= 14;
 
   return {
-    latestEventDateStr: latestEventDate.toFormat('yyyy-MM-dd'),
+    latestEventDateStr,
     isStale,
     daysUntilExpiry,
     ...(isStale
       ? {
           message:
             daysUntilExpiry <= 0
-              ? 'El calendario macroeconómico requiere actualización de datos para el período actual.'
+              ? 'El calendario macroeconómico y de feriados requiere actualización de datos para el período actual.'
               : `La cobertura del calendario vence en ${daysUntilExpiry} días. Se recomienda sincronizar.`
         }
       : {})

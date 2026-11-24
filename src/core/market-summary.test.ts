@@ -84,11 +84,16 @@ describe('market-summary domain helpers', () => {
     const holidayAgenda = getTodayAgenda(MARKETS, fiestasPatrias, CHILE_TZ, []);
     expect(holidayAgenda.holidays.filter((h) => h.marketId === 'chile')).toHaveLength(1);
 
-    const newYearsEve = DateTime.fromISO('2026-12-31T10:00:00', { zone: CHILE_TZ });
-    const earlyCloseAgenda = getTodayAgenda(MARKETS, newYearsEve, CHILE_TZ, []);
+    const christmasEve = DateTime.fromISO('2026-12-24T10:00:00', { zone: CHILE_TZ });
+    const earlyCloseAgenda = getTodayAgenda(MARKETS, christmasEve, CHILE_TZ, []);
     const chileEarlyCloses = earlyCloseAgenda.earlyCloses.filter((h) => h.marketId === 'chile');
     expect(chileEarlyCloses).toHaveLength(1);
-    expect(chileEarlyCloses[0].holiday.closeTime).toBe('12:30');
+    expect(chileEarlyCloses[0].holiday.closeTime).toBe('13:00');
+
+    const newYearsEve = DateTime.fromISO('2026-12-31T10:00:00', { zone: CHILE_TZ });
+    const bankHolidayAgenda = getTodayAgenda(MARKETS, newYearsEve, CHILE_TZ, []);
+    expect(bankHolidayAgenda.holidays.filter((h) => h.marketId === 'chile')).toHaveLength(1);
+    expect(bankHolidayAgenda.earlyCloses.filter((h) => h.marketId === 'chile')).toHaveLength(0);
 
     const withoutChile = MARKETS.filter((m) => m.id !== 'chile');
     const fallbackAgenda = getTodayAgenda(withoutChile, fiestasPatrias, CHILE_TZ, []);

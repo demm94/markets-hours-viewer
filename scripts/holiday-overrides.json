@@ -1,0 +1,478 @@
+{
+  "exclusions": [
+    "krx:2026-06-05",
+    "nse:2026-08-14",
+    "nse:2026-03-06",
+    "chile:2026-04-02",
+    "chile:2027-03-25"
+  ],
+  "nameMap": {
+    "nyse:2026-01-01": "Año Nuevo",
+    "nyse:2026-01-19": "Martin Luther King Jr. Day",
+    "nyse:2026-02-16": "Presidents' Day",
+    "nyse:2026-04-03": "Viernes Santo (Good Friday)",
+    "nyse:2026-05-25": "Memorial Day",
+    "nyse:2026-06-19": "Juneteenth National Independence",
+    "nyse:2026-07-03": "Independence Day (observado)",
+    "nyse:2026-09-07": "Labor Day",
+    "nyse:2026-11-26": "Thanksgiving Day",
+    "nyse:2026-11-27": "Black Friday (Cierre temprano)",
+    "nyse:2026-12-24": "Víspera de Navidad (Cierre temprano)",
+    "nyse:2026-12-25": "Navidad",
+    "nyse:2027-01-01": "Año Nuevo",
+    "nyse:2027-01-18": "Martin Luther King Jr. Day",
+    "nyse:2027-02-15": "Presidents' Day",
+    "nyse:2027-03-26": "Viernes Santo (Good Friday)",
+    "nyse:2027-05-31": "Memorial Day",
+    "nyse:2027-06-18": "Juneteenth National Independence",
+    "nyse:2027-07-05": "Independence Day (observado)",
+    "nyse:2027-09-06": "Labor Day",
+    "nyse:2027-11-25": "Thanksgiving Day",
+    "nyse:2027-11-26": "Black Friday (Cierre temprano)",
+    "nyse:2027-12-24": "Navidad (observado)",
+    "chile:2026-01-01": "Año Nuevo",
+    "chile:2026-04-03": "Viernes Santo",
+    "chile:2026-05-01": "Día del Trabajo",
+    "chile:2026-05-21": "Glorias Navales",
+    "chile:2026-06-29": "San Pedro y San Pablo",
+    "chile:2026-07-16": "Virgen del Carmen",
+    "chile:2026-09-17": "Víspera de Fiestas Patrias (Cierre temprano)",
+    "chile:2026-09-18": "Fiestas Patrias",
+    "chile:2026-10-12": "Encuentro de Dos Mundos",
+    "chile:2026-12-08": "Inmaculada Concepción",
+    "chile:2026-12-24": "Víspera de Navidad (Cierre temprano)",
+    "chile:2026-12-25": "Navidad",
+    "chile:2026-12-30": "Cierre de Año BCS (Cierre temprano)",
+    "chile:2026-12-31": "Feriado Bancario",
+    "chile:2027-01-01": "Año Nuevo",
+    "chile:2027-03-26": "Viernes Santo",
+    "chile:2027-05-21": "Día de las Glorias Navales",
+    "chile:2027-06-21": "Día Nacional de los Pueblos Indígenas",
+    "chile:2027-06-28": "San Pedro y San Pablo",
+    "chile:2027-07-16": "Virgen del Carmen",
+    "chile:2027-09-17": "Fiestas Patrias (feriado adicional)",
+    "chile:2027-10-11": "Encuentro de Dos Mundos",
+    "chile:2027-11-01": "Todos los Santos",
+    "chile:2027-12-08": "Inmaculada Concepción",
+    "chile:2027-12-24": "Víspera de Navidad (Cierre temprano)",
+    "chile:2027-12-31": "Feriado Bancario",
+    "sse:2026-01-02": "Año Nuevo",
+    "sse:2026-02-23": "Año Nuevo Chino (Festival Primavera)",
+    "sse:2026-10-01": "Día Nacional (Semana Dorada)",
+    "sse:2026-10-02": "Día Nacional",
+    "sse:2026-10-05": "Día Nacional",
+    "sse:2026-10-06": "Día Nacional",
+    "sse:2026-10-07": "Día Nacional",
+    "twse:2026-02-12": "Año Nuevo Lunar (cierre bursátil)",
+    "twse:2026-02-13": "Año Nuevo Lunar (cierre bursátil)",
+    "twse:2026-04-06": "Festival Qingming (observado)",
+    "twse:2026-09-28": "Día del Maestro",
+    "twse:2026-10-26": "Día de la Retrocesión (observado)",
+    "twse:2026-12-25": "Día de la Constitución",
+    "twse:2027-04-30": "Día del Trabajo (observado)",
+    "twse:2027-09-28": "Día del Maestro",
+    "twse:2027-10-25": "Día de la Retrocesión",
+    "krx:2026-06-03": "Elecciones Locales Corea",
+    "krx:2026-10-05": "Fundación Nacional (observado)",
+    "krx:2026-10-09": "Día del Hangeul",
+    "krx:2026-12-25": "Navidad",
+    "krx:2026-12-31": "Cierre de Año KRX",
+    "nse:2026-01-15": "Elecciones Municipales Maharashtra",
+    "nse:2026-03-03": "Holi",
+    "nse:2026-03-26": "Ram Navami",
+    "nse:2026-03-31": "Mahavir Jayanti",
+    "nse:2026-05-28": "Bakri Id",
+    "nse:2026-06-26": "Muharram",
+    "nse:2026-09-14": "Ganesh Chaturthi",
+    "nse:2026-11-10": "Diwali Balipratipada",
+    "nse:2026-11-24": "Guru Nanak Jayanti",
+    "nse:2026-12-25": "Navidad"
+  },
+  "overrides": [
+    {
+      "marketId": "nyse",
+      "date": "2026-11-27",
+      "name": "Black Friday (Cierre temprano)",
+      "isEarlyClose": true,
+      "closeTime": "13:00"
+    },
+    {
+      "marketId": "nyse",
+      "date": "2026-12-24",
+      "name": "Víspera de Navidad (Cierre temprano)",
+      "isEarlyClose": true,
+      "closeTime": "13:00"
+    },
+    {
+      "marketId": "nyse",
+      "date": "2027-11-25",
+      "name": "Thanksgiving Day"
+    },
+    {
+      "marketId": "nyse",
+      "date": "2027-11-26",
+      "name": "Black Friday (Cierre temprano)",
+      "isEarlyClose": true,
+      "closeTime": "13:00"
+    },
+    {
+      "marketId": "nyse",
+      "date": "2027-12-24",
+      "name": "Navidad (observado)"
+    },
+    {
+      "marketId": "chile",
+      "date": "2026-12-24",
+      "name": "Víspera de Navidad (Cierre temprano)",
+      "isEarlyClose": true,
+      "closeTime": "13:00"
+    },
+    {
+      "marketId": "chile",
+      "date": "2026-12-31",
+      "name": "Feriado Bancario"
+    },
+    {
+      "marketId": "chile",
+      "date": "2027-01-01",
+      "name": "Año Nuevo"
+    },
+    {
+      "marketId": "chile",
+      "date": "2027-03-26",
+      "name": "Viernes Santo"
+    },
+    {
+      "marketId": "chile",
+      "date": "2027-05-21",
+      "name": "Día de las Glorias Navales"
+    },
+    {
+      "marketId": "chile",
+      "date": "2027-06-21",
+      "name": "Día Nacional de los Pueblos Indígenas"
+    },
+    {
+      "marketId": "chile",
+      "date": "2027-06-28",
+      "name": "San Pedro y San Pablo"
+    },
+    {
+      "marketId": "chile",
+      "date": "2027-07-16",
+      "name": "Virgen del Carmen"
+    },
+    {
+      "marketId": "chile",
+      "date": "2027-09-17",
+      "name": "Fiestas Patrias (feriado adicional)"
+    },
+    {
+      "marketId": "chile",
+      "date": "2027-10-11",
+      "name": "Encuentro de Dos Mundos"
+    },
+    {
+      "marketId": "chile",
+      "date": "2027-11-01",
+      "name": "Todos los Santos"
+    },
+    {
+      "marketId": "chile",
+      "date": "2027-12-08",
+      "name": "Inmaculada Concepción"
+    },
+    {
+      "marketId": "chile",
+      "date": "2027-12-24",
+      "name": "Víspera de Navidad (Cierre temprano)",
+      "isEarlyClose": true,
+      "closeTime": "13:00"
+    },
+    {
+      "marketId": "chile",
+      "date": "2027-12-31",
+      "name": "Feriado Bancario"
+    },
+    {
+      "marketId": "krx",
+      "date": "2027-01-01",
+      "name": "Año Nuevo"
+    },
+    {
+      "marketId": "krx",
+      "date": "2027-02-08",
+      "name": "Seollal (Año Nuevo Lunar)"
+    },
+    {
+      "marketId": "krx",
+      "date": "2027-02-09",
+      "name": "Seollal (observado)"
+    },
+    {
+      "marketId": "krx",
+      "date": "2027-03-01",
+      "name": "Movimiento de Independencia"
+    },
+    {
+      "marketId": "krx",
+      "date": "2027-05-03",
+      "name": "Día del Trabajo (observado)"
+    },
+    {
+      "marketId": "krx",
+      "date": "2027-05-05",
+      "name": "Día del Niño"
+    },
+    {
+      "marketId": "krx",
+      "date": "2027-05-13",
+      "name": "Cumpleaños de Buda"
+    },
+    {
+      "marketId": "krx",
+      "date": "2027-07-19",
+      "name": "Día de la Constitución (observado)"
+    },
+    {
+      "marketId": "krx",
+      "date": "2027-08-16",
+      "name": "Día de la Liberación (observado)"
+    },
+    {
+      "marketId": "krx",
+      "date": "2027-09-14",
+      "name": "Chuseok"
+    },
+    {
+      "marketId": "krx",
+      "date": "2027-09-15",
+      "name": "Chuseok"
+    },
+    {
+      "marketId": "krx",
+      "date": "2027-09-16",
+      "name": "Chuseok"
+    },
+    {
+      "marketId": "krx",
+      "date": "2027-10-04",
+      "name": "Fundación Nacional (observado)"
+    },
+    {
+      "marketId": "krx",
+      "date": "2027-10-11",
+      "name": "Día del Hangeul (observado)"
+    },
+    {
+      "marketId": "krx",
+      "date": "2027-12-27",
+      "name": "Navidad (observado)"
+    },
+    {
+      "marketId": "krx",
+      "date": "2027-12-31",
+      "name": "Cierre de Año KRX"
+    },
+    {
+      "marketId": "sse",
+      "date": "2027-01-01",
+      "name": "Año Nuevo"
+    },
+    {
+      "marketId": "sse",
+      "date": "2027-02-05",
+      "name": "Año Nuevo Chino (Festival Primavera)"
+    },
+    {
+      "marketId": "sse",
+      "date": "2027-02-08",
+      "name": "Año Nuevo Chino (Festival Primavera)"
+    },
+    {
+      "marketId": "sse",
+      "date": "2027-02-09",
+      "name": "Año Nuevo Chino (Festival Primavera)"
+    },
+    {
+      "marketId": "sse",
+      "date": "2027-02-10",
+      "name": "Año Nuevo Chino (Festival Primavera)"
+    },
+    {
+      "marketId": "sse",
+      "date": "2027-02-11",
+      "name": "Año Nuevo Chino (Festival Primavera)"
+    },
+    {
+      "marketId": "sse",
+      "date": "2027-02-12",
+      "name": "Año Nuevo Chino (Festival Primavera)"
+    },
+    {
+      "marketId": "sse",
+      "date": "2027-04-05",
+      "name": "Qingming Festival"
+    },
+    {
+      "marketId": "sse",
+      "date": "2027-05-03",
+      "name": "Día del Trabajo"
+    },
+    {
+      "marketId": "sse",
+      "date": "2027-05-04",
+      "name": "Día del Trabajo"
+    },
+    {
+      "marketId": "sse",
+      "date": "2027-05-05",
+      "name": "Día del Trabajo"
+    },
+    {
+      "marketId": "sse",
+      "date": "2027-06-09",
+      "name": "Dragon Boat Festival"
+    },
+    {
+      "marketId": "sse",
+      "date": "2027-09-15",
+      "name": "Mid-Autumn Festival"
+    },
+    {
+      "marketId": "sse",
+      "date": "2027-10-01",
+      "name": "Día Nacional (Semana Dorada)"
+    },
+    {
+      "marketId": "sse",
+      "date": "2027-10-04",
+      "name": "Día Nacional"
+    },
+    {
+      "marketId": "sse",
+      "date": "2027-10-05",
+      "name": "Día Nacional"
+    },
+    {
+      "marketId": "sse",
+      "date": "2027-10-06",
+      "name": "Día Nacional"
+    },
+    {
+      "marketId": "sse",
+      "date": "2027-10-07",
+      "name": "Día Nacional"
+    },
+    {
+      "marketId": "twse",
+      "date": "2027-01-01",
+      "name": "Día de la Fundación"
+    },
+    {
+      "marketId": "twse",
+      "date": "2027-02-04",
+      "name": "Año Nuevo Lunar"
+    },
+    {
+      "marketId": "twse",
+      "date": "2027-02-05",
+      "name": "Año Nuevo Lunar"
+    },
+    {
+      "marketId": "twse",
+      "date": "2027-02-08",
+      "name": "Año Nuevo Lunar"
+    },
+    {
+      "marketId": "twse",
+      "date": "2027-02-09",
+      "name": "Año Nuevo Lunar"
+    },
+    {
+      "marketId": "twse",
+      "date": "2027-02-10",
+      "name": "Año Nuevo Lunar"
+    },
+    {
+      "marketId": "twse",
+      "date": "2027-03-01",
+      "name": "Día de la Paz (observado)"
+    },
+    {
+      "marketId": "twse",
+      "date": "2027-04-05",
+      "name": "Día del Niño y Qingming"
+    },
+    {
+      "marketId": "twse",
+      "date": "2027-05-03",
+      "name": "Día del Trabajo (observado)"
+    },
+    {
+      "marketId": "twse",
+      "date": "2027-06-09",
+      "name": "Festival Bote del Dragón"
+    },
+    {
+      "marketId": "twse",
+      "date": "2027-09-15",
+      "name": "Festival de Medio Otoño"
+    },
+    {
+      "marketId": "twse",
+      "date": "2027-10-11",
+      "name": "Día Nacional (observado)"
+    },
+    {
+      "marketId": "nse",
+      "date": "2027-01-26",
+      "name": "Día de la República"
+    },
+    {
+      "marketId": "nse",
+      "date": "2027-03-10",
+      "name": "Id-ul-Fitr"
+    },
+    {
+      "marketId": "nse",
+      "date": "2027-03-22",
+      "name": "Holi"
+    },
+    {
+      "marketId": "nse",
+      "date": "2027-03-26",
+      "name": "Viernes Santo"
+    },
+    {
+      "marketId": "nse",
+      "date": "2027-04-14",
+      "name": "Dr. Ambedkar Jayanti"
+    },
+    {
+      "marketId": "nse",
+      "date": "2027-04-15",
+      "name": "Ram Navami"
+    },
+    {
+      "marketId": "nse",
+      "date": "2027-04-19",
+      "name": "Mahavir Jayanti"
+    },
+    {
+      "marketId": "nse",
+      "date": "2027-05-17",
+      "name": "Bakri Id"
+    },
+    {
+      "marketId": "nse",
+      "date": "2027-06-15",
+      "name": "Muharram"
+    },
+    {
+      "marketId": "nse",
+      "date": "2027-10-29",
+      "name": "Diwali Laxmi Pujan"
+    }
+  ]
+}

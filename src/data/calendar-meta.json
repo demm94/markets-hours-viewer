@@ -1,0 +1,93 @@
+{
+  "holidays": {
+    "generatedAtUtc": "2026-11-24T00:26:43Z",
+    "source": "exchange_calendars+overrides",
+    "exchangeCalendarsVersion": "4.13.3",
+    "window": {
+      "startDate": "2026-01-01",
+      "endDate": "2027-12-31"
+    },
+    "totalCount": 177,
+    "byMarket": {
+      "nyse": {
+        "mic": "XNYS",
+        "calendarLastSession": "2027-11-23",
+        "count": 23,
+        "minDate": "2026-01-01",
+        "maxDate": "2027-12-24"
+      },
+      "sse": {
+        "mic": "XSHG",
+        "calendarLastSession": "2026-12-31",
+        "count": 37,
+        "minDate": "2026-01-01",
+        "maxDate": "2027-10-07"
+      },
+      "twse": {
+        "mic": "XTAI",
+        "calendarLastSession": "2027-11-23",
+        "count": 33,
+        "minDate": "2026-01-01",
+        "maxDate": "2027-10-25"
+      },
+      "krx": {
+        "mic": "XKRX",
+        "calendarLastSession": "2027-11-23",
+        "count": 32,
+        "minDate": "2026-01-01",
+        "maxDate": "2027-12-31"
+      },
+      "nse": {
+        "mic": "XBOM",
+        "calendarLastSession": "2026-12-31",
+        "count": 26,
+        "minDate": "2026-01-15",
+        "maxDate": "2027-10-29"
+      },
+      "chile": {
+        "mic": "XSGO",
+        "calendarLastSession": "2027-11-23",
+        "count": 26,
+        "minDate": "2026-01-01",
+        "maxDate": "2027-12-31"
+      }
+    }
+  },
+  "events": {
+    "generatedAtUtc": "2026-11-24T00:28:22Z",
+    "source": "verified-seed+pboc-rule+faireconomy",
+    "totalCount": 124,
+    "byMarket": {
+      "nyse": {
+        "count": 47,
+        "minDate": "2026-09-16",
+        "maxDate": "2027-12-10"
+      },
+      "sse": {
+        "count": 23,
+        "minDate": "2026-09-21",
+        "maxDate": "2027-12-20"
+      },
+      "twse": {
+        "count": 17,
+        "minDate": "2026-09-17",
+        "maxDate": "2027-12-16"
+      },
+      "krx": {
+        "count": 12,
+        "minDate": "2026-10-01",
+        "maxDate": "2027-11-25"
+      },
+      "nse": {
+        "count": 15,
+        "minDate": "2026-09-17",
+        "maxDate": "2027-12-03"
+      },
+      "chile": {
+        "count": 10,
+        "minDate": "2026-10-15",
+        "maxDate": "2027-12-14"
+      }
+    }
+  }
+}

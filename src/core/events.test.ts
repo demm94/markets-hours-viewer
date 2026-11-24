@@ -119,17 +119,17 @@ describe('events engine', () => {
   });
 
   it('should correctly handle UTC-to-Chile midnight transitions for daily projection', () => {
-    // PBoC LPR is 2026-09-20T01:15:00Z.
-    // In Chile (UTC-3), this is 2026-09-19 22:15:00 (minute 1335).
-    const sep19Chile = DateTime.fromISO('2026-09-19T10:00:00', { zone: 'America/Santiago' });
-    const sep19Map = getEventsForChileDay(sep19Chile);
-    expect(sep19Map['sse']).toBeDefined();
-    expect(sep19Map['sse'][0].id).toBe('cn-pboc-lpr-sep-2026');
-    expect(sep19Map['sse'][0].minuteInChile).toBe(22 * 60 + 15); // 1335 min
-
+    // PBoC LPR is 2026-09-21T01:15:00Z (Monday 09:15 Shanghai).
+    // In Chile (UTC-3), this is 2026-09-20 22:15:00 (minute 1335).
     const sep20Chile = DateTime.fromISO('2026-09-20T10:00:00', { zone: 'America/Santiago' });
     const sep20Map = getEventsForChileDay(sep20Chile);
-    expect(sep20Map['sse']).toBeUndefined();
+    expect(sep20Map['sse']).toBeDefined();
+    expect(sep20Map['sse'][0].id).toBe('cn-pboc-lpr-sep-2026');
+    expect(sep20Map['sse'][0].minuteInChile).toBe(22 * 60 + 15); // 1335 min
+
+    const sep21Chile = DateTime.fromISO('2026-09-21T10:00:00', { zone: 'America/Santiago' });
+    const sep21Map = getEventsForChileDay(sep21Chile);
+    expect(sep21Map['sse']).toBeUndefined();
   });
 
   describe('getRollingDaysWindow', () => {
@@ -260,8 +260,8 @@ describe('events engine', () => {
     });
 
     it('should warn when reference time is close to or past calendar horizon', () => {
-      // Future date past the latest event in 2027
-      const lateFuture = DateTime.fromISO('2027-04-01T12:00:00', { zone: 'America/Santiago' });
+      // Future date past the latest event and holiday horizon in 2027
+      const lateFuture = DateTime.fromISO('2028-04-01T12:00:00', { zone: 'America/Santiago' });
       const status = getDataFreshnessStatus(lateFuture);
 
       expect(status.isStale).toBe(true);
@@ -298,6 +298,43 @@ describe('events engine', () => {
           expect(hol.closeTime).toBeDefined();
           expect(hhMmRe.test(hol.closeTime!)).toBe(true);
         }
+      }
+    });
+
+    it('enforces weekday-only dates, zero event-on-holiday collisions, and 2027 coverage for all 6 markets', () => {
+      const trackedMarkets = ['nyse', 'sse', 'twse', 'krx', 'nse', 'chile'];
+      const fullHolidayKeys = new Set<string>();
+
+      for (const hol of MARKET_HOLIDAYS) {
+        const tz = MARKET_TIMEZONE_MAP[hol.marketId];
+        const holDt = DateTime.fromISO(hol.date, { zone: tz });
+        expect(holDt.weekday).toBeLessThan(6);
+        if (hol.isEarlyClose && hol.marketId === 'nyse') {
+          expect(hol.name).not.toBe('Thanksgiving Day');
+          expect(hol.name).not.toBe('Christmas');
+        }
+        if (!hol.isEarlyClose) {
+          fullHolidayKeys.add(`${hol.marketId}:${hol.date}`);
+        }
+      }
+
+      for (const evt of MARKET_EVENTS) {
+        const tz = MARKET_TIMEZONE_MAP[evt.marketId];
+        const localDt = DateTime.fromISO(evt.timestampUtc, { zone: 'utc' }).setZone(tz);
+        const localDateStr = localDt.toFormat('yyyy-MM-dd');
+        expect(localDt.weekday).toBeLessThan(6);
+        expect(fullHolidayKeys.has(`${evt.marketId}:${localDateStr}`)).toBe(false);
+      }
+
+      for (const marketId of trackedMarkets) {
+        const has2027Holidays = MARKET_HOLIDAYS.some(
+          (h) => h.marketId === marketId && h.date >= '2027-02-01'
+        );
+        const has2027Events = MARKET_EVENTS.some(
+          (e) => e.marketId === marketId && e.timestampUtc >= '2027-02-01'
+        );
+        expect(has2027Holidays).toBe(true);
+        expect(has2027Events).toBe(true);
       }
     });
   });

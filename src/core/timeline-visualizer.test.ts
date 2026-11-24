@@ -90,15 +90,24 @@ describe('timeline-visualizer & pwa-shell compliance', () => {
       endMinute: 960
     });
 
-    // Early close: 2026-12-31 Víspera de Año Nuevo closes at 12:30 CL (570..750)
+    // Early close: 2026-12-24 Víspera de Navidad closes at 13:00 CL (570..780)
     const earlyCloseSegments = projectMarketToTimeline(
       chileMarket!,
-      DateTime.fromISO('2026-12-31T10:00:00', { zone: CHILE_TZ })
+      DateTime.fromISO('2026-12-24T10:00:00', { zone: CHILE_TZ })
     );
     expect(earlyCloseSegments).toHaveLength(1);
     expect(earlyCloseSegments[0].startMinute).toBe(570);
-    expect(earlyCloseSegments[0].endMinute).toBe(750);
+    expect(earlyCloseSegments[0].endMinute).toBe(780);
     expect(earlyCloseSegments[0].holiday?.isEarlyClose).toBe(true);
+
+    // Full bank holiday: 2026-12-31 Feriado Bancario
+    const bankHolidaySegments = projectMarketToTimeline(
+      chileMarket!,
+      DateTime.fromISO('2026-12-31T10:00:00', { zone: CHILE_TZ })
+    );
+    expect(bankHolidaySegments.length).toBeGreaterThanOrEqual(1);
+    expect(bankHolidaySegments[0].holiday?.name).toBe('Feriado Bancario');
+    expect(bankHolidaySegments[0].holiday?.isEarlyClose).toBeFalsy();
 
     // Full holiday: 2026-09-18 Fiestas Patrias
     const holidaySegments = projectMarketToTimeline(
